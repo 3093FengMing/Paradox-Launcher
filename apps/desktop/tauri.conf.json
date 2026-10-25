@@ -15,9 +15,8 @@
         "title": "Paradox Launcher",
         "decorations": false,
         "width": 1240,
-        "height": 820,
-        "minWidth": 980,
-        "minHeight": 700,
+        "height": 720,
+        "resizable": true,
         "center": true,
         "backgroundColor": "#151517"
       }

@@ -29,10 +29,11 @@ export default function App() {
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('appearance');
   const [editor, setEditor] = useState<ProfileEditor | null>(null);
   const [inputMode, setInputMode] = useState<'pointer' | 'keyboard'>('pointer');
+  const contentRef = useRef<HTMLElement>(null);
   const profileSubmitting = useRef(false);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    contentRef.current?.scrollTo(0, 0);
   }, [page]);
 
   const navigate = (next: Page) => {
@@ -171,7 +172,7 @@ export default function App() {
             </button>
           </div>
         </header>
-        <main>
+        <main ref={contentRef}>
           <div className="page-heading">
             <div>
               <h1>

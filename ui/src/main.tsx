@@ -5,6 +5,7 @@ import './styles.css';
 import './desktop.css';
 import './window.css';
 import './immersive.css';
+import './scrollbars.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

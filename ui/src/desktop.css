@@ -834,3 +834,165 @@ main {
     font-size: 0.7em;
   }
 }
+
+/* Small desktop windows keep controls in the local content scroll area. */
+@media (max-width: 640px) {
+  .page-heading,
+  .toolbar,
+  .filter-row,
+  .button-group,
+  .app-footer {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .page-heading {
+    align-items: flex-start;
+  }
+  .page-heading > div {
+    min-width: 0;
+    flex: 1 1 200px;
+  }
+  .page-heading h1,
+  .page-heading p,
+  .field small {
+    overflow-wrap: anywhere;
+  }
+  .search {
+    min-width: 0;
+    flex: 1 1 180px;
+    max-width: none;
+  }
+  .search > svg,
+  .input-with-icon > svg,
+  .info-panel > svg {
+    flex-shrink: 0;
+  }
+  .filter-row > small {
+    margin-left: 0;
+  }
+  .field-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .settings-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+  .settings-tabs button {
+    min-width: 0;
+    flex: 1 1 120px;
+  }
+  .setting-row > div:first-child {
+    min-width: 0;
+  }
+  .swatches,
+  .memory-presets {
+    flex-wrap: wrap;
+  }
+  .range-control {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .save-bar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .save-bar > div {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .account-detail {
+    padding: 20px;
+  }
+  .account-title .avatar {
+    flex-shrink: 0;
+  }
+  .account-title > div:last-child,
+  .info-panel > div {
+    min-width: 0;
+  }
+  .account-title h2 {
+    overflow-wrap: anywhere;
+  }
+  .profile-actions,
+  .library-section .profile-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    flex-shrink: 1;
+    justify-content: flex-end;
+    margin-left: 0;
+  }
+  .table-heading,
+  .version-row {
+    grid-template-columns: minmax(0, 1fr) max-content;
+    gap: 8px 10px;
+    padding: 12px;
+  }
+  .table-heading span:nth-child(2) {
+    display: none;
+  }
+  .version-row > div {
+    gap: 8px;
+  }
+  .version-icon {
+    padding: 6px;
+    flex-shrink: 0;
+  }
+  .version-row > .badge {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .version-row > button {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+  .console-header {
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+  .log-line {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+    padding: 12px;
+  }
+  .log-line > span {
+    grid-column: 1 / -1;
+  }
+  .banner-copy {
+    max-width: 100%;
+  }
+  .banner-actions {
+    flex-wrap: wrap;
+  }
+  .library-empty {
+    padding: 24px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-panel .style-options,
+  .theme-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .theme-options button {
+    min-width: 0;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 12px;
+  }
+  .modal {
+    padding: 20px;
+  }
+  .modal-buttons {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-height: 400px) {
+  .save-bar {
+    position: static;
+  }
+}

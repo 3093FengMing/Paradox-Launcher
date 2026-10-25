@@ -1,10 +1,6 @@
 .app-shell {
   padding-top: 38px;
 }
-.sidebar {
-  top: 38px;
-  height: calc(100vh - 38px);
-}
 .window-bar {
   position: fixed;
   inset: 0 0 auto;
@@ -24,13 +20,20 @@
   align-items: center;
   padding-left: 13px;
   flex: 1;
+  min-width: 0;
   height: 100%;
   font-size: 0.78em;
   font-weight: 600;
 }
 .window-title > svg {
+  flex-shrink: 0;
   color: var(--accent-ink);
   pointer-events: none;
+}
+.window-title > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .window-title small {
   font-weight: 400;
@@ -40,6 +43,7 @@
 }
 .window-controls {
   display: flex;
+  flex-shrink: 0;
   height: 100%;
 }
 .window-controls button {
@@ -53,6 +57,16 @@
 }
 .window-controls button:active {
   transform: none !important;
+}
+@media (max-width: 480px) {
+  .window-title small {
+    display: none;
+  }
+}
+@media (max-width: 360px) {
+  .window-controls button {
+    width: 36px;
+  }
 }
 @media (hover: hover) and (pointer: fine) {
   .window-controls button:not(:disabled):hover {
