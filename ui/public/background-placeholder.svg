@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" fill="none">
+  <title>启动器背景占位图</title>
+  <desc>用于界面布局预览的简单天空、海面与方块岛屿，之后可替换为自定义背景。</desc>
+  <defs>
+    <linearGradient id="sky" x1="800" y1="0" x2="800" y2="580" gradientUnits="userSpaceOnUse"><stop stop-color="#6e9bc2"/><stop offset="1" stop-color="#c7dce5"/></linearGradient>
+    <linearGradient id="sea" x1="800" y1="530" x2="800" y2="900" gradientUnits="userSpaceOnUse"><stop stop-color="#72a7bd"/><stop offset="1" stop-color="#427894"/></linearGradient>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h1600v900H0z"/>
+  <path fill="#f5f5e8" opacity=".65" d="M255 110h92v92h-92z"/>
+  <g fill="#e9eff1" opacity=".6"><path d="M420 170h250v27H420zM470 148h90v22h-90zM105 285h190v24H105zM142 264h83v21h-83zM760 242h248v23H760zM831 221h128v21H831z"/></g>
+  <path fill="url(#sea)" d="M0 526h1600v374H0z"/>
+  <path fill="#c7dee4" opacity=".38" d="M0 526h1600v8H0z"/>
+  <g fill="#b4d5dd" opacity=".16"><path d="M80 610h330v4H80zM410 675h240v4H410zM55 783h360v5H55zM695 588h160v3H695zM742 824h248v4H742zM509 739h160v3H509z"/></g>
+  <path fill="#738b6d" d="M925 618h99v-28h112v-26h160v-27h172v18h132v110H925z"/>
+  <path fill="#849b74" d="M968 620h108v-31h145v-26h198v-8h181v105H968z"/>
+  <path fill="#aabb8c" d="M872 650h92v-30h118v-24h153v-23h233v27h132v87H872z"/>
+  <path fill="#b8b895" d="M835 681h94v-29h147v-25h183v-27h241v164H835z"/>
+  <path fill="#8e927b" d="M929 682h147v-26h183v-30h341v274h-249v-55h-193v-61H929z"/>
+  <path fill="#697563" d="M1076 683h183v-29h341v246h-249v-57h-142v-72h-133z"/>
+  <path fill="#d6d0ab" d="M835 680h94v27h-94zM929 653h147v29H929zM1076 627h183v27h-183zM1259 600h341v26h-341z"/>
+  <g fill="#5f7e65" opacity=".6"><path d="M1040 619h10v-18h-10zM1179 590h8v-16h-8zM1292 574h9v-23h-9zM1470 589h8v-20h-8z"/></g>
+  <g>
+    <path fill="#e3e5d3" d="M1258 376h31v224h-31zM1450 307h35v300h-35z"/>
+    <path fill="#aeb7a8" d="M1280 376h9v224h-9zM1476 307h9v300h-9z"/>
+    <path fill="#5d6961" d="M1258 412h14v9h-14zM1273 456h16v8h-16zM1258 498h12v8h-12zM1275 557h14v9h-14zM1450 350h16v9h-16zM1470 390h15v8h-15zM1450 439h11v8h-11zM1468 489h17v9h-17zM1450 548h14v8h-14z"/>
+    <path fill="#628866" d="M1187 301h174v79h-174zM1211 273h124v28h-124zM1241 251h72v22h-72zM1374 227h196v81h-196zM1404 195h140v32h-140zM1431 170h85v25h-85z"/>
+    <path fill="#729675" d="M1187 301h91v41h-91zM1211 273h81v28h-81zM1374 227h111v40h-111zM1404 195h101v32h-101z"/>
+  </g>
+</svg>
