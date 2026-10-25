@@ -2,84 +2,88 @@
 
 ## 技术选择
 
-- Rust：领域模型、文件与配置、Elemental SDK、进程与异步工作。
-- Tauri 2：桌面窗口、受控 IPC、事件流；系统 WebView 渲染前端。
-- React + TypeScript + Vite：页面组件、UI 状态、主题预览与交互。
-- Base UI：对话框与实例选择菜单的焦点、键盘和弹层行为；Sonner：任务及设置通知。
-- Elemental：catalog / inspect / prepare / load / build command，与游戏资源布局。
-- JSON + tempfile：版本化配置，验证后在同一目录原子替换。
+- Rust：配置与实例模型、文件 / 网络 / 下载、Java 管理、Elemental 适配与进程监督。
+- Tauri 2：桌面窗口、受控 IPC 与事件流，系统 WebView 渲染前端。
+- React + TypeScript + Vite：页面、共享组件、UI 状态和外观预览。
+- Base UI：对话框与菜单的焦点 / 键盘 / 弹层行为；Sonner：任务与设置通知。
+- i18next / react-i18next：内嵌简体中文与 English 资源、系统语言响应和界面本地化。
+- Elemental：版本目录、元数据解析、资源计划、实例布局、加载与启动命令。
+- JSON + tempfile：版本化配置，校验后在同一目录原子替换。
 
-用户要求现代 GUI 与较多自定义设置，因此采用 Web UI；Rust 是游戏逻辑的唯一实现位置。
+两种视觉样式使用同一领域模型与操作入口，Rust 执行实际游戏逻辑，Web 层负责交互。
 
-## 数据与调用关系
+## 调用关系
 
 ```mermaid
 flowchart LR
-    UI[React 页面] --> API[类型化前端 API]
+    UI[React 页面与 Hook] --> API[类型化 API adapter]
     API --> IPC[Tauri commands]
-    IPC --> CFG[配置模型 / ConfigStore]
-    IPC --> JOB[后台工作线程 / Tokio runtime]
+    IPC --> CFG[ConfigStore / 实例模型]
+    IPC --> Q[DownloadManager 会话队列]
+    IPC --> JOB[后台线程 / Tokio runtime]
+    Q --> JOB
     JOB --> SDK[ElementalService]
-    SDK --> ELE[Elemental Launcher / Storage / Driver]
-    ELE --> MC[游戏文件与 Java 进程]
-    JOB --> EVT[activity / log events]
+    SDK --> ELE[Elemental 目录 / 计划 / 启动命令]
+    SDK --> DL[应用 DownloadEngine]
+    JOB --> JAVA[应用 Java 检测 / Adoptium 下载]
+    DL --> FILE[游戏与运行时文件]
+    JAVA --> DL
+    SDK --> PROC[Java 进程]
+    JOB --> EVT[下载 / 活动 / 日志事件]
     EVT --> UI
 ```
 
-`crates/launcher-core/src/sdk.rs` 是 SDK 类型的适配边界。前端不保存 SDK 对象，实例与版本
-被转换为启动器拥有的数据结构。桌面宿主负责调度和进程管理。
+`crates/launcher-core/src/sdk.rs` 是游戏 SDK 的主要适配边界，将 SDK 版本、实例和资源计划转换为应用数据结构。目录缓存、下载引擎、Java 管理和实例配置独立于前端；桌面宿主负责队列、命令调度与进程生命周期。
 
-Elemental 某些 future 持有未声明 `Sync` 的 Driver trait object，不能放进需要 `Send`
-的 Tauri async command future。宿主使用 `spawn_blocking`，在后台线程内构造 SDK future，
-通过一个 Tokio 多线程 runtime 的 `block_on` 驱动，Tokio 仍可处理下载与解压的子任务。
-游戏运行期间此 runtime 保持存活，stdout / stderr 的读取任务因此不会随启动函数返回而销毁。
-进程监督区分自然退出与主动停止；成功停止报告完成，停止失败继续监督进程并收集日志。
+部分 Elemental future 持有未声明 Sync 的 driver 引用，不能直接移动到需要 Send 的 Tauri executor。宿主使用 `spawn_blocking`，在工作线程内部构造 future，通过 Tokio 多线程 runtime 的 `block_on` 驱动。游戏运行期间 runtime 持续存在，以保留 stdout / stderr 的读取任务。
 
-当前任务模型只允许一个安装 / 启动任务；目录查询与只读扫描可以单独执行。
-`BusyGuard` 原子互斥并在退出或失败时释放。配置保存与实例创建在任务期间被拒绝，
-避免运行中切换游戏目录。事件只报告实际阶段，不展示编造的下载百分比。
+## 下载、网络与 Java
 
-`apps/desktop/src/cli.rs` 提供无 GUI 的版本、帮助、版本目录与扫描诊断。窗口启动不再因配置加载失败而直接退出：宿主保留 `startup_error`，`get_config` 将错误传给前端，涉及配置的写命令被拒绝；损坏文件保持原样。修复文件后重新启动宿主即可重新读取。
+版本目录与安装元数据通过 `VanillaSource::with_client` 注入应用网络配置，使用官方或 Mojang 兼容镜像端点。`CatalogCache` 保存目录、获取时间与来源；过期或强制刷新时请求网络，失败时以警告回退可用缓存。
+
+原版安装先加载或解析 `ResolvedVanillaVersion`，由 SDK planner 生成资源计划。应用 `DownloadEngine` 执行并发传输、重试、取消与 SHA / 大小校验，再调用 SDK prepare 解压原生库和验证实例。下载目标的路径与已有父目录检查拒绝越过游戏根目录。已完成文件校验后复用，取消和失败等待文件工作线程结束后才返回。
+
+桌面 `DownloadManager` 对实例安装与 Java 下载排队，任务串行、任务内文件并发。当前最多 32 个待处理任务、100 条保留记录，按实际状态发布下载事件；重复添加同一待处理目标返回现有任务。队列历史仅在会话中保存，重启后的安装 / 修复通过文件校验恢复。
+
+`BusyGuard` 与队列共享原子状态，阻止下载、启动和配置修改冲突；下载进行中仍可追加其他下载任务。目录查询和只读扫描独立执行。启动使用已有实例，不隐式下载安装；进程监督区分自然退出、成功停止与异常退出，停止失败继续监督并收集日志。
+
+Java 候选来自 SDK provider、已配置路径、管理目录、环境变量、PATH 和常见目录，应用通过实际进程检查版本与架构。实例 JSON 决定所需 Java 主版本，旧元数据默认 Java 8；显式和自动选择均要求主版本及架构匹配。Adoptium JRE 下载使用同一引擎，校验归档、检查实际主版本后发布到配置目录旁的 `runtimes/`。
+
+固定 SDK 的 26.3 原生库兼容处理只追加实际 `natives/` 到命令搜索列表，保留元数据指定的 `natives/java`。接口与补丁详情见 [ELEMENTAL.md](ELEMENTAL.md)，实际兼容矩阵见 [VERIFICATION.md](VERIFICATION.md)。
 
 ## 配置与实例
 
-`AppConfig { schema_version, settings, profiles, active_profile }`：
+`AppConfig { schema_version, settings, profiles, active_profile, appearance_presets }` 保存全局配置、实例、当前选择与外观预设库。
 
-- `Settings` 为全局默认设置，含游戏参数与 `Appearance`。
-- `Appearance.interface_style` 选择 `immersive` 或 `modern`，默认 `immersive`；新增字段通过 serde 默认值兼容旧配置。
-- 背景模糊、遮罩与侧栏不透明度由配置映射到 CSS 变量，不引入远程图像依赖。
-- `GameProfile` 使用 UUID 作为 `instance_key`；显示名称可独立改变。
-- 安装状态来自 SDK 对磁盘的扫描，不写成永远可信的 `installed: true`。
-- 版本号、目录、实例键、内存与分辨率在 Rust 再次验证。
-- 未找到配置使用默认值；损坏或未来 schema 明确报错，保留原文件。
-- 默认游戏资源在本地应用数据目录，用户可改为其他绝对路径。
+- `Settings` 包括游戏、网络、关闭行为、`Appearance` 与语言偏好；新增字段通过 serde 默认值兼容旧配置。
+- `Appearance.interface_style` 为 `immersive` 或 `modern`，默认沉浸式；背景效果映射 CSS 变量，素材使用本地占位图。
+- `AppearancePreset` 保存 UUID、名称与完整外观；最多 32 个，名称 1–48 个 Unicode 字符，严格检查字段与 UUID 语义重复。预设 JSON 导入 / 导出只含外观，格式独立版本化。
+- 新实例以 UUID 为存储键，显示名称可独立修改；安装状态来自磁盘扫描。
+- `GameProfile.game_directory` 可引用外部完整游戏根目录，未指定时跟随全局根目录；修改全局目录不迁移文件。
+- `ProfileOverrides` 使用 `Option<T>` 表示继承或覆盖；启用空 Java 表示自动选择，空参数清除对应全局参数。
+- 配置、版本号、实例键、路径、内存和分辨率由 Rust 再次校验。元数据与链接路径也需满足文件操作边界。
+- 导入只注册已有 Vanilla 实例，保留原文件；移除记录与删除实例文件分开，文件移除保护共享资源及链接。
 
-当前 SDK BaseLayout 使用 `versions/<instance_key>` 作为独立游戏目录。
-未来每实例设置将使用 `Option<T>` 覆盖全局配置，不直接重复一整份默认值。
+`BaseRootLayout` 将独立实例放在 `versions/<instance_key>/`，完整根目录下的 assets / libraries 共用。未找到配置使用默认值，损坏或未来 schema 报错并保留原文件。宿主保存 `startup_error`，GUI 显示错误，相关写命令拒绝操作；修复后重启重新读取。
 
-## 前端与状态
+## 前端状态与窗口
 
-`App.tsx` 负责窗口壳与页面组合；`pages/` 分别负责实例、下载、账户、设置和日志页面。`useLauncher` 管理 config、活动任务、日志、目录数据、通知与异步操作，`useSystemTheme` 监听系统主题。`components/` 提供基础控件、实例卡片和对话框，`lib/` 保存校验、主题变量、导航与日志导出等纯逻辑。
+`App.tsx` 组合窗口与页面。`useLauncher` 管理配置、活动进程、日志与操作；`useCatalog` 管理版本缓存显示，`useJava` 管理检测 / 选择，`useDownloadQueue` 管理队列订阅与任务命令，`useCloseRequest` 管理关闭请求。共享 `LauncherDialog` 统一弹窗主题、焦点与待处理状态。
 
-设置使用单独 draft，在设置页即时预览，保存后再替换持久配置。离开设置页不会自动保存。配置写入串行执行，并从最后确认的配置构造下一次更新，避免账户保存与实例选择相互覆盖。异步扫描使用请求序号和目录检查排除过期结果；事件订阅在清理或部分失败时解除。
-日志最多显示 500 条；当前只在内存保存，可导出为文本。
-`HomePage` 保留现代工作台，`ImmersiveHome` 提供默认沉浸式首页；两者使用相同父级状态与操作回调。
-`WindowBar` 提供自绘标题栏，桌面中调用 Tauri 窗口 API，网页预览中禁用窗口操作。
-加载与错误页面也保留标题栏，因此即使配置或 IPC 失败仍有关闭入口。
-`immersive.css` 在基础与现代样式之后加载，背景只使用 CSS 图层与 `background-placeholder.svg`。
+设置维护独立 draft，外观即时预览，保存后更新持久配置，离开设置页不自动保存。写操作串行并使用最后确认的配置，扫描请求序号和目录检查排除过期结果。队列先订阅再读取快照，版本标记排除过期快照；Java 下载完成时合并待执行检测，避免其他选择或检查操作丢失刷新。事件在组件清理或部分失败时解除订阅。
 
-网页预览 adapter 使用浏览器本地存储，仅用于 UI 开发与交互验证；桌面 adapter 通过 IPC。
-预览查询 Mojang 真实目录（Vite 开发代理），禁止安装或启动，并显示模式说明。
+预设库写操作只替换最后已保存配置中的 `appearance_presets`，不提交设置草稿；应用预设只更新外观 draft。语言偏好独立于预设，即时预览并随设置保存。`i18n.ts` 初始化内嵌资源、同步文档语言与 Intl locale，已知启动器状态在展示时翻译，未知 SDK 诊断和游戏日志保留原文。资源键与插值一致性由 `ui/scripts/check-locales.mjs` 在 CI 中检查。
 
-## 权限与扩展
+日志最多保留最近 500 条，在内存中保存并可导出文本。现代 `HomePage` 与 `ImmersiveHome` 使用相同状态与回调。应用固定到视口，标题栏与侧栏稳定，正文 / 侧栏 / 弹窗分别按需滚动；窗口不设置应用级最小或最大尺寸。
 
-前端获得默认事件能力与最小化、最大化 / 还原、关闭、拖动窗口权限，文件与进程操作通过自定义 Rust 命令。
-CSP 禁止任意远程脚本；生产 UI 静态资源内嵌。
-正式构建显式启用 `tauri/custom-protocol`。Tauri 构建 hook 从宿主工作目录使用 `../ui` 执行前端命令，`frontendDist` 相对配置文件仍为 `../../ui/dist`。
-Microsoft 凭据将在后续使用 OS 凭据库，不能放进 config.json；登录与通用配置分离。
+`WindowBar` 调用 Tauri 窗口 API。任务期间关闭由宿主拦截，按保存的行为询问、取消任务并停止游戏，或隐藏继续。隐藏期间任务结束后退出，再次启动同一 exe 通过 single-instance 插件唤回；停止超时或失败保留窗口。
 
-## 代码规范与当前边界
+网页 adapter 使用独立浏览器本地存储与真实 Mojang 目录，只用于 UI 开发。安装 / 启动、Java 检测 / 下载和本地文件选择仅在桌面版执行。
 
-ESLint 10 使用 TypeScript 类型相关、Promise、React Hooks 与 Fast Refresh 规则；Prettier 格式化 Web 源码和文档，Rust 使用 rustfmt / Clippy。vendor、锁文件与生成资产不参与格式化，CI 使用相同检查命令。前端工具要求 Node 22.13+ 或 24+。
+## 构建、权限与范围
 
-本轮先交付 v0.1 测试版，不接入版本缓存、Java 检测页、下载队列或取消。关闭启动器当前不自动结束 Java，用户应先停止游戏。下一阶段再封装独立 job 模块，完成原版闭环、故障恢复和兼容性矩阵。
+窗口能力只授予事件、最小化、最大化 / 还原、关闭与拖动，文件和进程通过自定义 Rust 命令处理。CSP 禁止任意远程脚本，发布前端静态资源内嵌。正式构建显式启用 `tauri/custom-protocol` 并使用 `--locked`；Rust 工具链固定为 1.92.0。构建 hook 在宿主目录执行 `../ui`，frontendDist 为 `../../ui/dist`。
+
+ESLint 10 检查 TypeScript 类型、Promise、Hooks 与 Fast Refresh，Prettier 统一 Web 源码和文档，Rust 使用 rustfmt / Clippy。常规检查与本地真实游戏矩阵分别记录，CI 配置不代表远程平台已经通过。
+
+当前 v0.2 开放 Vanilla 离线流程。Microsoft 凭据计划存放 OS 凭据库，账户、loader、内容与自动更新继续按 [ROADMAP.md](../ROADMAP.md) 接入。Windows 高 DPI 完整矩阵、跨平台原生桌面与系统安装包另行验收。

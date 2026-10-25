@@ -1,13 +1,14 @@
 {
   "name": "paradox-launcher-workspace",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "scripts": {
     "dev": "cd apps/desktop && tauri dev",
     "build": "cd apps/desktop && tauri build",
     "dev:ui": "npm --prefix ui run dev",
     "build:ui": "npm --prefix ui run build",
     "check:ui": "npm --prefix ui run check",
+    "check:i18n": "npm --prefix ui run check:i18n",
     "lint:ui": "npm --prefix ui run lint",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

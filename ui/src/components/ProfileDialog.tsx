@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { CSSProperties } from 'react';
 import { Dialog } from '@base-ui/react/dialog';
 import { Box, LayoutGrid, LoaderCircle, Plus, X } from 'lucide-react';
@@ -27,6 +28,7 @@ export default function ProfileDialog({
   onClose,
   onSave,
 }: ProfileDialogProps) {
+  const { t } = useTranslation();
   return (
     <Dialog.Root
       open={editor !== null}
@@ -53,7 +55,7 @@ export default function ProfileDialog({
                   </div>
                   <button
                     className="icon-button"
-                    aria-label="关闭对话框"
+                    aria-label={t('common.closeDialog')}
                     disabled={saving}
                     onClick={onClose}
                   >
@@ -61,12 +63,12 @@ export default function ProfileDialog({
                   </button>
                 </div>
                 <Dialog.Title className="modal-title">
-                  {editor.editKey ? '重命名实例' : '创建游戏实例'}
+                  {editor.editKey ? t('instances.rename') : t('profileDialog.createTitle')}
                 </Dialog.Title>
                 <Dialog.Description className="modal-description">
                   {editor.editKey
-                    ? '修改显示名称，实例文件位置保持不变。'
-                    : '为不同版本与存档创建独立空间。'}
+                    ? t('profileDialog.renameDescription')
+                    : t('profileDialog.createDescription')}
                 </Dialog.Description>
                 <form
                   onSubmit={(event) => {
@@ -74,18 +76,18 @@ export default function ProfileDialog({
                     onSave();
                   }}
                 >
-                  <Field label="实例名称">
+                  <Field label={t('instances.name')}>
                     <input
                       id="profile-name"
                       required
                       disabled={saving}
-                      placeholder="例如：我的生存世界"
+                      placeholder={t('profileDialog.namePlaceholder')}
                       maxLength={64}
                       value={editor.name}
                       onChange={(event) => onChange({ name: event.target.value })}
                     />
                   </Field>
-                  <Field label="Minecraft 版本">
+                  <Field label={t('common.minecraftVersion')}>
                     <input
                       required
                       disabled={saving || !!editor.editKey}
@@ -95,16 +97,16 @@ export default function ProfileDialog({
                   </Field>
                   <div className="modal-type">
                     <LayoutGrid size={17} />
-                    <span>Vanilla 原版</span>
-                    <Badge>已支持</Badge>
+                    <span>{t('common.vanilla')}</span>
+                    <Badge>{t('common.supported')}</Badge>
                   </div>
                   <div className="modal-buttons">
                     <button type="button" className="secondary" disabled={saving} onClick={onClose}>
-                      取消
+                      {t('common.cancel')}
                     </button>
                     <button type="submit" className="primary" disabled={saving}>
                       {saving ? <LoaderCircle className="spin" size={16} /> : <Plus size={16} />}
-                      {editor.editKey ? '保存名称' : '创建实例'}
+                      {editor.editKey ? t('profileDialog.saveName') : t('common.createInstance')}
                     </button>
                   </div>
                 </form>

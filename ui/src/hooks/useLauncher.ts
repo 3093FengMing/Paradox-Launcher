@@ -1,9 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import i18n, { getFormattingLocale, translateRuntimeMessage } from '../i18n';
 import * as api from '../api';
 import { errorMessage } from '../lib/errors';
 import {
+  createAppearancePreset,
+  importAppearancePreset as parseAppearancePreset,
+  MAX_APPEARANCE_PRESETS,
+  validatePresetName,
+} from '../lib/appearance-presets';
+import {
   validateProfileName,
+  validateProfileSettings,
   validateSettings,
   validateUsername,
   type ProfileEditor,
@@ -11,13 +19,14 @@ import {
 import type {
   Activity,
   AppConfig,
+  AppearancePreset,
   Bootstrap,
   GameProfile,
-  GameVersion,
   InstalledInstance,
   LogLine,
   Settings,
 } from '../types';
+import { useCatalog } from './useCatalog';
 
 const MAX_LOG_LINES = 500;
 const NOTIFICATION_DEDUPLICATION_MS = 1000;
@@ -27,10 +36,7 @@ export function useLauncher() {
   const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
   const [draft, setDraft] = useState<Settings | null>(null);
   const [fatal, setFatal] = useState('');
-  const [versions, setVersions] = useState<GameVersion[]>([]);
   const [installed, setInstalled] = useState<InstalledInstance[]>([]);
-  const [catalogBusy, setCatalogBusy] = useState(false);
-  const [catalogError, setCatalogError] = useState('');
   const [busy, setBusy] = useState<Activity | null>(null);
   const [logs, setLogs] = useState<LogLine[]>([]);
   const [pendingWrites, setPendingWrites] = useState(0);
@@ -40,7 +46,6 @@ export function useLauncher() {
   const scanSequence = useRef(0);
   const actionSequence = useRef(0);
   const busyRef = useRef<Activity | null>(null);
-  const catalogPending = useRef(false);
   const lastNotification = useRef({ message: '', error: false, time: 0 });
 
   const addLog = useCallback((level: string, message: string) => {
@@ -49,12 +54,13 @@ export function useLauncher() {
       {
         level,
         message,
-        time: new Date().toLocaleTimeString('zh-CN', { hour12: false }),
+        time: new Date().toLocaleTimeString(getFormattingLocale(), { hour12: false }),
       },
     ]);
   }, []);
 
   const notify = useCallback((message: string, error = false) => {
+    message = translateRuntimeMessage(message);
     const previous = lastNotification.current;
     const time = Date.now();
     if (
@@ -76,6 +82,7 @@ export function useLauncher() {
     },
     [addLog, notify],
   );
+  const catalog = useCatalog(addLog);
 
   useEffect(() => {
     const lifecycleRef = lifecycle;
@@ -97,6 +104,7 @@ export function useLauncher() {
       .subscribe(
         (event) => {
           if (disposed) return;
+          if (event.action === 'install') return;
           if (event.status === 'finished' || event.status === 'error') {
             busyRef.current = null;
             setBusy(null);
@@ -131,7 +139,7 @@ export function useLauncher() {
     setPendingWrites((previous) => previous + 1);
     const task = configQueue.current.then(async () => {
       const current = configRef.current;
-      if (!current) throw new Error('启动器配置尚未加载');
+      if (!current) throw new Error(i18n.t('messages.configNotReady'));
       const config = await operation(current);
       configRef.current = config;
       if (lifecycle.current === generation) {
@@ -152,12 +160,22 @@ export function useLauncher() {
     const generation = lifecycle.current;
     const request = ++scanSequence.current;
     const directory = configRef.current?.settings.game_directory;
+    const profileRoots = JSON.stringify(
+      configRef.current?.profiles.map((profile) => [profile.instance_key, profile.game_directory]),
+    );
     try {
       const instances = await api.inspectInstances();
       if (
         generation === lifecycle.current &&
         request === scanSequence.current &&
-        directory === configRef.current?.settings.game_directory
+        directory === configRef.current?.settings.game_directory &&
+        profileRoots ===
+          JSON.stringify(
+            configRef.current?.profiles.map((profile) => [
+              profile.instance_key,
+              profile.game_directory,
+            ]),
+          )
       ) {
         setInstalled(instances);
       }
@@ -167,31 +185,12 @@ export function useLauncher() {
   }, [reportError]);
 
   const directory = bootstrap?.config.settings.game_directory;
+  const profileRoots = JSON.stringify(
+    bootstrap?.config.profiles.map((profile) => [profile.instance_key, profile.game_directory]),
+  );
   useEffect(() => {
     if (directory) void scan();
-  }, [directory, scan]);
-
-  const refreshCatalog = useCallback(async () => {
-    if (catalogPending.current) return;
-    catalogPending.current = true;
-    const generation = lifecycle.current;
-    setCatalogBusy(true);
-    setCatalogError('');
-    try {
-      const result = await api.catalog();
-      if (generation !== lifecycle.current) return;
-      setVersions(result);
-      addLog('info', `获取到 ${result.length} 个 Minecraft 版本`);
-    } catch (error) {
-      if (generation !== lifecycle.current) return;
-      const message = errorMessage(error);
-      setCatalogError(message);
-      addLog('error', message);
-    } finally {
-      catalogPending.current = false;
-      if (generation === lifecycle.current) setCatalogBusy(false);
-    }
-  }, [addLog]);
+  }, [directory, profileRoots, scan]);
 
   const patchSettings = useCallback(<K extends keyof Settings>(key: K, value: Settings[K]) => {
     setDraft((previous) => (previous ? { ...previous, [key]: value } : previous));
@@ -216,8 +215,8 @@ export function useLauncher() {
           ? structuredClone(config.settings)
           : previous,
       );
-      notify('设置已保存');
-      addLog('info', '启动器设置已保存');
+      notify(i18n.t('messages.settingsSaved'));
+      addLog('info', i18n.t('messages.settingsLog'));
       return true;
     } catch (error) {
       if (generation === lifecycle.current) reportError(error);
@@ -243,7 +242,7 @@ export function useLauncher() {
           ? { ...previous, offline_username: config.settings.offline_username }
           : previous,
       );
-      notify('账户已保存');
+      notify(i18n.t('messages.accountSaved'));
       return true;
     } catch (error) {
       if (generation === lifecycle.current) reportError(error);
@@ -295,7 +294,7 @@ export function useLauncher() {
           : api.createProfile(editor.name, editor.version),
       );
       if (generation !== lifecycle.current) return false;
-      notify(editor.editKey ? '实例已重命名' : '实例已创建，接下来可以安装游戏文件');
+      notify(i18n.t(editor.editKey ? 'messages.profileRenamed' : 'messages.profileCreated'));
       return true;
     } catch (error) {
       if (generation === lifecycle.current) reportError(error);
@@ -304,30 +303,73 @@ export function useLauncher() {
   };
 
   const runAction = async (action: 'install' | 'launch', profile: GameProfile) => {
+    if (action === 'install') {
+      try {
+        await api.enqueueInstall(profile.instance_key);
+        notify(i18n.t('messages.profileQueued', { name: profile.name }));
+      } catch (error) {
+        reportError(error);
+      }
+      return;
+    }
     if (busyRef.current) return;
     const request = ++actionSequence.current;
     const generation = lifecycle.current;
     const activity: Activity = {
       action,
       status: 'started',
-      message: action === 'install' ? `正在安装 ${profile.name}` : '正在检查 Java 并启动游戏',
+      message: i18n.t('messages.checkingJava'),
     };
     busyRef.current = activity;
     setBusy(activity);
     try {
-      if (action === 'install') {
-        await api.prepareInstance(profile.instance_key);
-        await scan();
-        if (request === actionSequence.current && generation === lifecycle.current) {
-          busyRef.current = null;
-          setBusy(null);
-        }
-      } else await api.launchInstance(profile.instance_key);
+      await api.launchInstance(profile.instance_key);
     } catch (error) {
       if (request !== actionSequence.current || generation !== lifecycle.current) return;
       busyRef.current = null;
       setBusy(null);
       reportError(error);
+    }
+  };
+
+  const updateProfile = async (profile: GameProfile): Promise<boolean> => {
+    try {
+      if (!configRef.current) return false;
+      validateProfileSettings(profile, configRef.current.settings);
+      await enqueueConfig(() => api.updateProfile(profile));
+      notify(i18n.t('messages.profileSettingsSaved'));
+      return true;
+    } catch (error) {
+      reportError(error);
+      return false;
+    }
+  };
+
+  const importProfiles = async (directory: string, keys: string[]): Promise<boolean> => {
+    try {
+      await enqueueConfig(() => api.importInstances(directory, keys));
+      notify(i18n.t('messages.profilesImported'));
+      return true;
+    } catch (error) {
+      reportError(error);
+      return false;
+    }
+  };
+
+  const removeProfile = async (key: string, deleteFiles: boolean): Promise<boolean> => {
+    try {
+      await enqueueConfig(() => api.removeProfile(key, deleteFiles));
+      await scan();
+      notify(i18n.t(deleteFiles ? 'messages.profileRemovedWithFiles' : 'messages.profileRemoved'));
+      return true;
+    } catch (error) {
+      reportError(error);
+      try {
+        await enqueueConfig(async () => (await api.getConfig()).config);
+      } catch (refreshError) {
+        reportError(refreshError);
+      }
+      return false;
     }
   };
 
@@ -339,16 +381,72 @@ export function useLauncher() {
     }
   };
 
+  const writePresets = async (
+    update: (presets: AppearancePreset[]) => AppearancePreset[],
+    messageKey: string,
+  ): Promise<void> => {
+    const generation = lifecycle.current;
+    try {
+      await enqueueConfig((current) => {
+        const presets = update(current.appearance_presets);
+        if (presets.length > MAX_APPEARANCE_PRESETS)
+          throw new Error(i18n.t('presets.errors.limit'));
+        return api.saveConfig({ ...current, appearance_presets: presets });
+      });
+      if (generation === lifecycle.current) notify(i18n.t(messageKey));
+    } catch (error) {
+      if (generation === lifecycle.current) reportError(error);
+      throw error;
+    }
+  };
+
+  const saveAppearancePreset = async (name: string): Promise<void> => {
+    if (!draft) throw new Error(i18n.t('messages.configNotReady'));
+    const preset = createAppearancePreset(name, draft.appearance);
+    await writePresets((presets) => [...presets, preset], 'presets.saved');
+  };
+
+  const applyAppearancePreset = (id: string): void => {
+    const preset = configRef.current?.appearance_presets.find((item) => item.id === id);
+    if (!preset) {
+      reportError(i18n.t('presets.errors.missing'));
+      return;
+    }
+    patchSettings('appearance', structuredClone(preset.appearance));
+    notify(i18n.t('presets.applied'));
+  };
+
+  const renameAppearancePreset = async (id: string, name: string): Promise<void> => {
+    const trimmed = validatePresetName(name);
+    await writePresets((presets) => {
+      if (!presets.some((preset) => preset.id === id))
+        throw new Error(i18n.t('presets.errors.missing'));
+      return presets.map((preset) => (preset.id === id ? { ...preset, name: trimmed } : preset));
+    }, 'presets.renamed');
+  };
+
+  const removeAppearancePreset = async (id: string): Promise<void> => {
+    await writePresets((presets) => {
+      if (!presets.some((preset) => preset.id === id))
+        throw new Error(i18n.t('presets.errors.missing'));
+      return presets.filter((preset) => preset.id !== id);
+    }, 'presets.removed');
+  };
+
+  const importAppearancePreset = async (json: string): Promise<void> => {
+    const imported = parseAppearancePreset(json);
+    const preset = createAppearancePreset(imported.name, imported.appearance);
+    await writePresets((presets) => [...presets, preset], 'presets.imported');
+  };
+
   return {
     bootstrap,
     draft,
     fatal,
-    versions,
     installed,
     busy,
     logs,
-    catalogBusy,
-    catalogError,
+    ...catalog,
     saving: pendingWrites > 0,
     notify,
     reportError,
@@ -360,9 +458,16 @@ export function useLauncher() {
     selectProfile,
     saveProfile,
     runAction,
-    refreshCatalog,
+    updateProfile,
+    importProfiles,
+    removeProfile,
     scan,
     stopGame,
+    saveAppearancePreset,
+    applyAppearancePreset,
+    renameAppearancePreset,
+    removeAppearancePreset,
+    importAppearancePreset,
     clearLogs: () => setLogs([]),
   };
 }

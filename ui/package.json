@@ -1,20 +1,23 @@
 {
   "name": "paradox-launcher-ui",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 1420 --strictPort",
     "build": "tsc -b && vite build",
     "check": "tsc -b --pretty false",
+    "check:i18n": "node scripts/check-locales.mjs",
     "lint": "eslint src vite.config.ts --max-warnings 0"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
     "@tauri-apps/api": "^2.9.0",
+    "i18next": "^26.5.10",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-i18next": "^17.1.9",
     "sonner": "^2.0.8"
   },
   "devDependencies": {

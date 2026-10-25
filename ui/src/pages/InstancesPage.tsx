@@ -1,5 +1,6 @@
+import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
-import { Folder, Layers, Plus, RefreshCw, Search } from 'lucide-react';
+import { Folder, Import, Layers, Plus, RefreshCw, Search } from 'lucide-react';
 import { Panel } from '../components/ui';
 import type { AppConfig, GameProfile } from '../types';
 
@@ -11,6 +12,7 @@ interface InstancesPageProps {
   onSearch: (value: string) => void;
   onScan: () => void;
   onCreate: () => void;
+  onImport: () => void;
 }
 
 export default function InstancesPage({
@@ -21,7 +23,9 @@ export default function InstancesPage({
   onSearch,
   onScan,
   onCreate,
+  onImport,
 }: InstancesPageProps) {
+  const { t } = useTranslation();
   const filteredProfiles = config.profiles.filter((profile) =>
     `${profile.name} ${profile.game_version}`.toLowerCase().includes(search.toLowerCase()),
   );
@@ -31,15 +35,19 @@ export default function InstancesPage({
         <div className="search">
           <Search size={17} />
           <input
-            aria-label="搜索实例"
-            placeholder="搜索实例名称或游戏版本…"
+            aria-label={t('instances.search')}
+            placeholder={t('instances.searchPlaceholder')}
             value={search}
             onChange={(event) => onSearch(event.target.value)}
           />
         </div>
         <button className="secondary" onClick={() => onScan()}>
           <RefreshCw size={16} />
-          扫描本地
+          {t('instances.scan')}
+        </button>
+        <button className="secondary" disabled={busy} onClick={onImport}>
+          <Import size={16} />
+          {t('instances.import')}
         </button>
       </div>
       <div className="profile-list">{filteredProfiles.map(renderProfile)}</div>
@@ -47,15 +55,15 @@ export default function InstancesPage({
       {config.profiles.length > 0 && filteredProfiles.length === 0 && (
         <Panel className="empty-state">
           <Search />
-          <h3>没有匹配的实例</h3>
-          <p>试试其他名称或版本号。</p>
+          <h3>{t('instances.noMatches')}</h3>
+          <p>{t('instances.trySearch')}</p>
         </Panel>
       )}
       <Panel className="info-panel">
         <Folder size={19} />
         <div>
-          <strong>共享资源，独立世界</strong>
-          <p>每个实例拥有独立的存档与配置，游戏资源由 Elemental 统一管理。</p>
+          <strong>{t('instances.storageTitle')}</strong>
+          <p>{t('instances.storageDescription')}</p>
           <code>{config.settings.game_directory}</code>
         </div>
       </Panel>
@@ -64,18 +72,19 @@ export default function InstancesPage({
 }
 
 function EmptyState({ busy, onCreate }: { busy: boolean; onCreate: () => void }) {
+  const { t } = useTranslation();
   return (
     <Panel className="empty-state compact-empty">
       <div className="empty-icon">
         <Layers size={27} />
       </div>
       <div>
-        <h3>你的冒险，尚待开启</h3>
-        <p>创建第一个实例，让这个空间成为你的世界。</p>
+        <h3>{t('instances.emptyTitle')}</h3>
+        <p>{t('instances.emptyDescription')}</p>
       </div>
       <button className="secondary" disabled={busy} onClick={onCreate}>
         <Plus size={16} />
-        创建实例
+        {t('common.createInstance')}
       </button>
     </Panel>
   );

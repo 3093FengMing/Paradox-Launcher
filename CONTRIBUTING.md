@@ -34,6 +34,7 @@ npm run format
 cargo fmt --all
 npm run format:check
 npm run lint:ui
+npm run check:i18n
 npm run build:ui
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --locked -- -D warnings

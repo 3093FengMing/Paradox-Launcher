@@ -8,26 +8,26 @@ interface NavigationItem {
 }
 
 export const navigation: NavigationItem[] = [
-  { id: 'home', label: '开始游戏', icon: Home },
-  { id: 'instances', label: '我的实例', icon: Layers },
-  { id: 'downloads', label: '版本下载', icon: Download },
-  { id: 'accounts', label: '账户管理', icon: UserRound },
+  { id: 'home', label: 'nav.home', icon: Home },
+  { id: 'instances', label: 'nav.instances', icon: Layers },
+  { id: 'downloads', label: 'nav.downloads', icon: Download },
+  { id: 'accounts', label: 'nav.accounts', icon: UserRound },
 ];
 
 export const pageNames: Record<Page, string> = {
-  home: '概览',
-  instances: '我的实例',
-  downloads: '版本下载',
-  accounts: '账户管理',
-  settings: '启动器设置',
-  logs: '运行日志',
+  home: 'pages.home.title',
+  instances: 'pages.instances.title',
+  downloads: 'pages.downloads.title',
+  accounts: 'pages.accounts.title',
+  settings: 'pages.settings.title',
+  logs: 'pages.logs.title',
 };
 
 export const pageDescriptions: Record<Page, string> = {
-  home: '选择一个世界，开始今天的游戏。',
-  instances: '独立配置，有序管理。为每个世界保留自己的空间。',
-  downloads: '查找 Minecraft 版本，创建属于你的游戏实例。',
-  accounts: '管理你的游戏身份，让下一次出发更简单。',
-  settings: '从界面到游戏，把每一个细节调整为你喜欢的样子。',
-  logs: '查看任务状态和游戏输出，快速定位启动问题。',
+  home: 'pages.home.description',
+  instances: 'pages.instances.description',
+  downloads: 'pages.downloads.description',
+  accounts: 'pages.accounts.description',
+  settings: 'pages.settings.description',
+  logs: 'pages.logs.description',
 };

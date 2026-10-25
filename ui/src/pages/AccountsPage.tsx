@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, Check } from 'lucide-react';
 import { Badge, Field, Panel } from '../components/ui';
 
@@ -20,32 +21,32 @@ export default function AccountsPage({
   onSave,
   onRoadmap,
 }: AccountsPageProps) {
+  const { t } = useTranslation();
   return (
     <div className="account-grid">
       <Panel className="account-detail">
         <div className="card-eyebrow">
-          离线身份<Badge>已启用</Badge>
+          {t('accounts.offlineIdentity')}
+          <Badge>{t('accounts.enabled')}</Badge>
         </div>
         <div className="account-title">
           <div className="avatar large">{username.slice(0, 1).toUpperCase()}</div>
           <div>
             <h2>{username}</h2>
-            <p>Offline · 本地游戏身份</p>
+            <p>{t('accounts.localIdentity')}</p>
           </div>
         </div>
-        <Field label="玩家名称" description="3–16 位英文字母、数字或下划线">
+        <Field label={t('accounts.playerName')} description={t('accounts.nameDescription')}>
           <input
             value={draftUsername}
             onChange={(event) => onUsernameChange(event.target.value)}
             maxLength={16}
           />
         </Field>
-        <p className="help-text">
-          离线账户用于本地游玩；需要正版验证的服务器请使用 Microsoft 账户。
-        </p>
+        <p className="help-text">{t('accounts.offlineHelp')}</p>
         <button className="primary" disabled={!!busy || saving} onClick={() => onSave()}>
           <Check size={17} />
-          保存账户
+          {t('accounts.save')}
         </button>
       </Panel>
       <Panel className="planned-card">
@@ -55,14 +56,11 @@ export default function AccountsPage({
           <i />
           <i />
         </div>
-        <h2>Microsoft 账户</h2>
+        <h2>{t('accounts.microsoft')}</h2>
         <Badge muted>Roadmap · v0.3</Badge>
-        <p>
-          设备代码登录、令牌安全存储
-          <br />与 Minecraft 正版权限验证。
-        </p>
+        <p>{t('accounts.microsoftDescription')}</p>
         <button className="secondary" onClick={() => onRoadmap()}>
-          查看开发计划
+          {t('accounts.roadmap')}
           <ArrowRight size={16} />
         </button>
       </Panel>

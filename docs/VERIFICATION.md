@@ -1,115 +1,111 @@
 # 验证记录
 
-记录日期：2026-10-25。环境为当前 Windows 开发机；Rust / Cargo 1.92、Node.js 24、npm 11。下表明确区分此前已取得结果与双样式集成后的复核。
+更新日期：2026-10-26（Asia/Shanghai）。以下记录基于当前 Windows 开发机的实际结果。v0.2 功能测试版已完成构建与交付文件校验，原生视觉和跨平台发行验收的剩余范围单独列出。
 
-## 已取得的结果
+## v0.2 原版运行矩阵
 
-以下结果来自新增沉浸式界面之前的基础框架验证，不能直接代替最新源码的检查结果。
+汇总记录为 `.test-data/v0.2-runtime-matrix.json`，验证工具使用 Rust 1.92.0，每组包含原始 JSON 与日志路径。四组均通过：两次游戏就绪由渲染、材质图集和声音引擎日志判定，自然退出记录的退出码为 0。日志证据不等同于游戏主菜单视觉截图验收。
 
-| 检查                                            | 结果                               | 范围                                                           |
-| ----------------------------------------------- | ---------------------------------- | -------------------------------------------------------------- |
-| 前端 TypeScript 与 Vite 生产构建                | 通过                               | 当时的现代工作台、设置、Base UI Dialog 与 Sonner 集成          |
-| `cargo check --workspace --all-targets`         | 通过                               | SDK 固定提交与 vendor 兼容补丁可编译                           |
-| Clippy，warnings 作为错误                       | 通过                               | 当时的 workspace 源码                                          |
-| `cargo test --workspace --all-targets --locked` | 7 项通过                           | 配置与领域逻辑；不包含游戏安装启动                             |
-| `--check-catalog`                               | 获取 920 个版本                    | 真实 Elemental / Mojang 目录请求                               |
-| `--inspect`                                     | 默认游戏目录正常，0 个实例         | 真实 SDK 磁盘扫描；当时没有游戏安装                            |
-| 原生桌面窗口                                    | 启动成功，可读取 UI 无障碍树       | Tauri 应用实际运行；当时的旧界面版本                           |
-| 现代工作台截图                                  | 已保存 `docs/screenshots/home.png` | 浏览器中实际渲染的宽视口界面                                   |
-| 设计技能安装                                    | 15 个技能已安装                    | `emilkowalski/skills@2d228630ba1446365f614a108cb8252f1feda202` |
+| Minecraft              | Java | 首次实际传输     | 再次修复传输     | 两次启动与自然退出 | 状态               |
+| ---------------------- | ---- | ---------------- | ---------------- | ------------------ | ------------------ |
+| 1.12.2                 | 8    | 180,858,254 字节 | 0 字节，0 个文件 | ready=true，exit=0 | 通过               |
+| 1.20.1                 | 17   | 623,394,062 字节 | 0 字节，0 个文件 | ready=true，exit=0 | 通过               |
+| 1.21.1                 | 21   | 919,460,315 字节 | 0 字节，0 个文件 | ready=true，exit=0 | 通过               |
+| 26.3，验证时最新稳定版 | 25   | 511,526,738 字节 | 0 字节，0 个文件 | ready=true，exit=0 | 兼容处理后复验通过 |
 
-原生截图 / 部分自动化点击曾受工具超时或 geometry unavailable 限制。这个限制没有否定原生窗口的成功启动，也不能算作原生交互验收通过。
+1.21.1 的完整安装位于 `.test-data/v0.2-中文路径 全新安装/`。报告确认游戏目录初始为空，安装 3,960 个文件，再次修复复用全部文件；两次自然退出耗时分别为 72 与 113 秒。该报告同时记录实际下载并校验 Adoptium Java 21 JRE，实际传输 48,999,141 字节，检测主版本 21，并成功用于游戏启动。旧失败或中断记录保留在历史目录。
 
-## 双样式集成复核（此前）
+26.3 最初因元数据的 `natives/java` 与 SDK 实际解压目录 `natives/` 不一致而退出，原失败记录保留。应用在启动命令中追加实际原生库搜索目录后，两次启动均日志就绪并自然退出，耗时分别为 178 与 203 秒。复验安装及再次修复传输均为 0 字节，首次安装传输量单独保留，避免将复用安装误记为全新下载。
 
-本轮新增 `Appearance` 字段、沉浸式布局、自绘标题栏和窗口权限，并修复主动停止的完成状态。本轮复核结果如下：
+Windows OpenGL 游戏截图曾超时，因此当前矩阵证明安装、运行日志就绪、自然退出和文件复用；原生游戏主菜单的视觉截图未完成。
 
-| 检查                                                             | 当前结果      | 需要保留的证据                                                                 |
-| ---------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------ |
-| `npm run build:ui`                                               | 通过          | 最终 TypeScript 与 Vite 生产构建完成                                           |
-| `cargo fmt --all -- --check`                                     | 通过          | Rust 格式检查完成                                                              |
-| `cargo check --workspace --all-targets --locked`                 | 通过          | 新模型、窗口权限和进程命令可编译                                               |
-| `cargo clippy --workspace --all-targets --locked -- -D warnings` | 通过          | 无 warnings                                                                    |
-| `cargo test --workspace --all-targets --locked`                  | 7 项通过      | 配置、路径安全、领域逻辑与版本排序                                             |
-| 浏览器双样式切换与保存                                           | 通过          | 切换并保存两种布局，重载保留样式和实例                                         |
-| 实例菜单与创建 / 重命名弹窗                                      | 通过          | 两个中文名称实例；菜单选择、Escape 关闭与焦点返回；方向键和 Enter 打开创建表单 |
-| 背景效果、主题与紧凑侧栏                                         | 通过          | 三个滑块改变 CSS 变量并保存；背景开关、浅色 / 深色、紧凑侧栏切换               |
-| 浏览器最小桌面尺寸                                               | 通过          | 980 × 700，documentElement 无横向溢出；仅网页预览                              |
-| 最新原生桌面版本                                                 | 仅确认启动    | 已读取最新界面无障碍树；按用户要求暂停原生渲染与窗口控制验收                   |
-| 本地 Git 基线                                                    | main 初始提交 | 用 `git log -1` 查看；项目未配置远程                                           |
+## v0.2 最终质量与交付复核
 
-截图保存在 `docs/screenshots/immersive.png`、`modern.png`、`appearance.png` 和 `immersive-minimum.png`。
-截图来自浏览器实际渲染；其中两个实例仅为浏览器本地预览数据，初次运行桌面启动器仍为空实例库。
-浏览器截图中的翻译扩展浮标来自测试浏览器，不是启动器组件。
+| 检查                                | 当前状态                   | 范围 / 证据                                                                                                                          |
+| ----------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 版本统一 0.2.0                      | 通过                       | Cargo workspace、Tauri、根 / UI package 与锁文件；locked 检查通过                                                                    |
+| Web 格式、ESLint、TypeScript / Vite | 通过                       | 最终 `format:check`、`lint:ui`、TypeScript 与 Vite 生产构建                                                                          |
+| Rust 格式、check、Clippy            | 通过                       | `cargo fmt`、workspace all-targets check / Clippy，locked，warnings 作为错误                                                         |
+| Rust 单元与异步故障测试             | 61 项全部通过              | 55 项 core + 6 项 desktop，覆盖配置、预设严格校验与磁盘持久化、路径、移除保护、缓存、网络、下载故障 / 取消 / 复用、Java 包校验与队列 |
+| i18n 资源与运行时                   | 通过                       | 502 个资源键、420 处静态翻译调用；30 项运行时检查覆盖系统语言响应、切换、复数、错误翻译与旧配置迁移                                  |
+| 外观预设与双语浏览器交互            | 通过                       | 预设 CRUD、JSON 导入 / 导出、复制、语言切换与重载、外观重载、草稿隔离及 320 × 240 / 120% 无溢出                                      |
+| 下载队列事件与 Java 自动刷新        | 代码审查 / 静态检查通过    | 先订阅再快照、过期快照排除、并发检测合并、任务期间按钮状态；原生并发操作尚未单独复验                                                 |
+| 原生 Tauri 窗口                     | 基本键盘交互通过           | 实例首页、Tab / Enter 打开设置、最大化 / 还原、切现代样式保存与空闲关闭                                                              |
+| 原生样式持久化                      | 通过                       | 交付目录 exe 重启后恢复已保存的现代工作台；新增预设 / 双语已完成浏览器和存储测试，尚未完整原生交互复验                               |
+| 原生弹窗与文件选择                  | 尚未完整覆盖               | 鼠标操作受工具几何错误限制；全部弹窗与文件选择器留待后续原生验收                                                                     |
+| 游戏期间关闭行为                    | 功能已实现，实际行为待补充 | 返回启动器、隐藏继续、停止并退出、失败时保留窗口                                                                                     |
+| 路径与配置错误                      | 通过已列范围               | 中文 / 空格全新安装、最终 exe 切换已安装 / 空目录、损坏配置退出并保留文件；只读配置写入失败由真实文件测试覆盖                        |
+| custom-protocol release             | 通过                       | `npm run build -- --features tauri/custom-protocol -- --locked`，固定 Rust 1.92.0，包含预设与双语资源                                |
+| 独立 v0.2 exe / CLI / PE / SHA-256  | 通过                       | 最终产物大小、SHA-256、Windows x64 GUI PE 与 5 组 CLI 检查已归档                                                                     |
 
-## v0.1 规范整理与独立测试版（本轮）
+Vite 最终 JavaScript bundle 为 627.11 kB，产生体积提示，构建成功。Rust 和 CI 固定使用 1.92.0；功能实现、代码检查和运行验收分别记录。
 
-本轮拆分页面、Hook、复用组件和纯逻辑，增加规范工具与配置加载错误路径，修正 Tauri 构建 hook 的前端工作目录，并抽出 CLI。以下结果来自最终源码及正式生成的测试文件。
+## v0.2 交付文件
 
-| 检查                                                | 当前结果 | 范围                                                                             |
-| --------------------------------------------------- | -------- | -------------------------------------------------------------------------------- |
-| `npm run format:check`                              | 通过     | Web 源码、CSS 与文档；排除 vendor 和生成资产                                     |
-| `npm run lint:ui`                                   | 通过     | ESLint 10 的类型、Promise、Hooks、Fast Refresh 规则，零 warning                  |
-| TypeScript / Vite 生产构建                          | 通过     | 最终重构后的前端由 Tauri beforeBuildCommand 成功构建                             |
-| Rust 格式与 Clippy                                  | 通过     | `cargo fmt --all -- --check` 与 Clippy `-D warnings`                             |
-| Rust 单元测试                                       | 7 项通过 | workspace all-targets，包含配置与路径边界                                        |
-| `npm run build -- --features tauri/custom-protocol` | 通过     | Windows x64 release，依赖特性记录确认使用 custom-protocol                        |
-| 独立 exe 文件                                       | 已生成   | 22,462,464 字节；PE machine 0x8664、GUI subsystem 2                              |
-| release CLI 诊断                                    | 通过     | 交付目录的 exe 执行 `--version`、`--inspect`、`--check-catalog`；取得 920 个版本 |
-| 损坏配置保护                                        | CLI 通过 | 错误退出且损坏文件内容保留；GUI 错误入口已修复，未做原生渲染验收                 |
-| 重构后网页回归                                      | 通过     | 双样式保存、页面导航、创建弹窗与 Escape、真实目录查询和日志                      |
-| 原生窗口渲染                                        | 未执行   | 按用户要求留给后续测试，不宣称通过                                               |
-| v0.2 草稿                                           | 未接入   | 目录缓存草稿单独保留，不纳入 v0.1 exe                                            |
+最终 exe 为 `releases/v0.2.0/Paradox-Launcher-0.2.0-windows-x64.exe`，包含外观预设和简体中文 / English 资源，大小为 **25,362,432 字节**。PE machine 为 `0x8664`，GUI subsystem 为 `2`。SHA-256：
 
-交付文件：`releases/v0.1.0/Paradox-Launcher-0.1.0-windows-x64.exe`。
+```text
+b5d2f6027a33e640e6de66cf1e57c4e8f5b6fc33bcd3cec0311c2591cc998158
+```
 
-SHA-256：
+2026-10-26 对最终文件执行的只读 CLI 检查全部符合预期：`--version` 输出 `Paradox Launcher 0.2.0`；已安装测试目录的 `--inspect` 返回 1 个 Vanilla 实例，切换空目录返回 0 个；损坏配置退出码为 1 且原文件 SHA-256 保持不变；`--check-catalog` 返回 920 个版本，首项为 26.3。所有检查均保留配置原文件，记录位于 `.test-data/v0.2-cli/final-report.json`。
+
+测试包为 `releases/Paradox-Launcher-0.2.0-windows-x64.zip`，包含 exe、许可证、测试指南、预设与多语言说明、验证记录和构建信息。`build-info.json` 与 `SHA256SUMS.txt` 随 exe 提供；包内不包含测试游戏、Java 运行时或个人配置。此前 v0.1 exe 保留在独立交付目录。
+
+## v0.2 外观预设与多语言验收
+
+首批语言为简体中文、English 和跟随系统，翻译资源内嵌，无需联网。浏览器实际验证了即时切换、保存后重载恢复、中文 / emoji 预设命名、重命名、导出全部 11 个外观字段和复制反馈。无效 JSON 显示本地化错误并保留弹窗；有效导入生成新预设；应用预设改变风格、颜色与模糊，保存后重载恢复。
+
+预设库操作不会提交尚未保存的语言或其他设置。验收中，英文已保存、中文仍为草稿时重命名预设，重载仍恢复英文；取消移除保留记录，移除全部测试预设后重载为空库，当前外观继续保留。后端严格验证完整预设字段、UUID 语义重复和数量 / 名称限制；真实磁盘测试确认非法数据或写入失败保留原配置。
+
+浏览器覆盖 640 × 480 与 320 × 240。在 320 × 240、120% 缩放下，document 无横纵溢出，预设卡片和设置面板无内部横向溢出。正文保持独立滚动。实际截图为 `docs/screenshots/v0.2-presets-en.jpg`（英文沉浸式）和 `v0.2-presets-zh.jpg`（中文现代工作台）。使用与格式见 [CUSTOMIZATION-I18N.md](CUSTOMIZATION-I18N.md)。
+
+这批新增交互由浏览器及存储测试覆盖；最终 exe 的完整预设 / 双语原生交互尚未单独复验。
+
+## v0.2 原生桌面交互记录
+
+使用正式构建 exe 加载测试配置，首页显示已有测试实例。通过 Tab / Enter 进入设置；键盘调用最大化后 OS 无障碍窗口按钮变为 Restore，还原后变回 Maximize，确认原生窗口状态实际改变。
+
+切换为现代工作台并保存，配置文件的 `appearance.interface_style` 确认为 `modern`。空闲状态按 Alt+F4 后测试进程 78304 已退出，确认正常关闭。从交付目录重新启动后，现代工作台正确恢复，确认原生样式持久化。全部弹窗与运行期间关闭行为尚未完整验收。
+
+原生截图捕获仍超时，鼠标点击返回 geometry unavailable。已取得的无障碍状态、键盘交互和配置文件结果可证明上述操作，完整视觉截图与鼠标拖动任意尺寸尚未覆盖；高 DPI 与全部尺寸矩阵安排在后续发行验收。
+
+## 此前 v0.1 与双样式结果
+
+v0.1 已完成格式、ESLint、TypeScript / Vite、Cargo check、Clippy 与 7 项配置 / 领域单元测试。正式 custom-protocol Windows x64 exe 为 22,462,464 字节，PE machine 0x8664、GUI subsystem 2；交付文件 `releases/v0.1.0/Paradox-Launcher-0.1.0-windows-x64.exe` 的 SHA-256：
 
 ```text
 b56b3626778fddfb5c2501e0010d50e4c77d6e9ad4e062460d574d7821207aa9
 ```
 
-手工测试步骤和当前限制见 [TESTING-v0.1.md](TESTING-v0.1.md)。发布版不需要 Rust / Node / Vite，运行环境仍需要 WebView2，以及所选 Minecraft 对应的本地 Java。
+该 exe 的 `--version`、`--inspect`、`--check-catalog` 已验证，目录查询取得 920 个版本。损坏配置的 CLI 检查失败退出且保留原文件。上述属于历史构建；最终 v0.2 的独立结果见交付文件章节。
 
-## 窗口缩放与滚动修复（2026-10-25）
+浏览器已验证双样式切换与保存、创建 / 重命名、Escape 与焦点返回、外观滑块、主题、紧凑侧栏和真实目录查询。窗口适配检查覆盖 1240 × 720、980 × 600、320 × 240 和 120% 缩放：document 无横纵溢出，正文滚动时标题栏 / 侧栏稳定，切页重置正文位置。
 
-- 应用高度固定到视口，标题栏与侧栏保持稳定，正文独立滚动；切页重置正文滚动位置。
-- 正文、侧栏与弹窗采用透明轨道的细滚动条，悬停或键盘焦点进入时提高对比度。
-- 默认窗口改为 1240 × 720，移除应用级最小宽高，显式允许调整大小。
-- 小窗口的设置、账户、版本行和日志允许换行；沉浸首页在小窗口使用正常流布局，避免提示与启动按钮重叠。
-- 网页检查覆盖 1240 × 720、980 × 600 和 320 × 240，120% 缩放；document 没有横纵溢出，正文滚动后标题栏与侧栏保持原位置，切换页面正文回到顶部。
-- 本轮仍未测试原生窗口渲染。网页截图：`docs/screenshots/scrolling-modern-980x600.png`。
+历史浏览器截图保存在 `docs/screenshots/immersive.png`、`modern.png`、`appearance.png`、`immersive-minimum.png` 和 `scrolling-modern-980x600.png`。实例为浏览器验证数据，首次启动桌面程序保持空实例库。浏览器翻译扩展浮标不属于启动器界面。
 
-## 尚未完成的验收
+## 尚未覆盖的发行范围
 
-- 没有在干净目录完成完整 Minecraft 下载、Java 启动、退出与再次启动闭环。
-- 没有实际验证主动停止游戏、崩溃退出与停止失败的运行时行为；修复目前属于代码层面的实现。
-- 关闭启动器不自动结束 Java；测试时建议先点击“停止游戏”。
-- 原生窗口渲染和窗口按钮操作按用户要求留到后续，不作为本轮验收项。
-- 没有完成长实例名称、所有缩放比例和高 DPI 的视觉兼容矩阵。
-- 没有完成 Java 8 / 17 / 21、路径含中文 / 空格、权限不足、网络中断的兼容矩阵。
-- 没有验证 Microsoft 登录、loader、整合包或 Java 自动下载，这些功能仍在路线图中。
-- Windows / Linux / macOS 的 CI 已配置，但没有远程运行结果；没有完成系统安装包或高 DPI 的全面验收。
+- Windows 高 DPI、多显示器及全部缩放比例的完整视觉矩阵。
+- Linux / macOS 原生桌面与 Java 下载；目前自动 Java 下载开放 Windows x64 / ARM64。
+- 所有代理、镜像服务与实际网络环境；当前镜像要求兼容 Mojang 元数据、assets 和 maven 路径。
+- Microsoft 正版登录、loader、整合包、自动更新、代码签名和系统安装包；这些功能属于后续里程碑。
+- GitHub Actions 远程运行结果；存在 CI 配置不代表远程平台已经通过。
 
-## 复现方式
+## 复现
 
 ```powershell
 npm ci
 npm --prefix ui ci
 npm run format:check
 npm run lint:ui
+npm run check:i18n
 npm run build:ui
 cargo fmt --all -- --check
 cargo check --workspace --all-targets --locked
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --all-targets --locked
+npm run build -- --features tauri/custom-protocol -- --locked
 ```
 
-SDK 只读检查：
-
-```powershell
-cargo run -p paradox-launcher -- --check-catalog
-cargo run -p paradox-launcher -- --inspect
-```
-
-桌面验证使用 `npm run dev`；仅前端使用 `npm run dev:ui`。可设置 `PARADOX_CONFIG` 为独立配置文件，网页预览则使用浏览器本地存储，两者的数据相互独立。
+游戏矩阵工具会下载并运行真实游戏，使用独立绝对目录，按 [v0.2 测试指南](TESTING-v0.2.md) 操作。桌面 `PARADOX_CONFIG` 与网页预览本地存储相互独立；指定配置路径后也应显式设置测试游戏根目录。

@@ -1,5 +1,7 @@
+import { useTranslation } from 'react-i18next';
 import { Box, ChevronRight, Settings2, Terminal } from 'lucide-react';
 import { navigation } from '../lib/navigation';
+import { appVersion } from '../lib/version';
 import type { AppConfig, Page } from '../types';
 
 interface AppSidebarProps {
@@ -19,6 +21,7 @@ export default function AppSidebar({
   hasErrors,
   onNavigate,
 }: AppSidebarProps) {
+  const { t } = useTranslation();
   const username = config.settings.offline_username;
   return (
     <aside className="sidebar">
@@ -34,34 +37,34 @@ export default function AppSidebar({
       </div>
       {immersive && (
         <>
-          <div className="nav-caption account-caption">账户</div>
+          <div className="nav-caption account-caption">{t('nav.accountCaption')}</div>
           <button
             className={`sidebar-account ${page === 'accounts' ? 'active' : ''}`}
             onClick={() => onNavigate('accounts')}
-            title="账户管理"
+            title={t('nav.accounts')}
           >
             <div className="avatar">{username.slice(0, 1).toUpperCase()}</div>
             <div>
               <strong>{username}</strong>
-              <small>离线账户</small>
+              <small>{t('common.offlineAccount')}</small>
             </div>
             <ChevronRight size={14} />
           </button>
         </>
       )}
-      <div className="nav-caption">{immersive ? '游戏' : '工作空间'}</div>
+      <div className="nav-caption">{immersive ? t('nav.gameCaption') : t('nav.workspace')}</div>
       <nav>
         {navigation
           .filter((item) => !immersive || item.id !== 'accounts')
           .map((item) => (
             <button
               key={item.id}
-              title={item.label}
+              title={t(item.label)}
               className={`nav-item ${page === item.id ? 'active' : ''}`}
               onClick={() => onNavigate(item.id)}
             >
               <item.icon size={19} />
-              <span>{item.label}</span>
+              <span>{t(item.label)}</span>
               {item.id === 'instances' && config.profiles.length > 0 && (
                 <b>{config.profiles.length}</b>
               )}
@@ -72,25 +75,27 @@ export default function AppSidebar({
         <button
           className={`nav-item ${page === 'logs' ? 'active' : ''}`}
           onClick={() => onNavigate('logs')}
-          title="运行日志"
+          title={t('nav.logs')}
         >
           <Terminal size={18} />
-          <span>运行日志</span>
+          <span>{t('nav.logs')}</span>
           {hasErrors && <i className="error-dot" />}
         </button>
         <button
           className={`nav-item ${page === 'settings' ? 'active' : ''}`}
           onClick={() => onNavigate('settings')}
-          title="设置"
+          title={t('window.settings')}
         >
           <Settings2 size={18} />
-          <span>设置与个性化</span>
+          <span>{t('nav.settings')}</span>
         </button>
         <div className="engine">
           <span className="status-dot" />
           <div>
-            <strong>{desktop ? 'Elemental Engine' : '网页预览模式'}</strong>
-            <small>{desktop ? 'Rust 驱动 · v0.1.0' : '安装与启动请打开桌面应用'}</small>
+            <strong>{desktop ? 'Elemental Engine' : t('nav.preview')}</strong>
+            <small>
+              {desktop ? t('nav.rustVersion', { version: appVersion }) : t('nav.desktopRequired')}
+            </small>
           </div>
         </div>
       </div>

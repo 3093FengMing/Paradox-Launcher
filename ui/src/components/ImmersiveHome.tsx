@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, type CSSProperties } from 'react';
 import { Menu } from '@base-ui/react/menu';
 import {
@@ -18,11 +19,13 @@ import {
 } from 'lucide-react';
 import { readableAccent } from '../colors';
 import type { Activity, AppConfig, GameProfile, Page } from '../types';
+import { translateRuntimeMessage } from '../i18n';
 
 interface Props {
   config: AppConfig;
   active?: GameProfile;
   busy: Activity | null;
+  queueActive: boolean;
   desktop: boolean;
   installed: boolean;
   onCreate: () => void;
@@ -37,6 +40,7 @@ export default function ImmersiveHome({
   config,
   active,
   busy,
+  queueActive,
   desktop,
   installed,
   onCreate,
@@ -46,29 +50,33 @@ export default function ImmersiveHome({
   onStop,
   onCustomize,
 }: Props) {
+  const { t } = useTranslation();
   const [showHint, setShowHint] = useState(true);
   const [keyboardNavigation, setKeyboardNavigation] = useState(false);
   const working = busy?.status === 'started' || busy?.status === 'running';
+  const blockedByQueue = queueActive && (installed || !active);
   const running = busy?.action === 'launch' && busy.status === 'running';
   const hasProfiles = config.profiles.length > 0;
   const title = working
     ? running
-      ? '游戏正在运行'
+      ? t('immersive.running')
       : busy?.action === 'install'
-        ? '正在准备游戏'
-        : '正在启动游戏'
-    : active
-      ? installed
-        ? '启动游戏'
-        : '安装游戏'
-      : hasProfiles
-        ? '选择游戏实例'
-        : '创建游戏实例';
+        ? t('immersive.preparing')
+        : t('immersive.launching')
+    : blockedByQueue
+      ? t('immersive.waitingDownload')
+      : active
+        ? installed
+          ? t('common.launchGame')
+          : t('common.installGame')
+        : hasProfiles
+          ? t('immersive.selectInstance')
+          : t('immersive.createInstance');
   const detail = active
     ? `${active.name} · ${active.game_version}`
     : hasProfiles
-      ? '为下一次冒险选择一个世界'
-      : '从你的第一个世界开始';
+      ? t('immersive.chooseWorld')
+      : t('immersive.firstWorld');
   const menuVariables = {
     '--menu-accent': readableAccent(config.settings.appearance.accent_color, 'dark'),
     '--menu-radius': `${config.settings.appearance.border_radius}px`,
@@ -84,27 +92,27 @@ export default function ImmersiveHome({
   return (
     <section
       className="immersive-home"
-      aria-label="开始游戏"
+      aria-label={t('nav.home')}
       onKeyDownCapture={() => setKeyboardNavigation(true)}
       onPointerDownCapture={() => setKeyboardNavigation(false)}
     >
       {showHint && (
-        <aside className="immersive-customize-hint" aria-label="界面个性化">
+        <aside className="immersive-customize-hint" aria-label={t('immersive.customization')}>
           <div className="immersive-hint-icon">
             <Palette size={19} strokeWidth={1.7} />
           </div>
           <div className="immersive-hint-copy">
-            <h2>让这里成为你的主场</h2>
-            <p>切换界面风格，调整背景与透明度。</p>
+            <h2>{t('immersive.hintTitle')}</h2>
+            <p>{t('immersive.hintDescription')}</p>
             <button type="button" onClick={onCustomize}>
-              个性化界面
+              {t('immersive.customize')}
               <ChevronRight size={13} />
             </button>
           </div>
           <button
             type="button"
             className="immersive-hint-close"
-            aria-label="关闭个性化提示"
+            aria-label={t('immersive.closeHint')}
             onClick={() => setShowHint(false)}
           >
             <X size={16} />
@@ -113,32 +121,36 @@ export default function ImmersiveHome({
       )}
 
       <div className="immersive-launch-area">
-        {working && (
+        {(working || blockedByQueue) && (
           <div className="immersive-activity" role="status">
             {running ? <Gamepad2 size={16} /> : <LoaderCircle size={16} className="spin" />}
-            <span>{busy?.message}</span>
+            <span>
+              {working && busy
+                ? translateRuntimeMessage(busy.message)
+                : t('immersive.queueBlocked')}
+            </span>
             {running && (
               <button type="button" onClick={onStop}>
                 <Square size={12} fill="currentColor" />
-                停止游戏
+                {t('common.stopGame')}
               </button>
             )}
           </div>
         )}
-        {!desktop && active && (
-          <p className="immersive-preview-note">界面预览 · 在桌面启动器中启动游戏</p>
-        )}
+        {!desktop && active && <p className="immersive-preview-note">{t('immersive.preview')}</p>}
         <div className="immersive-launch-split">
           <button
             type="button"
             className="immersive-launch-primary"
-            disabled={working || (!!active && !desktop)}
+            disabled={working || blockedByQueue || (!!active && !desktop)}
             onClick={primaryAction}
-            aria-label={`${title}${active ? `：${active.name}` : ''}`}
+            aria-label={
+              active ? t('immersive.primaryLabel', { action: title, name: active.name }) : title
+            }
           >
             {running ? (
               <Gamepad2 size={24} />
-            ) : working ? (
+            ) : working || blockedByQueue ? (
               <LoaderCircle size={23} className="spin" />
             ) : active ? (
               <Play size={24} fill="currentColor" strokeWidth={1.4} />
@@ -153,9 +165,9 @@ export default function ImmersiveHome({
           <Menu.Root>
             <Menu.Trigger
               className="immersive-launch-select"
-              disabled={working}
-              aria-label="选择游戏实例"
-              title="选择游戏实例"
+              disabled={working || queueActive}
+              aria-label={t('immersive.selectInstance')}
+              title={t('immersive.selectInstance')}
             >
               <ChevronDown size={20} />
             </Menu.Trigger>
@@ -169,7 +181,8 @@ export default function ImmersiveHome({
               >
                 <Menu.Popup className="immersive-instance-menu">
                   <div className="immersive-menu-heading">
-                    游戏实例<span>{config.profiles.length}</span>
+                    {t('immersive.instances')}
+                    <span>{config.profiles.length}</span>
                   </div>
                   <div className="immersive-menu-instances">
                     {hasProfiles ? (
@@ -179,14 +192,21 @@ export default function ImmersiveHome({
                           className="immersive-instance-entry"
                           label={profile.name}
                           onClick={() => onSelect(profile.instance_key)}
-                          aria-label={`${profile.name}，Minecraft ${profile.game_version}${profile.instance_key === active?.instance_key ? '，当前实例' : ''}`}
+                          aria-label={t(
+                            profile.instance_key === active?.instance_key
+                              ? 'immersive.currentInstanceLabel'
+                              : 'immersive.instanceLabel',
+                            { name: profile.name, version: profile.game_version },
+                          )}
                         >
                           <span className="immersive-menu-instance-icon">
                             <Box size={19} strokeWidth={1.6} />
                           </span>
                           <span className="immersive-menu-instance-copy">
                             <strong>{profile.name}</strong>
-                            <small>Minecraft {profile.game_version} · 原版</small>
+                            <small>
+                              {t('immersive.version', { version: profile.game_version })}
+                            </small>
                           </span>
                           {profile.instance_key === active?.instance_key && (
                             <Check size={17} className="immersive-menu-check" />
@@ -195,28 +215,28 @@ export default function ImmersiveHome({
                       ))
                     ) : (
                       <div className="immersive-menu-empty">
-                        还没有游戏实例
+                        {t('immersive.empty')}
                         <br />
-                        <span>先创建一个，开始新的冒险。</span>
+                        <span>{t('immersive.emptyDescription')}</span>
                       </div>
                     )}
                   </div>
                   <div className="immersive-menu-divider" />
                   <Menu.Item
                     className="immersive-menu-action"
-                    label="创建新实例"
+                    label={t('immersive.createNew')}
                     onClick={onCreate}
                   >
                     <Plus size={16} />
-                    创建新实例
+                    {t('immersive.createNew')}
                   </Menu.Item>
                   <Menu.Item
                     className="immersive-menu-action"
-                    label="管理所有实例"
+                    label={t('immersive.manageAll')}
                     onClick={() => onPage('instances')}
                   >
                     <Layers size={16} />
-                    管理所有实例
+                    {t('immersive.manageAll')}
                     <ChevronRight size={14} />
                   </Menu.Item>
                 </Menu.Popup>
@@ -232,14 +252,14 @@ export default function ImmersiveHome({
           >
             <UserRound size={13} />
             <span>{config.settings.offline_username}</span>
-            <small>离线账户</small>
+            <small>{t('common.offlineAccount')}</small>
           </button>
           <button
             type="button"
             className="immersive-instance-settings"
             onClick={() => onPage('instances')}
-            aria-label="管理游戏实例"
-            title="管理游戏实例"
+            aria-label={t('immersive.manageInstance')}
+            title={t('immersive.manageInstance')}
           >
             <Settings2 size={15} />
           </button>

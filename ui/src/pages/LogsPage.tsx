@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { ArrowDownToLine, Terminal } from 'lucide-react';
 import { Panel } from '../components/ui';
 import { exportLogs } from '../lib/download';
@@ -10,21 +11,22 @@ interface LogsPageProps {
 }
 
 export default function LogsPage({ logs, busy, onClear }: LogsPageProps) {
+  const { t } = useTranslation();
   return (
     <>
       <div className="toolbar">
         <div className="log-status">
           <span className="status-dot" />
-          {busy ? '任务进行中' : '等待下一次任务'}
-          <small>{logs.length} 条记录 · 最多保留 500 条</small>
+          {busy ? t('logs.running') : t('logs.waiting')}
+          <small>{t('logs.count', { count: logs.length })}</small>
         </div>
         <div className="button-group">
           <button className="secondary" onClick={() => exportLogs(logs)}>
             <ArrowDownToLine size={16} />
-            导出
+            {t('common.export')}
           </button>
           <button className="secondary" onClick={onClear}>
-            清空
+            {t('logs.clear')}
           </button>
         </div>
       </div>
@@ -49,8 +51,8 @@ export default function LogsPage({ logs, busy, onClear }: LogsPageProps) {
         ) : (
           <div className="console-empty">
             <Terminal size={30} />
-            <p>尚无运行日志</p>
-            <small>版本查询、安装与游戏输出会显示在这里。</small>
+            <p>{t('logs.emptyTitle')}</p>
+            <small>{t('logs.emptyDescription')}</small>
           </div>
         )}
       </Panel>

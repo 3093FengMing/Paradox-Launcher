@@ -6,11 +6,17 @@ use std::{
     },
 };
 
-use paradox_core::{AppConfig, ElementalService, GameProfile, GameVersion, InstalledInstance};
+use paradox_core::{AppConfig, ElementalService, GameProfile, InstalledInstance};
 use serde::Serialize;
 use tauri::{Emitter, State};
 
 use crate::AppState;
+
+pub mod catalog;
+pub mod instances;
+pub mod java;
+pub mod tasks;
+pub mod window;
 
 type CommandResult<T> = Result<T, String>;
 
@@ -132,10 +138,14 @@ async fn supervise_game(
     app: &tauri::AppHandle,
     config: &AppConfig,
     profile: &GameProfile,
+    managed_runtime_root: &std::path::Path,
     mut stop: tokio::sync::mpsc::Receiver<()>,
 ) -> anyhow::Result<GameExit> {
-    let service = ElementalService::new(&config.settings)?;
-    let mut process = service.launch(profile, &config.settings).await?;
+    let effective = profile.effective_settings(&config.settings)?;
+    let service = ElementalService::new(&effective)?;
+    let mut process = service
+        .launch_with_runtime_directory(profile, &effective, managed_runtime_root)
+        .await?;
     activity(
         app,
         "launch",
@@ -246,26 +256,25 @@ pub fn create_profile(
 }
 
 #[tauri::command]
-pub async fn catalog(state: State<'_, AppState>) -> CommandResult<Vec<GameVersion>> {
-    let config = snapshot(&state)?;
-    sdk_job(move || {
-        sdk_runtime()?.block_on(async {
-            let service = ElementalService::new(&config.settings)?;
-            tokio::time::timeout(std::time::Duration::from_secs(30), service.catalog())
-                .await
-                .map_err(|_| anyhow::anyhow!("获取版本目录超时，请稍后重试"))?
-        })
-    })
-    .await
-}
-
-#[tauri::command]
 pub async fn inspect_instances(
     state: State<'_, AppState>,
 ) -> CommandResult<Vec<InstalledInstance>> {
     let config = snapshot(&state)?;
     sdk_job(move || {
-        sdk_runtime()?.block_on(async { ElementalService::new(&config.settings)?.inspect().await })
+        sdk_runtime()?.block_on(async {
+            let mut roots = std::collections::HashSet::new();
+            roots.insert(config.settings.game_directory.clone());
+            for profile in &config.profiles {
+                roots.insert(profile.effective_settings(&config.settings)?.game_directory);
+            }
+            let mut instances = Vec::new();
+            for root in roots {
+                instances.extend(
+                    paradox_core::instances::scan_known_game_root(&config.settings, &root).await?,
+                );
+            }
+            Ok(instances)
+        })
     })
     .await
 }
@@ -291,9 +300,8 @@ pub async fn prepare_instance(
     let result = sdk_job(move || {
         let _guard = guard;
         sdk_runtime()?.block_on(async {
-            ElementalService::new(&config.settings)?
-                .prepare(&profile)
-                .await
+            let effective = profile.effective_settings(&config.settings)?;
+            ElementalService::new(&effective)?.prepare(&profile).await
         })
     })
     .await;
@@ -319,12 +327,20 @@ pub async fn launch_instance(
     let config = snapshot(&state)?;
     let profile = profile(&config, &key)?;
     let (sender, stop) = tokio::sync::mpsc::channel(1);
+    let managed_runtime_root = java::managed_root(&state);
     let stop_sender = Arc::clone(&state.stop_sender);
     *stop_sender.lock().map_err(|_| "进程锁不可用")? = Some(sender);
     activity(&app, "launch", "started", "正在检查 Java 并构建启动命令");
     tauri::async_runtime::spawn_blocking(move || {
-        let result = sdk_runtime()
-            .and_then(|runtime| runtime.block_on(supervise_game(&app, &config, &profile, stop)));
+        let result = sdk_runtime().and_then(|runtime| {
+            runtime.block_on(supervise_game(
+                &app,
+                &config,
+                &profile,
+                &managed_runtime_root,
+                stop,
+            ))
+        });
         if let Ok(mut sender) = stop_sender.lock() {
             *sender = None;
         }

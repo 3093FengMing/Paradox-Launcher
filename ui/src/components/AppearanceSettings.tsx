@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useId } from 'react';
 import { Check, Monitor, Moon, Sun } from 'lucide-react';
 import { accentForeground } from '../colors';
@@ -9,23 +10,31 @@ interface Props {
 }
 
 const styles = [
-  { id: 'immersive', title: '沉浸主页', description: '全窗背景 · 透明侧栏' },
-  { id: 'modern', title: '现代工作台', description: '卡片概览 · 清晰分区' },
+  {
+    id: 'immersive',
+    title: 'appearance.styles.immersive.title',
+    description: 'appearance.styles.immersive.description',
+  },
+  {
+    id: 'modern',
+    title: 'appearance.styles.modern.title',
+    description: 'appearance.styles.modern.description',
+  },
 ] as const;
 
 const themes = [
-  { id: 'dark', label: '深色', icon: Moon },
-  { id: 'light', label: '浅色', icon: Sun },
-  { id: 'system', label: '跟随系统', icon: Monitor },
+  { id: 'dark', label: 'appearance.themes.dark', icon: Moon },
+  { id: 'light', label: 'appearance.themes.light', icon: Sun },
+  { id: 'system', label: 'appearance.themes.system', icon: Monitor },
 ] as const;
 
 const accentPresets = [
-  { color: '#6387f5', name: '蓝色' },
-  { color: '#a78bfa', name: '紫色' },
-  { color: '#4cb99a', name: '青绿色' },
-  { color: '#eaa55c', name: '橙色' },
-  { color: '#e979a7', name: '粉色' },
-  { color: '#a3e635', name: '青柠色' },
+  { color: '#6387f5', name: 'appearance.accents.blue' },
+  { color: '#a78bfa', name: 'appearance.accents.purple' },
+  { color: '#4cb99a', name: 'appearance.accents.teal' },
+  { color: '#eaa55c', name: 'appearance.accents.orange' },
+  { color: '#e979a7', name: 'appearance.accents.pink' },
+  { color: '#a3e635', name: 'appearance.accents.lime' },
 ] as const;
 
 interface RangeSettingProps {
@@ -49,6 +58,7 @@ function RangeSetting({
   unit,
   onChange,
 }: RangeSettingProps) {
+  const { t } = useTranslation();
   const id = useId();
   return (
     <div className="setting-row">
@@ -66,7 +76,7 @@ function RangeSetting({
           value={value}
           aria-labelledby={`${id}-label`}
           aria-describedby={`${id}-description`}
-          aria-valuetext={`${value}${unit === 'px' ? ' 像素' : '%'}`}
+          aria-valuetext={unit === 'px' ? t('common.pixels', { value }) : `${value}%`}
           onChange={(event) => onChange(Number(event.target.value))}
         />
         <output htmlFor={`${id}-input`}>
@@ -109,6 +119,7 @@ function ToggleSetting({ title, description, checked, onChange }: ToggleSettingP
 }
 
 export default function AppearanceSettings({ appearance, onChange }: Props) {
+  const { t } = useTranslation();
   const styleLabelId = useId();
   const themeLabelId = useId();
   const patch = <K extends keyof Appearance>(key: K, value: Appearance[K]) =>
@@ -117,20 +128,20 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
   return (
     <>
       <div className="settings-intro">
-        <h2>让启动器更像你</h2>
-        <p>修改会即时预览，保存后在下次启动时继续生效。</p>
-        <p>当前背景使用占位图，正式背景图后续可替换。</p>
+        <h2>{t('appearance.title')}</h2>
+        <p>{t('appearance.description')}</p>
+        <p>{t('appearance.placeholder')}</p>
       </div>
 
       <div className="field">
-        <span id={styleLabelId}>界面风格</span>
+        <span id={styleLabelId}>{t('appearance.style')}</span>
         <div className="style-options" role="group" aria-labelledby={styleLabelId}>
           {styles.map((style) => (
             <button
               type="button"
               key={style.id}
               className={`style-option ${appearance.interface_style === style.id ? 'selected' : ''}`}
-              aria-label={style.title}
+              aria-label={t(style.title)}
               aria-pressed={appearance.interface_style === style.id}
               onClick={() => patch('interface_style', style.id)}
             >
@@ -143,8 +154,8 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
               </span>
               <span className="style-option-label">
                 <span>
-                  <strong>{style.title}</strong>
-                  <small>{style.description}</small>
+                  <strong>{t(style.title)}</strong>
+                  <small>{t(style.description)}</small>
                 </span>
                 {appearance.interface_style === style.id && <Check size={17} aria-hidden="true" />}
               </span>
@@ -154,19 +165,19 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
       </div>
 
       <div className="field">
-        <span id={themeLabelId}>界面主题</span>
+        <span id={themeLabelId}>{t('appearance.theme')}</span>
         <div className="theme-options" role="group" aria-labelledby={themeLabelId}>
           {themes.map((theme) => (
             <button
               type="button"
               key={theme.id}
               className={appearance.theme === theme.id ? 'selected' : ''}
-              aria-label={theme.label}
+              aria-label={t(theme.label)}
               aria-pressed={appearance.theme === theme.id}
               onClick={() => patch('theme', theme.id)}
             >
               <theme.icon size={21} aria-hidden="true" />
-              <span>{theme.label}</span>
+              <span>{t(theme.label)}</span>
               {appearance.theme === theme.id && <Check size={15} aria-hidden="true" />}
             </button>
           ))}
@@ -175,17 +186,20 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
 
       <div className="setting-row">
         <div>
-          <h3>强调色</h3>
-          <p>用于按钮、选中状态和关键提示。</p>
+          <h3>{t('appearance.accent')}</h3>
+          <p>{t('appearance.accentDescription')}</p>
         </div>
-        <div className="swatches" role="group" aria-label="强调色">
+        <div className="swatches" role="group" aria-label={t('appearance.accent')}>
           {accentPresets.map((preset) => (
             <button
               type="button"
               key={preset.color}
-              aria-label={`${preset.name}强调色 ${preset.color}`}
+              aria-label={t('appearance.accentLabel', {
+                name: t(preset.name),
+                color: preset.color,
+              })}
               aria-pressed={appearance.accent_color.toLowerCase() === preset.color}
-              title={preset.name}
+              title={t(preset.name)}
               style={{ background: preset.color, color: accentForeground(preset.color) }}
               onClick={() => patch('accent_color', preset.color)}
             >
@@ -196,8 +210,8 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
           ))}
           <input
             type="color"
-            aria-label="自定义强调色"
-            title="自定义强调色"
+            aria-label={t('appearance.customAccent')}
+            title={t('appearance.customAccent')}
             value={appearance.accent_color}
             onChange={(event) => patch('accent_color', event.target.value)}
           />
@@ -205,8 +219,8 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
       </div>
 
       <RangeSetting
-        title="界面缩放"
-        description="调整文字与控件的视觉尺寸。"
+        title={t('appearance.scale')}
+        description={t('appearance.scaleDescription')}
         min={85}
         max={120}
         step={5}
@@ -215,8 +229,8 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
         onChange={(value) => patch('ui_scale', value)}
       />
       <RangeSetting
-        title="卡片圆角"
-        description="从简洁直角到柔和圆角。"
+        title={t('appearance.radius')}
+        description={t('appearance.radiusDescription')}
         min={0}
         max={28}
         unit="px"
@@ -224,17 +238,17 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
         onChange={(value) => patch('border_radius', value)}
       />
       <ToggleSetting
-        title="紧凑侧栏"
-        description="只显示导航图标，为内容留出更多空间。"
+        title={t('appearance.compact')}
+        description={t('appearance.compactDescription')}
         checked={appearance.compact_sidebar}
         onChange={(value) => patch('compact_sidebar', value)}
       />
       <ToggleSetting
-        title="背景图"
+        title={t('appearance.background')}
         description={
           appearance.interface_style === 'immersive'
-            ? '显示全窗口背景占位图，关闭后使用纯色背景。'
-            : '在首页卡片中显示背景占位图。'
+            ? t('appearance.backgroundImmersive')
+            : t('appearance.backgroundModern')
         }
         checked={appearance.background_art}
         onChange={(value) => patch('background_art', value)}
@@ -243,8 +257,8 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
       {appearance.interface_style === 'immersive' && (
         <>
           <RangeSetting
-            title="背景模糊"
-            description="柔化背景，让前景内容更突出。"
+            title={t('appearance.blur')}
+            description={t('appearance.blurDescription')}
             min={0}
             max={16}
             unit="px"
@@ -252,8 +266,8 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
             onChange={(value) => patch('background_blur', value)}
           />
           <RangeSetting
-            title="背景遮罩"
-            description="数值越高，背景越暗。"
+            title={t('appearance.dim')}
+            description={t('appearance.dimDescription')}
             min={0}
             max={60}
             unit="%"
@@ -261,8 +275,8 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
             onChange={(value) => patch('background_dim', value)}
           />
           <RangeSetting
-            title="侧栏不透明度"
-            description="数值越低，侧栏越通透。"
+            title={t('appearance.sidebarOpacity')}
+            description={t('appearance.sidebarOpacityDescription')}
             min={25}
             max={85}
             unit="%"
@@ -273,8 +287,8 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
       )}
 
       <ToggleSetting
-        title="减少动效"
-        description="关闭非必要的界面过渡与动画。"
+        title={t('appearance.reduceMotion')}
+        description={t('appearance.reduceMotionDescription')}
         checked={appearance.reduce_motion}
         onChange={(value) => patch('reduce_motion', value)}
       />

@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Toaster } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { Box, ChevronRight, LoaderCircle, Plus, Settings2 } from 'lucide-react';
 import * as api from './api';
 import ActivityBar from './components/ActivityBar';
@@ -9,32 +10,70 @@ import ImmersiveHome from './components/ImmersiveHome';
 import ProfileCard from './components/ProfileCard';
 import ProfileDialog from './components/ProfileDialog';
 import WindowBar from './components/WindowBar';
+import CloseRequestDialog from './components/CloseRequestDialog';
+import DownloadQueue from './components/DownloadQueue';
+import ImportInstancesDialog from './components/ImportInstancesDialog';
+import InstanceSettingsDialog from './components/InstanceSettingsDialog';
+import JavaSettings from './components/JavaSettings';
+import RemoveProfileDialog from './components/RemoveProfileDialog';
+import AppearancePresets from './components/AppearancePresets';
+import { applyLanguagePreference } from './i18n';
+import { useCloseRequest } from './hooks/useCloseRequest';
+import { useDownloadQueue } from './hooks/useDownloadQueue';
+import { useJava } from './hooks/useJava';
 import { useLauncher } from './hooks/useLauncher';
 import { useSystemTheme } from './hooks/useSystemTheme';
 import { appearanceVariables } from './lib/appearance';
 import type { ProfileEditor, SettingsTab } from './lib/forms';
 import { pageDescriptions, pageNames } from './lib/navigation';
+import { profileIsInstalled } from './lib/instances';
+import { appVersion } from './lib/version';
 import AccountsPage from './pages/AccountsPage';
 import DownloadsPage from './pages/DownloadsPage';
 import InstancesPage from './pages/InstancesPage';
 import LogsPage from './pages/LogsPage';
 import SettingsPage from './pages/SettingsPage';
-import type { GameProfile, Page } from './types';
+import type { Activity, DownloadTask, GameProfile, Page } from './types';
 
 export default function App() {
+  const { t } = useTranslation();
   const launcher = useLauncher();
+  const java = useJava(launcher.reportError);
+  const { scan: scanInstalled, refreshCatalog } = launcher;
+  const { discover: discoverJava } = java;
+  const onDownloadComplete = useCallback(
+    (task: DownloadTask) => {
+      if (task.kind === 'install') void scanInstalled();
+      else void discoverJava();
+    },
+    [scanInstalled, discoverJava],
+  );
+  const downloads = useDownloadQueue(launcher.reportError, onDownloadComplete);
+  const closeRequest = useCloseRequest(launcher.reportError);
   const systemDark = useSystemTheme();
   const [page, setPage] = useState<Page>('home');
   const [search, setSearch] = useState('');
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('appearance');
   const [editor, setEditor] = useState<ProfileEditor | null>(null);
+  const [editingInstance, setEditingInstance] = useState<GameProfile | null>(null);
+  const [removingInstance, setRemovingInstance] = useState<GameProfile | null>(null);
+  const [importing, setImporting] = useState(false);
   const [inputMode, setInputMode] = useState<'pointer' | 'keyboard'>('pointer');
   const contentRef = useRef<HTMLElement>(null);
   const profileSubmitting = useRef(false);
+  const language =
+    page === 'settings' ? launcher.draft?.language : launcher.bootstrap?.config.settings.language;
+
+  useEffect(() => {
+    void applyLanguagePreference(language ?? 'zh-CN').catch(launcher.reportError);
+  }, [language, launcher.reportError]);
 
   useEffect(() => {
     contentRef.current?.scrollTo(0, 0);
   }, [page]);
+  useEffect(() => {
+    if (page === 'downloads') void refreshCatalog();
+  }, [page, refreshCatalog]);
 
   const navigate = (next: Page) => {
     setPage(next);
@@ -48,6 +87,10 @@ export default function App() {
 
   const openCreate = (version?: string) => {
     if (launcher.busy || launcher.saving) return;
+    if (downloads.active) {
+      launcher.notify(t('app.downloadsBlockCreate'), true);
+      return;
+    }
     const defaultVersion =
       launcher.versions.find((item) => item.kind === 'release')?.id ?? '1.21.1';
     setEditor({ name: '', version: version ?? defaultVersion });
@@ -71,10 +114,10 @@ export default function App() {
       <div className="boot-screen" data-theme="dark">
         <WindowBar onHelp={() => location.reload()} onError={launcher.reportError} />
         <Box size={48} />
-        <h1>无法读取启动器配置</h1>
+        <h1>{t('app.configError')}</h1>
         <p>{launcher.fatal}</p>
-        <p>请备份并修复配置文件后重新打开启动器。</p>
-        <button onClick={() => location.reload()}>重试</button>
+        <p>{t('app.configErrorHelp')}</p>
+        <button onClick={() => location.reload()}>{t('common.retry')}</button>
       </div>
     );
   }
@@ -83,7 +126,7 @@ export default function App() {
       <div className="boot-screen" data-theme="dark">
         <WindowBar onHelp={() => location.reload()} onError={launcher.reportError} />
         <LoaderCircle className="spin" />
-        <p>正在加载 Paradox…</p>
+        <p>{t('app.loading')}</p>
       </div>
     );
   }
@@ -97,10 +140,40 @@ export default function App() {
   const variables = appearanceVariables(appearance, theme);
   const dirty = JSON.stringify(draft) !== JSON.stringify(config.settings);
   const working = busy !== null || saving;
+  const dialogAppearance = {
+    theme,
+    variables,
+    reduceMotion: appearance.reduce_motion,
+    keyboardNavigation: inputMode === 'keyboard',
+  };
+  const activeTask = downloads.tasks.find(
+    (task) =>
+      task.profile_key === active?.instance_key &&
+      ['queued', 'running', 'cancelling'].includes(task.status),
+  );
+  const homeActivity: Activity | null =
+    busy ??
+    (activeTask
+      ? {
+          action: 'install',
+          status: activeTask.status === 'queued' ? 'started' : 'running',
+          message: activeTask.message,
+        }
+      : null);
   const isInstalled = (profile: GameProfile) =>
-    launcher.installed.some((instance) => instance.instance_key === profile.instance_key);
+    profileIsInstalled(profile, config.settings, launcher.installed);
+  const install = async (profile: GameProfile) => {
+    if (await downloads.install(profile.instance_key))
+      launcher.notify(t('messages.profileQueued', { name: profile.name }));
+  };
   const launch = (profile: GameProfile) => {
-    void launcher.runAction(isInstalled(profile) ? 'launch' : 'install', profile);
+    if (isInstalled(profile)) {
+      if (downloads.active) {
+        launcher.notify(t('app.downloadsBlockLaunch'), true);
+        return;
+      }
+      void launcher.runAction('launch', profile);
+    } else void install(profile);
   };
   const renderProfile = (profile: GameProfile) => (
     <ProfileCard
@@ -109,9 +182,17 @@ export default function App() {
       activeKey={config.active_profile}
       installed={isInstalled(profile)}
       busy={working}
+      queueActive={downloads.active}
+      installing={
+        downloads.tasks.some(
+          (task) =>
+            task.profile_key === profile.instance_key &&
+            ['queued', 'running', 'cancelling'].includes(task.status),
+        ) || downloads.pending.includes(`install:${profile.instance_key}`)
+      }
       desktop={api.desktop}
       onInstall={(item) => {
-        void launcher.runAction('install', item);
+        void install(item);
       }}
       onLaunch={launch}
       onSelect={(key) => {
@@ -120,6 +201,8 @@ export default function App() {
       onRename={(item) =>
         setEditor({ name: item.name, version: item.game_version, editKey: item.instance_key })
       }
+      onSettings={setEditingInstance}
+      onRemove={setRemovingInstance}
     />
   );
   const shellClass = [
@@ -156,16 +239,16 @@ export default function App() {
       <div className="workspace">
         <header className="topbar">
           <div className="breadcrumb">
-            工作空间 <ChevronRight size={14} />
-            <strong>{pageNames[page]}</strong>
+            {t('app.workspace')} <ChevronRight size={14} />
+            <strong>{t(pageNames[page])}</strong>
           </div>
           <div className="topbar-right">
             <span className="version-tag">
-              EARLY ACCESS <b>0.1</b>
+              {t('app.earlyAccess')} <b>{appVersion}</b>
             </span>
             <button
               className="avatar"
-              aria-label="打开账户管理"
+              aria-label={t('app.openAccount')}
               onClick={() => navigate('accounts')}
             >
               {config.settings.offline_username.slice(0, 1).toUpperCase()}
@@ -177,15 +260,19 @@ export default function App() {
             <div>
               <h1>
                 {page === 'home'
-                  ? `欢迎回来，${config.settings.offline_username}`
-                  : pageNames[page]}
+                  ? t('app.welcome', { name: config.settings.offline_username })
+                  : t(pageNames[page])}
               </h1>
-              <p>{pageDescriptions[page]}</p>
+              <p>{t(pageDescriptions[page])}</p>
             </div>
             {(page === 'home' || page === 'instances') && (
-              <button className="secondary" disabled={working} onClick={() => openCreate()}>
+              <button
+                className="secondary"
+                disabled={working || downloads.active}
+                onClick={() => openCreate()}
+              >
                 <Plus size={17} />
-                创建实例
+                {t('app.createInstance')}
               </button>
             )}
           </div>
@@ -203,7 +290,8 @@ export default function App() {
               <ImmersiveHome
                 config={config}
                 active={active}
-                busy={busy}
+                busy={homeActivity}
+                queueActive={downloads.active}
                 desktop={api.desktop}
                 installed={!!active && isInstalled(active)}
                 onCreate={() => openCreate()}
@@ -221,7 +309,9 @@ export default function App() {
               <HomePage
                 config={config}
                 active={active}
-                busy={working}
+                busy={
+                  working || !!activeTask || (downloads.active && (!active || isInstalled(active)))
+                }
                 desktop={api.desktop}
                 backgroundArt={appearance.background_art}
                 isInstalled={isInstalled}
@@ -236,13 +326,14 @@ export default function App() {
             <InstancesPage
               config={config}
               search={search}
-              busy={working}
+              busy={working || downloads.active}
               renderProfile={renderProfile}
               onSearch={setSearch}
               onScan={() => {
                 void launcher.scan();
               }}
               onCreate={() => openCreate()}
+              onImport={() => setImporting(true)}
             />
           )}
           {page === 'downloads' && (
@@ -250,12 +341,27 @@ export default function App() {
               versions={launcher.versions}
               search={search}
               showSnapshots={config.settings.show_snapshots}
-              busy={working}
+              busy={working || downloads.active}
               catalogBusy={launcher.catalogBusy}
               catalogError={launcher.catalogError}
+              catalogSnapshot={launcher.catalogSnapshot}
+              queue={
+                <DownloadQueue
+                  tasks={downloads.tasks}
+                  pending={downloads.pending}
+                  desktop={api.desktop}
+                  gameRunning={busy !== null}
+                  onCancel={(id) => {
+                    void downloads.cancel(id);
+                  }}
+                  onRetry={(id) => {
+                    void downloads.retry(id);
+                  }}
+                />
+              }
               onSearch={setSearch}
               onRefresh={() => {
-                void launcher.refreshCatalog();
+                void launcher.refreshCatalog(true);
               }}
               onCreate={openCreate}
               onSnapshotsChange={(value) => {
@@ -267,15 +373,13 @@ export default function App() {
             <AccountsPage
               username={config.settings.offline_username}
               draftUsername={draft.offline_username}
-              busy={busy !== null}
+              busy={busy !== null || downloads.active}
               saving={saving}
               onUsernameChange={(value) => launcher.patchSettings('offline_username', value)}
               onSave={() => {
                 void launcher.saveAccount();
               }}
-              onRoadmap={() =>
-                launcher.notify('Microsoft 登录计划在 v0.3 接入，详见项目 ROADMAP.md')
-              }
+              onRoadmap={() => launcher.notify(t('accounts.microsoftRoadmap'))}
             />
           )}
           {page === 'settings' && (
@@ -284,7 +388,7 @@ export default function App() {
               configPath={configPath}
               tab={settingsTab}
               dirty={dirty}
-              busy={busy !== null}
+              busy={busy !== null || downloads.active}
               saving={saving}
               onTabChange={setSettingsTab}
               onPatch={launcher.patchSettings}
@@ -292,6 +396,50 @@ export default function App() {
                 void launcher.saveSettings();
               }}
               onReset={launcher.resetSettings}
+              onChooseDirectory={() => {
+                void api
+                  .chooseDirectory(t('app.gameDirectory'))
+                  .then((path) => {
+                    if (path) launcher.patchSettings('game_directory', path);
+                  })
+                  .catch(launcher.reportError);
+              }}
+              presetsPanel={
+                <AppearancePresets
+                  {...dialogAppearance}
+                  presets={config.appearance_presets}
+                  currentAppearance={draft.appearance}
+                  disabled={working || downloads.active}
+                  onSavePreset={launcher.saveAppearancePreset}
+                  onApplyPreset={launcher.applyAppearancePreset}
+                  onRenamePreset={launcher.renameAppearancePreset}
+                  onRemovePreset={launcher.removeAppearancePreset}
+                  onImportPreset={launcher.importAppearancePreset}
+                />
+              }
+              javaPanel={
+                <JavaSettings
+                  discovery={java.discovery}
+                  busy={java.busy}
+                  desktop={api.desktop}
+                  gameRunning={busy !== null}
+                  onDiscover={() => {
+                    void java.discover();
+                  }}
+                  onChoose={() => {
+                    void java.choose().then((path) => {
+                      if (path) launcher.patchSettings('java_executable', path);
+                    });
+                  }}
+                  onInspect={() => {
+                    void java.inspect(draft.java_executable);
+                  }}
+                  onSelect={(path) => launcher.patchSettings('java_executable', path)}
+                  onDownload={(major) => {
+                    void downloads.java(major);
+                  }}
+                />
+              }
             />
           )}
           {page === 'logs' && (
@@ -299,11 +447,11 @@ export default function App() {
           )}
           <footer className="app-footer">
             <span>
-              Paradox Launcher <i>·</i> v0.1.0
+              Paradox Launcher <i>·</i> v{appVersion}
             </span>
             <button className="text-button" onClick={() => openSettings('advanced')}>
               <Settings2 size={14} />
-              关于与配置
+              {t('app.aboutName')}
             </button>
           </footer>
         </main>
@@ -337,6 +485,48 @@ export default function App() {
           void saveEditor();
         }}
       />
+      {editingInstance && (
+        <InstanceSettingsDialog
+          key={editingInstance.instance_key}
+          {...dialogAppearance}
+          profile={editingInstance}
+          settings={config.settings}
+          saving={saving}
+          onClose={() => setEditingInstance(null)}
+          onError={launcher.reportError}
+          onSave={launcher.updateProfile}
+        />
+      )}
+      {removingInstance && (
+        <RemoveProfileDialog
+          key={removingInstance.instance_key}
+          {...dialogAppearance}
+          profile={removingInstance}
+          saving={saving}
+          onClose={() => setRemovingInstance(null)}
+          onRemove={launcher.removeProfile}
+        />
+      )}
+      {importing && (
+        <ImportInstancesDialog
+          {...dialogAppearance}
+          saving={saving}
+          blocked={busy !== null || downloads.active}
+          onClose={() => setImporting(false)}
+          onError={launcher.reportError}
+          onImport={launcher.importProfiles}
+        />
+      )}
+      {closeRequest.request && (
+        <CloseRequestDialog
+          {...dialogAppearance}
+          request={closeRequest.request}
+          closing={closeRequest.closing}
+          onChoice={(mode) => {
+            void closeRequest.close(mode);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 import {
   ArrowRight,
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export default function HomePage(props: Props) {
+  const { t } = useTranslation();
   const {
     config,
     active,
@@ -59,16 +61,16 @@ export default function HomePage(props: Props) {
               active.name
             ) : (
               <>
-                你的世界，
+                {t('home.headlineFirst')}
                 <br />
-                即刻开始。
+                {t('home.headlineSecond')}
               </>
             )}
           </h2>
           <p>
             {active
-              ? `Minecraft ${active.game_version} · Vanilla 原版`
-              : '创建一个独立实例，从第一块方块开始。'}
+              ? t('home.versionDescription', { version: active.game_version })
+              : t('home.startDescription')}
           </p>
           <div className="banner-actions">
             <button
@@ -77,12 +79,16 @@ export default function HomePage(props: Props) {
               onClick={() => (active ? onLaunch(active) : onCreate())}
             >
               {active ? <Play size={17} fill="currentColor" /> : <Plus size={18} />}
-              {active ? (isInstalled(active) ? '启动游戏' : '安装游戏') : '创建实例'}
+              {active
+                ? isInstalled(active)
+                  ? t('common.launchGame')
+                  : t('common.installGame')
+                : t('common.createInstance')}
               <ArrowRight size={17} />
             </button>
             {active && (
               <button className="banner-secondary" onClick={() => onPage('instances')}>
-                管理实例
+                {t('home.manageInstances')}
                 <ChevronRight size={15} />
               </button>
             )}
@@ -92,9 +98,9 @@ export default function HomePage(props: Props) {
           <span className="status-dot" />
           {active
             ? isInstalled(active)
-              ? '实例已就绪'
-              : '等待安装游戏文件'
-            : '准备好开始你的冒险'}
+              ? t('home.ready')
+              : t('home.waitingInstall')
+            : t('home.adventureReady')}
         </div>
       </section>
 
@@ -102,10 +108,11 @@ export default function HomePage(props: Props) {
         <section className="library-section">
           <div className="section-heading">
             <h2>
-              实例库<span>{config.profiles.length}</span>
+              {t('home.library')}
+              <span>{config.profiles.length}</span>
             </h2>
             <button className="text-button" onClick={() => onPage('instances')}>
-              查看全部
+              {t('home.viewAll')}
               <ChevronRight size={15} />
             </button>
           </div>
@@ -116,11 +123,11 @@ export default function HomePage(props: Props) {
               <div className="empty-cubes">
                 <Layers size={30} strokeWidth={1.4} />
               </div>
-              <h3>留一个位置，给下一个世界</h3>
-              <p>不同版本、不同存档，都有独立的空间。</p>
+              <h3>{t('home.emptyTitle')}</h3>
+              <p>{t('home.emptyDescription')}</p>
               <button className="text-button" disabled={busy} onClick={onCreate}>
                 <Plus size={15} />
-                创建第一个实例
+                {t('home.createFirst')}
               </button>
             </div>
           )}
@@ -130,8 +137,8 @@ export default function HomePage(props: Props) {
                 <Gamepad2 size={19} />
               </div>
               <div>
-                <strong>发现游戏版本</strong>
-                <span>查找版本，创建新实例</span>
+                <strong>{t('home.discoverVersions')}</strong>
+                <span>{t('home.discoverDescription')}</span>
               </div>
               <ArrowRight size={17} />
             </button>
@@ -140,8 +147,8 @@ export default function HomePage(props: Props) {
                 <Palette size={19} />
               </div>
               <div>
-                <strong>按你的喜好调整</strong>
-                <span>主题、界面与启动选项</span>
+                <strong>{t('home.customize')}</strong>
+                <span>{t('home.customizeDescription')}</span>
               </div>
               <ArrowRight size={17} />
             </button>
@@ -149,26 +156,32 @@ export default function HomePage(props: Props) {
         </section>
         <section className="preferences-card">
           <div className="section-heading">
-            <h2>启动偏好</h2>
-            <button className="icon-button" aria-label="调整启动偏好" onClick={onGameSettings}>
+            <h2>{t('home.preferences')}</h2>
+            <button
+              className="icon-button"
+              aria-label={t('home.editPreferences')}
+              onClick={onGameSettings}
+            >
               <Sparkles size={17} />
             </button>
           </div>
           <button className="preference-row" onClick={onGameSettings}>
             <Cpu size={17} />
-            <span>游戏内存</span>
+            <span>{t('home.memory')}</span>
             <strong>{(config.settings.memory_mb / 1024).toFixed(1)} GB</strong>
             <ChevronRight size={14} />
           </button>
           <button className="preference-row" onClick={onGameSettings}>
             <Box size={17} />
-            <span>Java 运行时</span>
-            <strong>{config.settings.java_executable ? '手动指定' : '自动选择'}</strong>
+            <span>{t('java.runtime')}</span>
+            <strong>
+              {config.settings.java_executable ? t('common.manual') : t('common.automatic')}
+            </strong>
             <ChevronRight size={14} />
           </button>
           <button className="preference-row" onClick={onGameSettings}>
             <Monitor size={17} />
-            <span>窗口大小</span>
+            <span>{t('home.windowSize')}</span>
             <strong>
               {config.settings.resolution_width} × {config.settings.resolution_height}
             </strong>
@@ -182,7 +195,7 @@ export default function HomePage(props: Props) {
               <strong>{config.settings.offline_username}</strong>
               <span>
                 <UserRound size={11} />
-                离线账户
+                {t('common.offlineAccount')}
               </span>
             </div>
             <ChevronRight size={16} />

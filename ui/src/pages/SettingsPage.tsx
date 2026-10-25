@@ -1,8 +1,11 @@
+import { useTranslation } from 'react-i18next';
 import { Check, Folder, Gamepad2, LoaderCircle, Palette, SlidersHorizontal } from 'lucide-react';
 import AppearanceSettings from '../components/AppearanceSettings';
 import { Field, Panel, Toggle } from '../components/ui';
 import type { PatchSettings, SettingsTab } from '../lib/forms';
 import type { Settings } from '../types';
+import type { ReactNode } from 'react';
+import * as api from '../api';
 
 interface SettingsPageProps {
   draft: Settings;
@@ -15,12 +18,15 @@ interface SettingsPageProps {
   onPatch: PatchSettings;
   onSave: () => void;
   onReset: () => void;
+  javaPanel: ReactNode;
+  presetsPanel: ReactNode;
+  onChooseDirectory: () => void;
 }
 
 const settingsTabs = [
-  { id: 'appearance', label: '外观与体验', icon: Palette },
-  { id: 'game', label: '游戏与 Java', icon: Gamepad2 },
-  { id: 'advanced', label: '高级设置', icon: SlidersHorizontal },
+  { id: 'appearance', label: 'settings.tabs.appearance', icon: Palette },
+  { id: 'game', label: 'settings.tabs.game', icon: Gamepad2 },
+  { id: 'advanced', label: 'settings.tabs.advanced', icon: SlidersHorizontal },
 ] as const;
 
 export default function SettingsPage({
@@ -34,7 +40,11 @@ export default function SettingsPage({
   onPatch,
   onSave,
   onReset,
+  javaPanel,
+  presetsPanel,
+  onChooseDirectory,
 }: SettingsPageProps) {
+  const { t } = useTranslation();
   return (
     <>
       <div className="settings-tabs">
@@ -45,26 +55,50 @@ export default function SettingsPage({
             onClick={() => onTabChange(tab.id)}
           >
             <tab.icon size={17} />
-            {tab.label}
+            {t(tab.label)}
           </button>
         ))}
       </div>
       <Panel className="settings-panel">
         {settingsTab === 'appearance' && (
-          <AppearanceSettings
-            appearance={draft.appearance}
-            onChange={(next) => onPatch('appearance', next)}
-          />
+          <>
+            <div className="field">
+              <span>{t('settings.language')}</span>
+              <p>{t('settings.languageDescription')}</p>
+              <div className="theme-options" role="group" aria-label={t('settings.language')}>
+                {[
+                  { value: 'zh-CN', label: '简体中文' },
+                  { value: 'en-US', label: 'English' },
+                  { value: 'system', label: t('settings.systemLanguage') },
+                ].map((language) => (
+                  <button
+                    type="button"
+                    key={language.value}
+                    className={draft.language === language.value ? 'selected' : ''}
+                    aria-pressed={draft.language === language.value}
+                    onClick={() => onPatch('language', language.value as Settings['language'])}
+                  >
+                    {language.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {presetsPanel}
+            <AppearanceSettings
+              appearance={draft.appearance}
+              onChange={(next) => onPatch('appearance', next)}
+            />
+          </>
         )}
         {settingsTab === 'game' && (
           <>
             <div className="settings-intro">
-              <h2>为世界准备合适的环境</h2>
-              <p>Java 留空时，Elemental 会寻找与游戏版本匹配的本地运行时。</p>
+              <h2>{t('settings.gameTitle')}</h2>
+              <p>{t('settings.javaDescription')}</p>
             </div>
             <Field
-              label="游戏文件目录"
-              description="使用绝对路径。改变目录会切换本地资源库，已有文件不会自动迁移。"
+              label={t('settings.gameDirectory')}
+              description={t('settings.gameDirectoryDescription')}
             >
               <div className="input-with-icon">
                 <Folder size={18} />
@@ -74,18 +108,25 @@ export default function SettingsPage({
                 />
               </div>
             </Field>
-            <Field
-              label="Java 可执行文件"
-              description="例如 C:\Program Files\Java\jdk-21\bin\java.exe"
+            <button
+              type="button"
+              className="secondary small"
+              disabled={!api.desktop || busy || saving}
+              onClick={onChooseDirectory}
             >
+              <Folder size={16} />
+              {t('settings.chooseGameDirectory')}
+            </button>
+            <Field label={t('settings.javaExecutable')} description={t('settings.javaExample')}>
               <input
-                placeholder="自动检测兼容的 Java"
+                placeholder={t('settings.javaPlaceholder')}
                 value={draft.java_executable}
                 onChange={(event) => onPatch('java_executable', event.target.value)}
               />
             </Field>
+            {javaPanel}
             <div className="field-grid">
-              <Field label="最小内存 (MB)">
+              <Field label={t('settings.minimumMemory')}>
                 <input
                   type="number"
                   min={256}
@@ -95,7 +136,7 @@ export default function SettingsPage({
                   onChange={(event) => onPatch('minimum_memory_mb', +event.target.value)}
                 />
               </Field>
-              <Field label="最大内存 (MB)">
+              <Field label={t('settings.maximumMemory')}>
                 <input
                   type="number"
                   min={512}
@@ -118,7 +159,7 @@ export default function SettingsPage({
               ))}
             </div>
             <div className="field-grid">
-              <Field label="游戏窗口宽度">
+              <Field label={t('settings.windowWidth')}>
                 <input
                   type="number"
                   min={640}
@@ -127,7 +168,7 @@ export default function SettingsPage({
                   onChange={(event) => onPatch('resolution_width', +event.target.value)}
                 />
               </Field>
-              <Field label="游戏窗口高度">
+              <Field label={t('settings.windowHeight')}>
                 <input
                   type="number"
                   min={480}
@@ -142,43 +183,128 @@ export default function SettingsPage({
         {settingsTab === 'advanced' && (
           <>
             <div className="settings-intro">
-              <h2>精细控制每次启动</h2>
-              <p>参数由 Elemental 解析，支持带引号的参数值。</p>
+              <h2>{t('settings.advancedTitle')}</h2>
+              <p>{t('settings.argumentsDescription')}</p>
             </div>
-            <Field
-              label="额外 JVM 参数"
-              description="内存请在“游戏与 Java”中设置，避免重复传入 -Xmx / -Xms。"
-            >
+            <Field label={t('settings.jvmArguments')} description={t('settings.jvmDescription')}>
               <textarea
                 rows={3}
-                placeholder="例如 -XX:+UseG1GC"
+                placeholder={t('settings.jvmPlaceholder')}
                 value={draft.extra_jvm_arguments}
                 onChange={(event) => onPatch('extra_jvm_arguments', event.target.value)}
               />
             </Field>
-            <Field label="额外游戏参数" description="传递给 Minecraft 主程序的参数。">
+            <Field
+              label={t('settings.gameArguments')}
+              description={t('settings.gameArgumentsDescription')}
+            >
               <textarea
                 rows={3}
-                placeholder="例如 --fullscreen"
+                placeholder={t('settings.gameArgumentsPlaceholder')}
                 value={draft.extra_game_arguments}
                 onChange={(event) => onPatch('extra_game_arguments', event.target.value)}
               />
             </Field>
             <div className="setting-row">
               <div>
-                <h3>显示快照与历史版本</h3>
-                <p>在下载页中显示所有可用版本。</p>
+                <h3>{t('downloads.showSnapshots')}</h3>
+                <p>{t('settings.snapshotsDescription')}</p>
               </div>
               <Toggle
-                label="显示快照与历史版本"
+                label={t('downloads.showSnapshots')}
                 checked={draft.show_snapshots}
                 onChange={(value) => onPatch('show_snapshots', value)}
               />
             </div>
             <div className="config-location">
-              <h3>配置文件</h3>
+              <h3>{t('settings.configFile')}</h3>
               <code>{configPath}</code>
-              <p>配置采用版本化 JSON，保存时执行校验与原子替换。</p>
+              <p>{t('settings.configDescription')}</p>
+            </div>
+            <div className="settings-intro">
+              <h2>{t('settings.networkTitle')}</h2>
+              <p>{t('settings.networkDescription')}</p>
+            </div>
+            <div className="field-grid">
+              <Field label={t('settings.timeout')}>
+                <input
+                  type="number"
+                  min={1}
+                  max={300}
+                  value={draft.network.timeout_seconds}
+                  onChange={(event) =>
+                    onPatch('network', {
+                      ...draft.network,
+                      timeout_seconds: Number(event.target.value),
+                    })
+                  }
+                />
+              </Field>
+              <Field label={t('settings.concurrentDownloads')}>
+                <input
+                  type="number"
+                  min={1}
+                  max={32}
+                  value={draft.network.max_concurrent_downloads}
+                  onChange={(event) =>
+                    onPatch('network', {
+                      ...draft.network,
+                      max_concurrent_downloads: Number(event.target.value),
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <Field label={t('settings.retries')}>
+              <input
+                type="number"
+                min={0}
+                max={8}
+                value={draft.network.max_retries}
+                onChange={(event) =>
+                  onPatch('network', { ...draft.network, max_retries: Number(event.target.value) })
+                }
+              />
+            </Field>
+            <Field label={t('settings.proxy')} description={t('settings.proxyDescription')}>
+              <input
+                autoComplete="off"
+                value={draft.network.proxy_url}
+                onChange={(event) =>
+                  onPatch('network', { ...draft.network, proxy_url: event.target.value })
+                }
+              />
+            </Field>
+            <Field label={t('settings.mirror')} description={t('settings.mirrorDescription')}>
+              <input
+                value={draft.network.mirror_url}
+                onChange={(event) =>
+                  onPatch('network', { ...draft.network, mirror_url: event.target.value })
+                }
+              />
+            </Field>
+            <div className="settings-intro">
+              <h2>{t('settings.closeTitle')}</h2>
+              <p>{t('settings.closeDescription')}</p>
+            </div>
+            <div className="theme-options" role="group" aria-label={t('settings.closeBehavior')}>
+              {[
+                { value: 'ask', label: t('settings.closeAsk') },
+                { value: 'stop', label: t('settings.closeStop') },
+                { value: 'background', label: t('settings.closeBackground') },
+              ].map((item) => (
+                <button
+                  type="button"
+                  className={draft.close_behavior === item.value ? 'selected' : ''}
+                  aria-pressed={draft.close_behavior === item.value}
+                  key={item.value}
+                  onClick={() =>
+                    onPatch('close_behavior', item.value as Settings['close_behavior'])
+                  }
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
           </>
         )}
@@ -188,25 +314,26 @@ export default function SettingsPage({
           {dirty ? (
             <>
               <span className="status-dot" />
-              有未保存的修改
+              {t('settings.unsaved')}
             </>
           ) : (
             <>
               <Check size={15} />
-              设置已同步
+              {t('settings.synced')}
             </>
           )}
         </span>
         <div>
           <button className="secondary" onClick={() => onReset()}>
-            还原修改
+            {t('settings.reset')}
           </button>
           <button
             className="primary"
             disabled={!!busy || saving || !dirty}
             onClick={() => onSave()}
           >
-            {saving ? <LoaderCircle className="spin" size={16} /> : <Check size={16} />}保存设置
+            {saving ? <LoaderCircle className="spin" size={16} /> : <Check size={16} />}
+            {t('settings.save')}
           </button>
         </div>
       </div>

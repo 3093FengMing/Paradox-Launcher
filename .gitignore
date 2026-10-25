@@ -6,6 +6,7 @@ node_modules/
 .eslintcache
 /apps/desktop/gen/
 /.cache/
+/.test-data/
 /.minecraft/
 /data/
 /.local/

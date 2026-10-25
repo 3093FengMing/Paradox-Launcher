@@ -1,5 +1,7 @@
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, Gamepad2, LoaderCircle, Square } from 'lucide-react';
 import type { Activity } from '../types';
+import { translateRuntimeMessage } from '../i18n';
 
 interface ActivityBarProps {
   activity: Activity;
@@ -8,19 +10,20 @@ interface ActivityBarProps {
 }
 
 export default function ActivityBar({ activity, onStop, onLogs }: ActivityBarProps) {
+  const { t } = useTranslation();
   const running = activity.action === 'launch' && activity.status === 'running';
   return (
     <div className="activity-bar" role="status">
       {running ? <Gamepad2 size={18} /> : <LoaderCircle className="spin" size={18} />}
-      <span>{activity.message}</span>
+      <span>{translateRuntimeMessage(activity.message)}</span>
       {running && (
         <button className="secondary small" onClick={onStop}>
           <Square size={13} />
-          停止游戏
+          {t('common.stopGame')}
         </button>
       )}
       <button className="text-button" onClick={onLogs}>
-        查看日志
+        {t('activity.viewLogs')}
         <ArrowRight size={14} />
       </button>
     </div>

@@ -12,7 +12,7 @@ export function appearanceVariables(
     '--accent-ink': readableAccent(appearance.accent_color, theme),
     '--hero-accent-ink': readableAccent(appearance.accent_color, 'dark'),
     '--radius': `${appearance.border_radius}px`,
-    '--background-image': appearance.background_art ? "url('/background-placeholder.svg')" : 'none',
+    '--background-image': appearance.background_art ? "url('/background-placeholder.png')" : 'none',
     '--background-blur': `${appearance.background_blur}px`,
     '--background-dim': appearance.background_dim / 100,
     '--sidebar-opacity': appearance.sidebar_opacity / 100,

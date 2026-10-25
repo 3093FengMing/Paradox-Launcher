@@ -99,4 +99,106 @@ mod tests {
         assert!(store.save(&config).is_err());
         assert_eq!(store.load().unwrap().schema_version, 1);
     }
+
+    #[test]
+    fn language_and_complete_presets_survive_disk_replacement() {
+        use crate::model::{Appearance, AppearancePreset};
+
+        let directory = tempfile::tempdir().unwrap();
+        let store = ConfigStore::new(directory.path().join("界面预设/config.json"));
+        let preset = AppearancePreset {
+            id: uuid::Uuid::new_v4().to_string(),
+            name: "夜色工作台 🌙".into(),
+            appearance: Appearance {
+                interface_style: "modern".into(),
+                theme: "light".into(),
+                accent_color: "#aabbcc".into(),
+                ui_scale: 115,
+                border_radius: 24,
+                compact_sidebar: true,
+                reduce_motion: true,
+                background_art: false,
+                background_blur: 12,
+                background_dim: 32,
+                sidebar_opacity: 45,
+            },
+        };
+        let mut config = AppConfig {
+            appearance_presets: vec![preset],
+            ..AppConfig::default()
+        };
+        config.settings.language = "system".into();
+        store.save(&config).unwrap();
+        let mut loaded = store.load().unwrap();
+        assert_eq!(loaded.settings.language, "system");
+        assert_eq!(
+            serde_json::to_value(&loaded.appearance_presets).unwrap(),
+            serde_json::to_value(&config.appearance_presets).unwrap()
+        );
+
+        loaded.settings.language = "en-US".into();
+        loaded.settings.memory_mb = 8192;
+        store.save(&loaded).unwrap();
+        let replaced = store.load().unwrap();
+        assert_eq!(replaced.settings.language, "en-US");
+        assert_eq!(replaced.settings.memory_mb, 8192);
+        assert_eq!(
+            serde_json::to_value(replaced.appearance_presets).unwrap(),
+            serde_json::to_value(config.appearance_presets).unwrap()
+        );
+    }
+
+    #[test]
+    fn invalid_language_or_preset_preserves_existing_configuration() {
+        use crate::model::{Appearance, AppearancePreset};
+
+        let directory = tempfile::tempdir().unwrap();
+        let store = ConfigStore::new(directory.path().join("config.json"));
+        let preset = AppearancePreset {
+            id: uuid::Uuid::new_v4().to_string(),
+            name: "My style".into(),
+            appearance: Appearance::default(),
+        };
+        let config = AppConfig {
+            appearance_presets: vec![preset.clone()],
+            ..AppConfig::default()
+        };
+        store.save(&config).unwrap();
+        let original = fs::read(store.path()).unwrap();
+
+        let mut invalid_language = config.clone();
+        invalid_language.settings.language = "unsupported".into();
+        let mut invalid_appearance = config.clone();
+        invalid_appearance.appearance_presets[0].appearance.ui_scale = 200;
+        let mut duplicate = config;
+        duplicate.appearance_presets.push(preset);
+        for invalid in [invalid_language, invalid_appearance, duplicate] {
+            assert!(store.save(&invalid).is_err());
+            assert_eq!(fs::read(store.path()).unwrap(), original);
+        }
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn readonly_config_rejects_replacement_and_preserves_saved_data() {
+        let directory = tempfile::tempdir().unwrap();
+        let store = ConfigStore::new(directory.path().join("只读配置/config.json"));
+        let mut config = AppConfig::default();
+        store.save(&config).unwrap();
+        let original = fs::read(store.path()).unwrap();
+        let original_permissions = fs::metadata(store.path()).unwrap().permissions();
+        assert!(!original_permissions.readonly());
+        let mut readonly_permissions = original_permissions.clone();
+        readonly_permissions.set_readonly(true);
+        fs::set_permissions(store.path(), readonly_permissions).unwrap();
+
+        config.settings.memory_mb = 8192;
+        let result = store.save(&config);
+        let retained = fs::read(store.path());
+        // Restore the original writable permission before asserting so the
+        // temporary directory is removable even if the regression fails.
+        fs::set_permissions(store.path(), original_permissions).unwrap();
+        assert!(result.is_err(), "read-only configuration was replaced");
+        assert_eq!(retained.unwrap(), original);
+    }
 }
