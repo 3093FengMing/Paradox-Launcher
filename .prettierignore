@@ -1,0 +1,27 @@
+# Dependencies and upstream source
+node_modules/
+vendor/
+package-lock.json
+ui/package-lock.json
+Cargo.lock
+
+# Build output and generated assets
+target/
+ui/dist/
+apps/desktop/gen/
+apps/desktop/icons/
+assets/
+ui/public/
+docs/screenshots/
+*.tsbuildinfo
+
+# Local data
+.local/
+.cache/
+.minecraft/
+data/
+.git/
+*.log
+*.tmp
+.env
+.env.*

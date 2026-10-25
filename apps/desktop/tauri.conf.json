@@ -4,22 +4,24 @@
   "version": "0.1.0",
   "identifier": "io.paradoxlauncher.desktop",
   "build": {
-    "beforeDevCommand": "npm --prefix ../../ui run dev",
-    "beforeBuildCommand": "npm --prefix ../../ui run build",
+    "beforeDevCommand": "npm --prefix ../ui run dev",
+    "beforeBuildCommand": "npm --prefix ../ui run build",
     "devUrl": "http://localhost:1420",
     "frontendDist": "../../ui/dist"
   },
   "app": {
-    "windows": [{
-      "title": "Paradox Launcher",
-      "decorations": false,
-      "width": 1240,
-      "height": 820,
-      "minWidth": 980,
-      "minHeight": 700,
-      "center": true,
-      "backgroundColor": "#151517"
-    }],
+    "windows": [
+      {
+        "title": "Paradox Launcher",
+        "decorations": false,
+        "width": 1240,
+        "height": 820,
+        "minWidth": 980,
+        "minHeight": 700,
+        "center": true,
+        "backgroundColor": "#151517"
+      }
+    ],
     "security": {
       "csp": "default-src 'self'; connect-src ipc: http://ipc.localhost; img-src 'self' asset: http://asset.localhost data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:"
     }

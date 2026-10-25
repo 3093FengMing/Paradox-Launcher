@@ -39,6 +39,8 @@ Elemental 某些 future 持有未声明 `Sync` 的 Driver trait object，不能�
 `BusyGuard` 原子互斥并在退出或失败时释放。配置保存与实例创建在任务期间被拒绝，
 避免运行中切换游戏目录。事件只报告实际阶段，不展示编造的下载百分比。
 
+`apps/desktop/src/cli.rs` 提供无 GUI 的版本、帮助、版本目录与扫描诊断。窗口启动不再因配置加载失败而直接退出：宿主保留 `startup_error`，`get_config` 将错误传给前端，涉及配置的写命令被拒绝；损坏文件保持原样。修复文件后重新启动宿主即可重新读取。
+
 ## 配置与实例
 
 `AppConfig { schema_version, settings, profiles, active_profile }`：
@@ -57,11 +59,13 @@ Elemental 某些 future 持有未声明 `Sync` 的 Driver trait object，不能�
 
 ## 前端与状态
 
-页面共用 config、活动任务、日志、目录数据与通知。设置使用单独 draft，在设置页即时预览，
-保存后再替换持久配置。离开设置页不会自动保存。
+`App.tsx` 负责窗口壳与页面组合；`pages/` 分别负责实例、下载、账户、设置和日志页面。`useLauncher` 管理 config、活动任务、日志、目录数据、通知与异步操作，`useSystemTheme` 监听系统主题。`components/` 提供基础控件、实例卡片和对话框，`lib/` 保存校验、主题变量、导航与日志导出等纯逻辑。
+
+设置使用单独 draft，在设置页即时预览，保存后再替换持久配置。离开设置页不会自动保存。配置写入串行执行，并从最后确认的配置构造下一次更新，避免账户保存与实例选择相互覆盖。异步扫描使用请求序号和目录检查排除过期结果；事件订阅在清理或部分失败时解除。
 日志最多显示 500 条；当前只在内存保存，可导出为文本。
 `HomePage` 保留现代工作台，`ImmersiveHome` 提供默认沉浸式首页；两者使用相同父级状态与操作回调。
 `WindowBar` 提供自绘标题栏，桌面中调用 Tauri 窗口 API，网页预览中禁用窗口操作。
+加载与错误页面也保留标题栏，因此即使配置或 IPC 失败仍有关闭入口。
 `immersive.css` 在基础与现代样式之后加载，背景只使用 CSS 图层与 `background-placeholder.svg`。
 
 网页预览 adapter 使用浏览器本地存储，仅用于 UI 开发与交互验证；桌面 adapter 通过 IPC。
@@ -71,7 +75,11 @@ Elemental 某些 future 持有未声明 `Sync` 的 Driver trait object，不能�
 
 前端获得默认事件能力与最小化、最大化 / 还原、关闭、拖动窗口权限，文件与进程操作通过自定义 Rust 命令。
 CSP 禁止任意远程脚本；生产 UI 静态资源内嵌。
+正式构建显式启用 `tauri/custom-protocol`。Tauri 构建 hook 从宿主工作目录使用 `../ui` 执行前端命令，`frontendDist` 相对配置文件仍为 `../../ui/dist`。
 Microsoft 凭据将在后续使用 OS 凭据库，不能放进 config.json；登录与通用配置分离。
 
-下一阶段优先将任务状态、取消和下载报告封装为独立 job 模块，再拆分 React 页面与复用控件。
-当前页面集中于 `App.tsx` 以便审阅初始流程，扩展到 loader / 内容前应拆分。
+## 代码规范与当前边界
+
+ESLint 10 使用 TypeScript 类型相关、Promise、React Hooks 与 Fast Refresh 规则；Prettier 格式化 Web 源码和文档，Rust 使用 rustfmt / Clippy。vendor、锁文件与生成资产不参与格式化，CI 使用相同检查命令。前端工具要求 Node 22.13+ 或 24+。
+
+本轮先交付 v0.1 测试版，不接入版本缓存、Java 检测页、下载队列或取消。关闭启动器当前不自动结束 Java，用户应先停止游戏。下一阶段再封装独立 job 模块，完成原版闭环、故障恢复和兼容性矩阵。

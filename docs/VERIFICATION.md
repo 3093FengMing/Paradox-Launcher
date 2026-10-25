@@ -6,46 +6,76 @@
 
 以下结果来自新增沉浸式界面之前的基础框架验证，不能直接代替最新源码的检查结果。
 
-| 检查 | 结果 | 范围 |
-| --- | --- | --- |
-| 前端 TypeScript 与 Vite 生产构建 | 通过 | 当时的现代工作台、设置、Base UI Dialog 与 Sonner 集成 |
-| `cargo check --workspace --all-targets` | 通过 | SDK 固定提交与 vendor 兼容补丁可编译 |
-| Clippy，warnings 作为错误 | 通过 | 当时的 workspace 源码 |
-| `cargo test --workspace --all-targets --locked` | 7 项通过 | 配置与领域逻辑；不包含游戏安装启动 |
-| `--check-catalog` | 获取 920 个版本 | 真实 Elemental / Mojang 目录请求 |
-| `--inspect` | 默认游戏目录正常，0 个实例 | 真实 SDK 磁盘扫描；当时没有游戏安装 |
-| 原生桌面窗口 | 启动成功，可读取 UI 无障碍树 | Tauri 应用实际运行；当时的旧界面版本 |
-| 现代工作台截图 | 已保存 `docs/screenshots/home.png` | 浏览器中实际渲染的宽视口界面 |
-| 设计技能安装 | 15 个技能已安装 | `emilkowalski/skills@2d228630ba1446365f614a108cb8252f1feda202` |
+| 检查                                            | 结果                               | 范围                                                           |
+| ----------------------------------------------- | ---------------------------------- | -------------------------------------------------------------- |
+| 前端 TypeScript 与 Vite 生产构建                | 通过                               | 当时的现代工作台、设置、Base UI Dialog 与 Sonner 集成          |
+| `cargo check --workspace --all-targets`         | 通过                               | SDK 固定提交与 vendor 兼容补丁可编译                           |
+| Clippy，warnings 作为错误                       | 通过                               | 当时的 workspace 源码                                          |
+| `cargo test --workspace --all-targets --locked` | 7 项通过                           | 配置与领域逻辑；不包含游戏安装启动                             |
+| `--check-catalog`                               | 获取 920 个版本                    | 真实 Elemental / Mojang 目录请求                               |
+| `--inspect`                                     | 默认游戏目录正常，0 个实例         | 真实 SDK 磁盘扫描；当时没有游戏安装                            |
+| 原生桌面窗口                                    | 启动成功，可读取 UI 无障碍树       | Tauri 应用实际运行；当时的旧界面版本                           |
+| 现代工作台截图                                  | 已保存 `docs/screenshots/home.png` | 浏览器中实际渲染的宽视口界面                                   |
+| 设计技能安装                                    | 15 个技能已安装                    | `emilkowalski/skills@2d228630ba1446365f614a108cb8252f1feda202` |
 
 原生截图 / 部分自动化点击曾受工具超时或 geometry unavailable 限制。这个限制没有否定原生窗口的成功启动，也不能算作原生交互验收通过。
 
-## 当前双样式集成复核
+## 双样式集成复核（此前）
 
 本轮新增 `Appearance` 字段、沉浸式布局、自绘标题栏和窗口权限，并修复主动停止的完成状态。本轮复核结果如下：
 
-| 检查 | 当前结果 | 需要保留的证据 |
-| --- | --- | --- |
-| `npm run build:ui` | 通过 | 最终 TypeScript 与 Vite 生产构建完成 |
-| `cargo fmt --all -- --check` | 通过 | Rust 格式检查完成 |
-| `cargo check --workspace --all-targets --locked` | 通过 | 新模型、窗口权限和进程命令可编译 |
-| `cargo clippy --workspace --all-targets --locked -- -D warnings` | 通过 | 无 warnings |
-| `cargo test --workspace --all-targets --locked` | 7 项通过 | 配置、路径安全、领域逻辑与版本排序 |
-| 浏览器双样式切换与保存 | 通过 | 切换并保存两种布局，重载保留样式和实例 |
-| 实例菜单与创建 / 重命名弹窗 | 通过 | 两个中文名称实例；菜单选择、Escape 关闭与焦点返回；方向键和 Enter 打开创建表单 |
-| 背景效果、主题与紧凑侧栏 | 通过 | 三个滑块改变 CSS 变量并保存；背景开关、浅色 / 深色、紧凑侧栏切换 |
-| 浏览器最小桌面尺寸 | 通过 | 980 × 700，documentElement 无横向溢出；仅网页预览 |
-| 最新原生桌面版本 | 仅确认启动 | 已读取最新界面无障碍树；按用户要求暂停原生渲染与窗口控制验收 |
-| 本地 Git 基线 | main 初始提交 | 用 `git log -1` 查看；项目未配置远程 |
+| 检查                                                             | 当前结果      | 需要保留的证据                                                                 |
+| ---------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------ |
+| `npm run build:ui`                                               | 通过          | 最终 TypeScript 与 Vite 生产构建完成                                           |
+| `cargo fmt --all -- --check`                                     | 通过          | Rust 格式检查完成                                                              |
+| `cargo check --workspace --all-targets --locked`                 | 通过          | 新模型、窗口权限和进程命令可编译                                               |
+| `cargo clippy --workspace --all-targets --locked -- -D warnings` | 通过          | 无 warnings                                                                    |
+| `cargo test --workspace --all-targets --locked`                  | 7 项通过      | 配置、路径安全、领域逻辑与版本排序                                             |
+| 浏览器双样式切换与保存                                           | 通过          | 切换并保存两种布局，重载保留样式和实例                                         |
+| 实例菜单与创建 / 重命名弹窗                                      | 通过          | 两个中文名称实例；菜单选择、Escape 关闭与焦点返回；方向键和 Enter 打开创建表单 |
+| 背景效果、主题与紧凑侧栏                                         | 通过          | 三个滑块改变 CSS 变量并保存；背景开关、浅色 / 深色、紧凑侧栏切换               |
+| 浏览器最小桌面尺寸                                               | 通过          | 980 × 700，documentElement 无横向溢出；仅网页预览                              |
+| 最新原生桌面版本                                                 | 仅确认启动    | 已读取最新界面无障碍树；按用户要求暂停原生渲染与窗口控制验收                   |
+| 本地 Git 基线                                                    | main 初始提交 | 用 `git log -1` 查看；项目未配置远程                                           |
 
 截图保存在 `docs/screenshots/immersive.png`、`modern.png`、`appearance.png` 和 `immersive-minimum.png`。
 截图来自浏览器实际渲染；其中两个实例仅为浏览器本地预览数据，初次运行桌面启动器仍为空实例库。
 浏览器截图中的翻译扩展浮标来自测试浏览器，不是启动器组件。
 
+## v0.1 规范整理与独立测试版（本轮）
+
+本轮拆分页面、Hook、复用组件和纯逻辑，增加规范工具与配置加载错误路径，修正 Tauri 构建 hook 的前端工作目录，并抽出 CLI。以下结果来自最终源码及正式生成的测试文件。
+
+| 检查                                                | 当前结果 | 范围                                                                             |
+| --------------------------------------------------- | -------- | -------------------------------------------------------------------------------- |
+| `npm run format:check`                              | 通过     | Web 源码、CSS 与文档；排除 vendor 和生成资产                                     |
+| `npm run lint:ui`                                   | 通过     | ESLint 10 的类型、Promise、Hooks、Fast Refresh 规则，零 warning                  |
+| TypeScript / Vite 生产构建                          | 通过     | 最终重构后的前端由 Tauri beforeBuildCommand 成功构建                             |
+| Rust 格式与 Clippy                                  | 通过     | `cargo fmt --all -- --check` 与 Clippy `-D warnings`                             |
+| Rust 单元测试                                       | 7 项通过 | workspace all-targets，包含配置与路径边界                                        |
+| `npm run build -- --features tauri/custom-protocol` | 通过     | Windows x64 release，依赖特性记录确认使用 custom-protocol                        |
+| 独立 exe 文件                                       | 已生成   | 22,462,464 字节；PE machine 0x8664、GUI subsystem 2                              |
+| release CLI 诊断                                    | 通过     | 交付目录的 exe 执行 `--version`、`--inspect`、`--check-catalog`；取得 920 个版本 |
+| 损坏配置保护                                        | CLI 通过 | 错误退出且损坏文件内容保留；GUI 错误入口已修复，未做原生渲染验收                 |
+| 重构后网页回归                                      | 通过     | 双样式保存、页面导航、创建弹窗与 Escape、真实目录查询和日志                      |
+| 原生窗口渲染                                        | 未执行   | 按用户要求留给后续测试，不宣称通过                                               |
+| v0.2 草稿                                           | 未接入   | 目录缓存草稿单独保留，不纳入 v0.1 exe                                            |
+
+交付文件：`releases/v0.1.0/Paradox-Launcher-0.1.0-windows-x64.exe`。
+
+SHA-256：
+
+```text
+b56b3626778fddfb5c2501e0010d50e4c77d6e9ad4e062460d574d7821207aa9
+```
+
+手工测试步骤和当前限制见 [TESTING-v0.1.md](TESTING-v0.1.md)。发布版不需要 Rust / Node / Vite，运行环境仍需要 WebView2，以及所选 Minecraft 对应的本地 Java。
+
 ## 尚未完成的验收
 
 - 没有在干净目录完成完整 Minecraft 下载、Java 启动、退出与再次启动闭环。
 - 没有实际验证主动停止游戏、崩溃退出与停止失败的运行时行为；修复目前属于代码层面的实现。
+- 关闭启动器不自动结束 Java；测试时建议先点击“停止游戏”。
 - 原生窗口渲染和窗口按钮操作按用户要求留到后续，不作为本轮验收项。
 - 没有完成长实例名称、所有缩放比例和高 DPI 的视觉兼容矩阵。
 - 没有完成 Java 8 / 17 / 21、路径含中文 / 空格、权限不足、网络中断的兼容矩阵。
@@ -57,6 +87,8 @@
 ```powershell
 npm ci
 npm --prefix ui ci
+npm run format:check
+npm run lint:ui
 npm run build:ui
 cargo fmt --all -- --check
 cargo check --workspace --all-targets --locked

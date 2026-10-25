@@ -1,7 +1,9 @@
 /target/
+/releases/
 node_modules/
 /ui/dist/
 *.tsbuildinfo
+.eslintcache
 /apps/desktop/gen/
 /.cache/
 /.minecraft/

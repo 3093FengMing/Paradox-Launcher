@@ -1,6 +1,6 @@
 # Paradox Launcher
 
-一个基于 **Rust + Elemental SDK** 的 Minecraft 桌面启动器。前端使用 **Tauri 2、React 19、TypeScript**，当前为可运行的 `v0.1.0` 基础框架。
+一个基于 **Rust + Elemental SDK** 的 Minecraft 桌面启动器。前端使用 **Tauri 2、React 19、TypeScript**，当前先交付 `v0.1.0` 基础框架测试版，收敛反馈后再推进 v0.2。
 
 ## 当前能力
 
@@ -20,9 +20,17 @@ Microsoft 登录、模组加载器、整合包、Java 自动下载、安装取�
 
 在「设置与个性化 → 外观与体验」选择界面风格。外观修改在设置页即时预览，点击「保存设置」后持久生效；「还原修改」恢复已保存的值。
 
+## Windows 测试版
+
+测试文件位置：`releases/v0.1.0/Paradox-Launcher-0.1.0-windows-x64.exe`。构建与校验状态见 [验证记录](docs/VERIFICATION.md)，操作步骤见 [v0.1 测试指南](docs/TESTING-v0.1.md)。
+
+发布版内嵌前端，不需要 Rust、Node.js、npm 或 Vite 服务。Windows 需要 WebView2 Runtime；安装游戏需要网络，启动 Minecraft 需要对应版本的本地 Java。
+
+关闭启动器当前不会自动结束 Java，建议先点击「停止游戏」。完整游戏兼容矩阵、原生渲染和高 DPI 尚未验收。
+
 ## 开发启动
 
-环境：Rust **1.92+**（MSVC）、Node.js **22+**、npm、Windows WebView2 Runtime。
+环境：Rust **1.92+**（MSVC）、Node.js **22.13+ 或 24+**、npm、Windows WebView2 Runtime。
 Windows 需要 Visual Studio Build Tools 的 C++ 桌面开发组件和 Windows SDK；SDK 的 TLS 依赖需要 CMake。
 本项目已在当前 Windows 环境编译与验证。Linux / macOS 的 CI 已配置，跨平台行为仍需 CI 和人工验收。
 
@@ -46,14 +54,16 @@ npm run dev:ui
 构建可执行文件（当前关闭安装包打包）：
 
 ```powershell
-npm run build
+npm run build -- --features tauri/custom-protocol
 ```
 
-Windows 输出：`target/release/paradox-launcher.exe`。发布版内嵌前端；开发版需 Vite 服务。
+Windows 输出：`target/release/paradox-launcher.exe`。发布构建显式启用 `tauri/custom-protocol`，使用内嵌资源；不要将未启用该特性的普通 Cargo release 预编译产物当作独立测试版。
 
 ## 校验
 
 ```powershell
+npm run format:check
+npm run lint:ui
 npm run build:ui
 cargo fmt --all -- --check
 cargo check --workspace --all-targets --locked
@@ -70,6 +80,8 @@ cargo run -p paradox-launcher -- --inspect
 
 首次以 Cargo 运行桌面 crate 前，应先执行 `npm run build:ui`。
 网络目录查询不纳入常规单元测试，避免 CI 依赖 Mojang 服务。
+
+前端由 `App` 组合页面、`useLauncher` 管理状态与操作、API adapter 处理 IPC／网页预览；复用组件与纯逻辑分别位于 `components/` 和 `lib/`。ESLint 10 执行类型相关、Promise 和 React Hooks 规则，Prettier 统一 Web 源码格式；Rust 使用 rustfmt 与 Clippy。开发约定见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 目录
 
@@ -120,4 +132,4 @@ SDK 固定为 [`26673f48`](https://github.com/ElectronicWave/Elemental/tree/2667
 
 本地 Git 已使用 `main` 分支；远程仓库地址待创建后设置，不将 Elemental 上游误设为本项目 origin。
 
-详细文档：[架构](docs/ARCHITECTURE.md) · [近期计划](docs/PLAN.md) · [UI 与自定义](docs/UI.md) · [SDK 接入](docs/ELEMENTAL.md) · [路线图](ROADMAP.md) · [验证记录](docs/VERIFICATION.md)
+详细文档：[架构](docs/ARCHITECTURE.md) · [近期计划](docs/PLAN.md) · [UI 与自定义](docs/UI.md) · [SDK 接入](docs/ELEMENTAL.md) · [路线图](ROADMAP.md) · [验证记录](docs/VERIFICATION.md) · [v0.1 测试指南](docs/TESTING-v0.1.md)

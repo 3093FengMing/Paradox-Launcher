@@ -52,11 +52,19 @@ impl Drop for BusyGuard {
 }
 
 fn snapshot(state: &AppState) -> CommandResult<AppConfig> {
+    ensure_config_loaded(state)?;
     state
         .config
         .lock()
         .map(|config| config.clone())
         .map_err(|_| "配置锁不可用".into())
+}
+
+fn ensure_config_loaded(state: &AppState) -> CommandResult<()> {
+    match &state.startup_error {
+        Some(error) => Err(format!("无法读取启动器配置：{error}")),
+        None => Ok(()),
+    }
 }
 
 fn profile(config: &AppConfig, key: &str) -> CommandResult<GameProfile> {
@@ -201,6 +209,7 @@ pub fn get_config(state: State<'_, AppState>) -> CommandResult<Bootstrap> {
 
 #[tauri::command]
 pub fn save_config(config: AppConfig, state: State<'_, AppState>) -> CommandResult<AppConfig> {
+    ensure_config_loaded(&state)?;
     let mut current = state.config.lock().map_err(|_| "配置锁不可用")?;
     if state.busy.load(Ordering::Acquire) {
         return Err("请在安装或游戏结束后保存设置".into());
@@ -219,6 +228,7 @@ pub fn create_profile(
     version: String,
     state: State<'_, AppState>,
 ) -> CommandResult<AppConfig> {
+    ensure_config_loaded(&state)?;
     let mut current = state.config.lock().map_err(|_| "配置锁不可用")?;
     if state.busy.load(Ordering::Acquire) {
         return Err("请在当前任务结束后创建实例".into());

@@ -10,16 +10,16 @@
 
 ## 已使用的接口
 
-| 产品操作 | SDK 接口 |
-| --- | --- |
-| 游戏根目录 | `Launcher::builder().storage_root(path).build()` |
-| 原版目录 | `catalog(VanillaCatalog::with_defaults())` |
-| 本地扫描 | `inspect_instances()` / `inspect_instance(key)` |
-| 安装 / 修复 | `prepare_instance(PrepareInstanceRequest { DriverSpec::Vanilla(VanillaSpec) })` |
-| 读取已有安装 | `load_instance(instance)` |
-| 构建启动命令 | `build_launch_command(prepared, OfflineAuthorizer, LaunchOptions)` |
-| 日志进程 | `core::launcher::process::spawn_command_logged(command)` |
-| 参数解析 | `try_set_extra_jvm_argument_string` / `try_set_extra_game_argument_string` |
+| 产品操作     | SDK 接口                                                                        |
+| ------------ | ------------------------------------------------------------------------------- |
+| 游戏根目录   | `Launcher::builder().storage_root(path).build()`                                |
+| 原版目录     | `catalog(VanillaCatalog::with_defaults())`                                      |
+| 本地扫描     | `inspect_instances()` / `inspect_instance(key)`                                 |
+| 安装 / 修复  | `prepare_instance(PrepareInstanceRequest { DriverSpec::Vanilla(VanillaSpec) })` |
+| 读取已有安装 | `load_instance(instance)`                                                       |
+| 构建启动命令 | `build_launch_command(prepared, OfflineAuthorizer, LaunchOptions)`              |
+| 日志进程     | `core::launcher::process::spawn_command_logged(command)`                        |
+| 参数解析     | `try_set_extra_jvm_argument_string` / `try_set_extra_game_argument_string`      |
 
 `LaunchOptions` 是 `VersionJsonLaunchConfig` 的别名，可设置 Java、分辨率、launcher 信息与参数。
 兼容的本地 Java 由 SDK 查找；当前不会自动下载安装 Java。

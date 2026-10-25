@@ -24,11 +24,39 @@ export interface Settings {
   extra_game_arguments: string;
   appearance: Appearance;
 }
-export interface GameProfile { instance_key: string; name: string; game_version: string }
-export interface AppConfig { schema_version: number; settings: Settings; profiles: GameProfile[]; active_profile: string | null }
-export interface Bootstrap { config: AppConfig; config_path: string }
-export interface GameVersion { id: string; kind: string }
-export interface InstalledInstance { instance_key: string; game_version: string | null; loader: string; root: string }
-export interface Activity { action: 'install' | 'launch'; status: 'started' | 'running' | 'finished' | 'error'; message: string }
-export interface LogLine { level: string; message: string; time: string }
+export interface GameProfile {
+  instance_key: string;
+  name: string;
+  game_version: string;
+}
+export interface AppConfig {
+  schema_version: number;
+  settings: Settings;
+  profiles: GameProfile[];
+  active_profile: string | null;
+}
+export interface Bootstrap {
+  config: AppConfig;
+  config_path: string;
+}
+export interface GameVersion {
+  id: string;
+  kind: string;
+}
+export interface InstalledInstance {
+  instance_key: string;
+  game_version: string | null;
+  loader: string;
+  root: string;
+}
+export interface Activity {
+  action: 'install' | 'launch';
+  status: 'started' | 'running' | 'finished' | 'error';
+  message: string;
+}
+export interface LogLine {
+  level: string;
+  message: string;
+  time: string;
+}
 export type Page = 'home' | 'instances' | 'downloads' | 'accounts' | 'settings' | 'logs';

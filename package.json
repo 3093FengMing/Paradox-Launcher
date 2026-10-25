@@ -7,7 +7,16 @@
     "build": "cd apps/desktop && tauri build",
     "dev:ui": "npm --prefix ui run dev",
     "build:ui": "npm --prefix ui run build",
-    "check:ui": "npm --prefix ui run check"
+    "check:ui": "npm --prefix ui run check",
+    "lint:ui": "npm --prefix ui run lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
-  "devDependencies": { "@tauri-apps/cli": "^2.9.0" }
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.9.0",
+    "prettier": "^3.9.10"
+  },
+  "engines": {
+    "node": "^22.13.0 || >=24"
+  }
 }
