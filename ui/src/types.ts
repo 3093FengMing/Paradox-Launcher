@@ -1,3 +1,4 @@
+import type { UiRouteId } from './ui-suite/routes';
 export interface Appearance {
   interface_style: 'immersive' | 'modern';
   theme: 'dark' | 'light' | 'system';
@@ -17,6 +18,22 @@ export interface AppearancePreset {
   appearance: Appearance;
 }
 export type LanguagePreference = 'zh-CN' | 'en-US' | 'system';
+export interface MicrosoftAccount {
+  id: string;
+  name: string;
+  skin_url: string | null;
+}
+export interface AccountsState {
+  client_id: string;
+  active: string | null;
+  accounts: MicrosoftAccount[];
+}
+export interface LoginPrompt {
+  id: string;
+  user_code: string;
+  verification_uri: string;
+  expires_at: number;
+}
 export interface Settings {
   game_directory: string;
   java_executable: string;
@@ -32,16 +49,39 @@ export interface Settings {
   language: LanguagePreference;
   network: NetworkOptions;
   close_behavior: 'ask' | 'stop' | 'background';
+  personalization: Personalization;
+  argument_templates: ArgumentTemplate[];
+}
+export interface Personalization {
+  background_file: string;
+  background_fit: 'cover' | 'contain' | 'stretch';
+  font: 'system' | 'yahei' | 'arial' | 'serif' | 'monospace';
+  startup_page: UiRouteId;
+  notifications: boolean;
+  retain_logs: boolean;
+  shortcuts: boolean;
+  launch_shortcut: 'Ctrl+Enter' | 'Ctrl+Shift+L' | 'Alt+Enter';
+}
+export interface ArgumentTemplate {
+  id: string;
+  name: string;
+  jvm: string;
+  game: string;
+  environment: Record<string, string>;
 }
 export interface GameProfile {
   instance_key: string;
   name: string;
   game_version: string;
+  loader: 'vanilla' | 'fabric' | 'quilt' | 'forge' | 'neoforge';
+  loader_version: string;
   game_directory: string | null;
   overrides: ProfileOverrides;
 }
 
 export interface ProfileOverrides {
+  argument_template?: string | null;
+  environment?: Record<string, string>;
   java_executable?: string | null;
   memory_mb?: number | null;
   minimum_memory_mb?: number | null;
@@ -100,7 +140,7 @@ export interface DownloadProgress {
 
 export interface DownloadTask {
   id: string;
-  kind: 'install' | 'java';
+  kind: 'install' | 'java' | 'content' | 'pack';
   name: string;
   profile_key: string | null;
   java_major: number | null;
@@ -132,16 +172,51 @@ export interface InstalledInstance {
   instance_key: string;
   game_version: string | null;
   loader: string;
+  loader_version: string | null;
   root: string;
 }
 export interface Activity {
   action: 'install' | 'launch';
-  status: 'started' | 'running' | 'finished' | 'error';
+  status: 'started' | 'running' | 'cancelling' | 'finished' | 'error';
   message: string;
 }
+export interface LogIdentity {
+  session: string;
+  sequence: string;
+}
+export interface StoredLog {
+  id?: LogIdentity;
+  level: string;
+  message: string;
+  time: number;
+}
+export interface LogEvent extends StoredLog {
+  id: LogIdentity;
+}
 export interface LogLine {
+  id?: LogIdentity;
   level: string;
   message: string;
   time: string;
 }
-export type Page = 'home' | 'instances' | 'downloads' | 'accounts' | 'settings' | 'logs';
+export interface ContentEntry {
+  name: string;
+  category: string;
+  size: number;
+  enabled: boolean;
+  record: { project_id: string; version_id: string; title: string } | null;
+}
+export interface ContentProject {
+  project_id: string;
+  title: string;
+  description: string;
+  project_type: string;
+  downloads: number;
+}
+export interface ContentSearch {
+  hits: ContentProject[];
+  total_hits: number;
+  offset: number;
+}
+export type Page =
+  'home' | 'instances' | 'downloads' | 'accounts' | 'settings' | 'logs' | 'content';

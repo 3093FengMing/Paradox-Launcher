@@ -23,6 +23,8 @@ pub struct Settings {
     pub language: String,
     pub network: crate::network::NetworkOptions,
     pub close_behavior: String,
+    pub personalization: crate::preferences::Personalization,
+    pub argument_templates: Vec<crate::preferences::ArgumentTemplate>,
 }
 
 impl Default for Settings {
@@ -42,6 +44,8 @@ impl Default for Settings {
             language: "zh-CN".into(),
             network: crate::network::NetworkOptions::default(),
             close_behavior: "ask".into(),
+            personalization: crate::preferences::Personalization::default(),
+            argument_templates: Vec::new(),
         }
     }
 }
@@ -64,6 +68,19 @@ impl Settings {
             "游戏分辨率超出支持范围"
         );
         self.appearance.validate()?;
+        self.personalization.validate()?;
+        ensure!(
+            self.argument_templates.len() <= 16,
+            "content.errors.templates"
+        );
+        let mut template_ids = HashSet::new();
+        for template in &self.argument_templates {
+            template.validate()?;
+            ensure!(
+                template_ids.insert(&template.id),
+                "content.errors.templates"
+            );
+        }
         ensure!(
             matches!(self.language.as_str(), "zh-CN" | "en-US" | "system"),
             "界面语言无效"
@@ -221,6 +238,10 @@ pub struct GameProfile {
     pub instance_key: String,
     pub name: String,
     pub game_version: String,
+    #[serde(default = "default_loader")]
+    pub loader: String,
+    #[serde(default)]
+    pub loader_version: String,
     /// A complete external Minecraft root; absence follows the global root.
     #[serde(default)]
     pub game_directory: Option<PathBuf>,
@@ -234,6 +255,8 @@ impl GameProfile {
             instance_key: uuid::Uuid::new_v4().to_string(),
             name: name.trim().into(),
             game_version: game_version.trim().into(),
+            loader: "vanilla".into(),
+            loader_version: String::new(),
             game_directory: None,
             overrides: crate::instances::ProfileOverrides::default(),
         };
@@ -243,6 +266,7 @@ impl GameProfile {
 
     pub fn validate(&self) -> Result<()> {
         validate_instance_key(&self.instance_key)?;
+        crate::loaders::validate_loader(&self.loader, &self.loader_version)?;
         ensure!(
             !self.name.trim().is_empty() && self.name.chars().count() <= 64,
             "实例名称应为 1–64 个字符"
@@ -279,6 +303,10 @@ impl GameProfile {
             &self.overrides,
         )
     }
+}
+
+fn default_loader() -> String {
+    "vanilla".into()
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -359,6 +387,8 @@ pub struct InstalledInstance {
     pub instance_key: String,
     pub game_version: Option<String>,
     pub loader: String,
+    #[serde(default)]
+    pub loader_version: Option<String>,
     pub root: PathBuf,
 }
 

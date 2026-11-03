@@ -1,0 +1,127 @@
+.appearance-presets {
+  padding-top: 24px;
+  margin-bottom: 26px;
+  border-top: 1px solid var(--border);
+}
+.preset-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.preset-heading h3 {
+  font-size: 0.82em;
+  font-weight: 600;
+}
+.preset-heading p,
+.preset-note {
+  color: var(--muted);
+  font-size: 0.65em;
+  line-height: 1.65;
+  margin-top: 7px;
+}
+.preset-list {
+  display: grid;
+  gap: 8px;
+}
+.preset-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  background: var(--input);
+  border: 1px solid var(--border);
+  border-radius: min(10px, var(--radius));
+  min-width: 0;
+}
+.preset-swatch {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: min(8px, var(--radius));
+  background: var(--hover);
+}
+.preset-info {
+  flex: 1;
+  min-width: 0;
+}
+.preset-info h4 {
+  font-size: 0.76em;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.preset-info p {
+  color: var(--muted);
+  font-size: 0.62em;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+.preset-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.preset-actions .icon-button {
+  width: 30px;
+  height: 30px;
+}
+.preset-apply {
+  font-size: 0.66em;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+.preset-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 17px 14px;
+  background: var(--input);
+  border: 1px dashed var(--border);
+  border-radius: min(10px, var(--radius));
+  color: var(--muted);
+}
+.preset-empty p {
+  font-size: 0.67em;
+  line-height: 1.65;
+}
+.preset-note {
+  margin-top: 12px;
+}
+.preset-error {
+  color: #fb7185;
+  font-size: 0.72em;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .preset-card {
+    flex-wrap: wrap;
+  }
+  .preset-info {
+    flex-basis: calc(100% - 48px);
+  }
+  .preset-actions {
+    margin-left: auto;
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .preset-apply {
+    white-space: normal;
+    text-align: right;
+  }
+  .preset-heading > .button-group {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+  .preset-heading > .button-group > button {
+    min-width: 0;
+    white-space: normal;
+    text-align: left;
+  }
+}

@@ -1,0 +1,13 @@
+.modern-shell {
+  --builtin-background: url('../common/assets/background-placeholder.png');
+  --builtin-banner: url('../common/assets/world.svg');
+}
+.modern-shell .banner-illustration {
+  background-image: var(--banner-image, var(--builtin-banner));
+}
+.modern-shell .workspace {
+  min-width: 0;
+}
+.modern-shell main {
+  min-height: 0;
+}

@@ -1,0 +1,3 @@
+[submodule "QuintElement"]
+	path = vendor/QuintElement
+	url = https://github.com/3093FengMing/QuintElement.git

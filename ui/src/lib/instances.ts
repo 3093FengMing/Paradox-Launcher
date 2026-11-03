@@ -11,19 +11,30 @@ function normalizedPath(path: string): string {
     ? normalized.toLowerCase()
     : normalized;
 }
+export function installedProfile(
+  profile: GameProfile,
+  settings: Settings,
+  installed: InstalledInstance[],
+): InstalledInstance | undefined {
+  const expected = normalizedPath(
+    `${profile.game_directory ?? settings.game_directory}/versions/${profile.instance_key}`,
+  );
+  return installed.find(
+    (instance) =>
+      instance.instance_key === profile.instance_key && normalizedPath(instance.root) === expected,
+  );
+}
+
 export function profileIsInstalled(
   profile: GameProfile,
   settings: Settings,
   installed: InstalledInstance[],
 ): boolean {
-  const expected = normalizedPath(
-    `${profile.game_directory ?? settings.game_directory}/versions/${profile.instance_key}`,
-  );
-  return installed.some(
-    (instance) =>
-      instance.instance_key === profile.instance_key &&
-      instance.loader === 'vanilla' &&
-      instance.game_version === profile.game_version &&
-      normalizedPath(instance.root) === expected,
+  const instance = installedProfile(profile, settings, installed);
+  return (
+    !!instance &&
+    instance.loader === (profile.loader ?? 'vanilla') &&
+    instance.game_version === profile.game_version &&
+    (instance.loader === 'vanilla' || instance.loader_version === profile.loader_version)
   );
 }

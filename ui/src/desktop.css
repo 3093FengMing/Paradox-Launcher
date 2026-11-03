@@ -197,7 +197,10 @@ main {
   position: absolute;
   inset: 0;
   z-index: -2;
-  background: url('/world.svg') center right / cover;
+  background-image: var(--banner-image, url('./ui-suite/builtins/common/assets/world.svg'));
+  background-position: center;
+  background-size: var(--background-size, cover);
+  background-repeat: no-repeat;
 }
 .launch-banner::after {
   content: '';
@@ -591,7 +594,7 @@ main {
   position: fixed;
   z-index: 50;
   inset: 0;
-  background: #08081099;
+  background: var(--overlay-backdrop);
   backdrop-filter: blur(4px);
   opacity: 1;
   transition: opacity 180ms var(--ease-out);
@@ -609,9 +612,7 @@ main {
   max-height: calc(100vh - 40px);
   overflow: auto;
   background: var(--surface);
-  box-shadow:
-    0 24px 80px #00000040,
-    0 0 0 1px var(--border);
+  box-shadow: var(--overlay-shadow);
   border: 0;
   border-radius: var(--radius);
   padding: 28px;

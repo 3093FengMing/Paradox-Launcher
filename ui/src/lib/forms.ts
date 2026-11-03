@@ -7,6 +7,8 @@ export type PatchSettings = <K extends keyof Settings>(key: K, value: Settings[K
 export interface ProfileEditor {
   name: string;
   version: string;
+  loader?: GameProfile['loader'];
+  loader_version?: string;
   editKey?: string;
   game_directory?: string | null;
   overrides?: ProfileOverrides;

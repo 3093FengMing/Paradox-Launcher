@@ -1,0 +1,271 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 22px;
+}
+.field > span {
+  font-size: 0.76em;
+  font-weight: 550;
+}
+.field small {
+  color: var(--faint);
+  font-size: 0.64em;
+  line-height: 1.65;
+}
+.field input,
+.field textarea {
+  font-size: 0.76em;
+}
+.ui-select-trigger,
+.ui-select-positioner {
+  --ui-select-surface: var(--surface, var(--panel, #20242a));
+  --ui-select-input: var(--input, #262b33);
+  --ui-select-text: var(--text, #f1f4f8);
+  --ui-select-muted: var(--faint, #aeb7c4);
+  --ui-select-border: var(--border, #58616e);
+  --ui-select-highlight: var(--hover, #394b2c);
+  color-scheme: dark;
+  color: var(--ui-select-text);
+  font: inherit;
+}
+.ui-select-trigger[data-ui-theme='light'],
+.ui-select-positioner[data-ui-theme='light'] {
+  --ui-select-surface: var(--surface, var(--panel, #fff));
+  --ui-select-input: var(--input, #fff);
+  --ui-select-text: var(--text, #202730);
+  --ui-select-muted: var(--faint, #58616e);
+  --ui-select-border: var(--border, #a1aab5);
+  --ui-select-highlight: var(--hover, #e2edce);
+  color-scheme: light;
+}
+.ui-select-trigger {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  width: 100%;
+  border: 1px solid var(--ui-select-border);
+  border-radius: min(10px, var(--radius, 10px));
+  background: var(--ui-select-input);
+  padding: 0.8em 1em;
+  text-align: start;
+  cursor: pointer;
+}
+.field .ui-select-trigger {
+  font-size: 0.76em;
+}
+.ui-select-trigger:focus-visible,
+.ui-select-trigger[data-popup-open] {
+  outline: 2px solid var(--accent, #a3e635);
+  outline-offset: 2px;
+}
+.ui-select-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ui-select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ui-select-value[data-placeholder] {
+  color: var(--ui-select-muted);
+}
+.ui-select-icon {
+  flex-shrink: 0;
+}
+.ui-select-positioner {
+  z-index: 10000;
+  outline: none;
+  pointer-events: auto;
+}
+.ui-select-popup {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-width: var(--anchor-width);
+  max-width: var(--available-width);
+  max-height: min(320px, var(--available-height));
+  overflow: hidden;
+  background: var(--ui-select-surface);
+  border: 1px solid var(--ui-select-border);
+  border-radius: min(10px, var(--radius, 10px));
+  box-shadow: var(--overlay-shadow);
+  padding: 5px;
+  outline: none;
+}
+.ui-select-list {
+  min-height: 0;
+  max-height: inherit;
+  overflow-y: auto;
+  outline: none;
+}
+.ui-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  outline: none;
+  overflow-wrap: anywhere;
+}
+.ui-select-option[data-highlighted] {
+  background: var(--ui-select-highlight);
+}
+.ui-select-option[data-selected] {
+  font-weight: 650;
+}
+.ui-select-option[data-disabled] {
+  color: var(--ui-select-muted);
+  cursor: not-allowed;
+}
+.ui-select-indicator {
+  width: 1em;
+  flex-shrink: 0;
+}
+/* Shared overlay tokens work in the application and its sibling ShadowRoot. */
+[data-theme],
+[data-ui-theme] {
+  --overlay-shadow: var(--shadow, 0 8px 28px #0004);
+  --overlay-backdrop: color-mix(in srgb, var(--bg, #151517) 65%, transparent);
+}
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55em;
+  font: inherit;
+  color: var(--text);
+  background: var(--input);
+  border: 1px solid var(--border);
+  border-radius: min(10px, var(--radius, 10px));
+  padding: 0.7em 1em;
+  cursor: pointer;
+}
+.ui-button:hover:not(:disabled) {
+  background: var(--hover);
+}
+.ui-button.icon-button {
+  padding: 0.5em;
+}
+.ui-button:disabled,
+.ui-input:disabled,
+.ui-textarea:disabled,
+.ui-slider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ui-button:focus-visible,
+.ui-input:focus-visible,
+.ui-textarea:focus-visible,
+.ui-slider:focus-visible,
+.ui-tab:focus-visible {
+  outline: 2px solid var(--accent, #a3e635);
+  outline-offset: 2px;
+}
+.ui-input,
+.ui-textarea,
+select[data-user-authored] {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  color: var(--text);
+  background: var(--input);
+  border: 1px solid var(--border);
+  border-radius: min(10px, var(--radius, 10px));
+  padding: 0.8em 1em;
+}
+.ui-input::placeholder,
+.ui-textarea::placeholder {
+  color: var(--faint);
+}
+.ui-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+}
+.ui-checkbox input {
+  width: auto;
+  accent-color: var(--accent-ink, var(--accent));
+}
+.ui-slider,
+.ui-progress {
+  width: 100%;
+  accent-color: var(--accent-ink, var(--accent));
+}
+.ui-slider {
+  padding: 0;
+  cursor: pointer;
+}
+.ui-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-backdrop);
+}
+.ui-dialog-popup,
+.ui-menu-popup,
+.ui-tooltip-popup {
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 10px);
+  box-shadow: var(--overlay-shadow);
+  outline: none;
+  pointer-events: auto;
+}
+.ui-dialog-popup {
+  max-width: calc(100vw - 8px);
+  max-height: calc(100dvh - 8px);
+}
+.ui-menu-positioner,
+.ui-tooltip-positioner {
+  z-index: 10000;
+  pointer-events: auto;
+}
+.ui-menu-popup {
+  max-width: var(--available-width);
+  max-height: var(--available-height);
+  overflow: auto;
+  padding: 5px;
+}
+.ui-menu-item {
+  padding: 9px 12px;
+  border-radius: 5px;
+  outline: none;
+  cursor: pointer;
+}
+.ui-menu-item[data-highlighted] {
+  background: var(--hover);
+}
+.ui-menu-item[data-disabled] {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+.ui-tooltip-popup {
+  max-width: min(320px, var(--available-width));
+  padding: 7px 10px;
+  font-size: 0.85em;
+}
+.ui-tabs-list {
+  display: flex;
+  gap: 6px;
+}
+.ui-tab {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: min(8px, var(--radius, 8px));
+  color: var(--text);
+  background: var(--input);
+}
+.ui-tab[data-active] {
+  color: var(--accent-ink, var(--accent));
+  background: var(--hover);
+}
+.ui-tab-panel {
+  padding-block: 12px;
+}

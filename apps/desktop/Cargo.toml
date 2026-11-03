@@ -4,13 +4,14 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "A native Rust Minecraft launcher powered by Elemental"
+description = "A native Rust Minecraft launcher powered by QuintElement"
 
 [dependencies]
 anyhow.workspace = true
 paradox-core = { path = "../../crates/launcher-core" }
 serde.workspace = true
 serde_json.workspace = true
+uuid.workspace = true
 tauri.workspace = true
 tokio.workspace = true
 tokio-util.workspace = true
@@ -19,6 +20,14 @@ tauri-plugin-dialog.workspace = true
 tauri-plugin-single-instance.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+tempfile.workspace = true
+open = "5"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.60", features = ["Win32_Foundation", "Win32_System_JobObjects", "Win32_System_Threading", "Win32_Security"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
 
 [build-dependencies]
 tauri-build.workspace = true

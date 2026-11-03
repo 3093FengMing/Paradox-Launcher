@@ -40,11 +40,7 @@ pub fn handle_close_requested(window: &tauri::Window, api: &tauri::CloseRequestA
         .map(|config| config.settings.close_behavior.clone())
         .unwrap_or_else(|_| "ask".into());
     if behavior == "ask" {
-        let game_running = state
-            .stop_sender
-            .lock()
-            .map(|sender| sender.is_some())
-            .unwrap_or(false);
+        let game_running = state.launch.is_active();
         let _ = app.emit(
             "launcher://close-requested",
             CloseRequest {
@@ -106,13 +102,10 @@ async fn close(app: &tauri::AppHandle, mode: &str) -> CommandResult<()> {
         _ => return Err("关闭行为无效".into()),
     }
     state.downloads.cancel_all(app);
-    let sender = state
-        .stop_sender
-        .lock()
-        .map_err(|_| "进程锁不可用")?
-        .clone();
-    if let Some(sender) = sender {
-        let _ = sender.try_send(());
+    if state.launch.is_active() {
+        // Completion can race this request; an already completed launch needs
+        // no further stop signal. Both close and IPC use the same controller.
+        let _ = crate::launch::request_stop(app, &state.launch);
     }
     let deadline = Instant::now() + Duration::from_secs(15);
     while state.busy.load(Ordering::Acquire) {

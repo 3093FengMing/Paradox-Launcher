@@ -2,10 +2,10 @@
 members = ["crates/launcher-core", "apps/desktop"]
 default-members = ["apps/desktop"]
 resolver = "3"
-exclude = ["vendor/minecraft-msa-auth"]
+exclude = ["vendor/minecraft-msa-auth", "vendor/QuintElement"]
 
 [workspace.package]
-version = "0.2.0"
+version = "0.4.0-dev"
 edition = "2024"
 rust-version = "1.92"
 license = "AGPL-3.0-only"
@@ -13,13 +13,14 @@ license = "AGPL-3.0-only"
 [workspace.dependencies]
 anyhow = "1.0"
 dirs = "6.0"
-elemental = { package = "elemental-kit", git = "https://github.com/ElectronicWave/Elemental", rev = "26673f4878882eeb94d4341bdc3dae910d3e57b7", default-features = false, features = ["launcher", "driver", "core", "infra"] }
+# Compile the tracked SDK submodule directly for launcher/core development.
+elemental = { package = "elemental-kit", path = "vendor/QuintElement/crates/elemental", default-features = false, features = ["launcher", "driver", "core", "infra"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tempfile = "3.23"
 tokio = { version = "1.48", features = ["rt-multi-thread", "macros", "sync", "time", "process", "fs", "io-util", "net"] }
 tokio-util = { version = "0.7", features = ["rt"] }
-reqwest = { version = "0.13", features = ["json", "stream", "query"] }
+reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "query", "form", "native-tls", "charset", "http2", "system-proxy"] }
 futures-util = "0.3"
 sha1 = "0.10"
 sha2 = "0.10"
@@ -36,7 +37,7 @@ uuid = { version = "1.18", features = ["v4"] }
 lto = "thin"
 strip = "debuginfo"
 
-# Elemental passes oauth2's reqwest 0.12 Client to minecraft-msa-auth.
+# QuintElement currently passes oauth2's reqwest 0.12 Client to minecraft-msa-auth.
 # Keep the helper on the same Client type until upstream fixes this boundary.
 [patch.crates-io]
 minecraft-msa-auth = { path = "vendor/minecraft-msa-auth" }

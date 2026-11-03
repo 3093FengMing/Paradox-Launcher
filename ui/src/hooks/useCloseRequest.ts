@@ -6,7 +6,12 @@ export function useCloseRequest(onError: (error: unknown) => void) {
   const [request, setRequest] = useState<CloseRequest | null>(null);
   const [closing, setClosing] = useState(false);
   const pending = useRef(false);
+  const lifecycle = useRef(0);
   useEffect(() => {
+    const life = lifecycle;
+    const generation = ++life.current;
+    pending.current = false;
+    setClosing(false);
     let disposed = false;
     let unsubscribe: (() => void) | undefined;
     void api
@@ -31,21 +36,25 @@ export function useCloseRequest(onError: (error: unknown) => void) {
       });
     return () => {
       disposed = true;
+      if (life.current === generation) life.current++;
       unsubscribe?.();
     };
   }, [onError]);
   const close = async (mode: 'stop' | 'background' | 'stay') => {
     if (pending.current) return;
     pending.current = true;
+    const generation = lifecycle.current;
     setClosing(true);
     try {
       await api.closeLauncher(mode);
-      setRequest(null);
+      if (lifecycle.current === generation) setRequest(null);
     } catch (error) {
-      onError(error);
+      if (lifecycle.current === generation) onError(error);
     } finally {
-      pending.current = false;
-      setClosing(false);
+      if (lifecycle.current === generation) {
+        pending.current = false;
+        setClosing(false);
+      }
     }
   };
   return { request, closing, close };

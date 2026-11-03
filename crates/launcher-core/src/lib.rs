@@ -1,11 +1,19 @@
+pub mod account_skins;
+pub mod accounts;
+pub mod auth;
 pub mod catalog;
+pub mod content;
 pub mod download;
 pub mod instances;
 pub mod java;
+pub mod loaders;
 pub mod model;
 pub mod network;
+pub mod packs;
+pub mod preferences;
 pub mod sdk;
 pub mod store;
+pub mod ui_suite;
 
 pub use model::{AppConfig, GameProfile, GameVersion, InstalledInstance, Settings};
 pub use sdk::ElementalService;

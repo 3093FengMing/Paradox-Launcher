@@ -4,26 +4,33 @@ import type { DownloadTask } from '../types';
 
 export function useDownloadQueue(
   onError: (error: unknown) => void,
-  onComplete: (task: DownloadTask) => void,
+  onFinished: (task: DownloadTask) => void,
 ) {
   const [tasks, setTasks] = useState<DownloadTask[]>([]);
+  const tasksRef = useRef<DownloadTask[]>([]);
   const [pending, setPending] = useState<string[]>([]);
-  const completedIds = useRef(new Set<string>());
+  const finishedIds = useRef(new Set<string>());
   const commandRef = useRef(new Set<string>());
   const generation = useRef(0);
   const revision = useRef(0);
 
   const acceptTasks = useCallback(
     (next: DownloadTask[]) => {
+      tasksRef.current = next;
       setTasks(next);
       for (const task of next) {
-        if (task.status === 'completed' && !completedIds.current.has(task.id)) {
-          completedIds.current.add(task.id);
-          onComplete(task);
+        // Pack instances are registered before installation, so failed and
+        // cancelled attempts can also leave configuration that needs reloading.
+        const needsRefresh =
+          task.status === 'completed' ||
+          (task.kind === 'pack' && ['failed', 'cancelled'].includes(task.status));
+        if (needsRefresh && !finishedIds.current.has(task.id)) {
+          finishedIds.current.add(task.id);
+          onFinished(task);
         }
       }
     },
-    [onComplete],
+    [onFinished],
   );
 
   const refresh = useCallback(async () => {
@@ -91,6 +98,13 @@ export function useDownloadQueue(
   );
 
   return {
+    getGuardState: () => ({
+      tasks: tasksRef.current as readonly DownloadTask[],
+      active: tasksRef.current.some((task) =>
+        ['queued', 'running', 'cancelling'].includes(task.status),
+      ),
+      pending: [...commandRef.current],
+    }),
     tasks,
     pending,
     active: tasks.some((task) => ['queued', 'running', 'cancelling'].includes(task.status)),

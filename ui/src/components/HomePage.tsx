@@ -1,3 +1,4 @@
+import { customComponent } from '../customization/Customizable';
 import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 import {
@@ -30,7 +31,7 @@ interface Props {
   onGameSettings: () => void;
 }
 
-export default function HomePage(props: Props) {
+function HomePage(props: Props) {
   const { t } = useTranslation();
   const {
     config,
@@ -205,3 +206,6 @@ export default function HomePage(props: Props) {
     </div>
   );
 }
+
+const CustomizedHomePage = customComponent('page.home-modern', HomePage);
+export default CustomizedHomePage;

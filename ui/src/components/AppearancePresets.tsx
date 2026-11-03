@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { customComponent } from '../customization/Customizable';
+import { useState } from 'react';
+import { useLauncherActions, useLauncherSnapshot } from '@paradox/launcher';
 import {
   Check,
   Copy,
@@ -13,130 +15,71 @@ import {
 import { useTranslation } from 'react-i18next';
 import LauncherDialog, { type DialogAppearance } from './LauncherDialog';
 import { Field } from './ui';
-import {
-  appearancesEqual,
-  exportAppearancePreset,
-  MAX_APPEARANCE_PRESETS,
-  PresetValidationError,
-  validatePresetName,
-} from '../lib/appearance-presets';
-import type { Appearance, AppearancePreset } from '../types';
+import { appearancesEqual, MAX_APPEARANCE_PRESETS } from '../lib/appearance-presets';
 import '../presets.css';
 
-interface Props extends DialogAppearance {
-  presets: AppearancePreset[];
-  currentAppearance: Appearance;
-  disabled: boolean;
-  onSavePreset: (name: string) => Promise<void>;
-  onApplyPreset: (id: string) => void;
-  onRenamePreset: (id: string, name: string) => Promise<void>;
-  onRemovePreset: (id: string) => Promise<void>;
-  onImportPreset: (json: string) => Promise<void>;
-}
-
-type PresetDialog =
-  | { kind: 'save' }
-  | { kind: 'rename'; preset: AppearancePreset }
-  | { kind: 'remove'; preset: AppearancePreset }
-  | { kind: 'import' }
-  | { kind: 'export'; preset: AppearancePreset; json: string };
-
-export default function AppearancePresets({
-  presets,
-  currentAppearance,
-  disabled,
-  onSavePreset,
-  onApplyPreset,
-  onRenamePreset,
-  onRemovePreset,
-  onImportPreset,
-  ...appearance
-}: Props) {
+function AppearancePresets(appearance: DialogAppearance) {
   const { t } = useTranslation();
-  const [dialog, setDialog] = useState<PresetDialog | null>(null);
-  const [name, setName] = useState('');
-  const [json, setJson] = useState('');
-  const [error, setError] = useState('');
-  const [pending, setPending] = useState(false);
+  const snapshot = useLauncherSnapshot();
+  const { presets: actions } = useLauncherActions();
+  const presets = snapshot.config.value?.appearance_presets ?? [];
+  const currentAppearance = snapshot.settings.draft?.appearance;
+  const draft = snapshot.drafts.preset;
+  const dialog = draft?.request;
+  const name = draft?.name ?? '';
+  const json = draft?.json ?? '';
+  const error = draft?.error;
+  const pending = snapshot.drafts.presetPending || (draft?.pending ?? false);
   const [copied, setCopied] = useState(false);
-  const inFlight = useRef(false);
-  const mounted = useRef(true);
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-
-  const blocked = disabled || pending;
+  const blocked =
+    !!snapshot.activity ||
+    snapshot.settings.saving ||
+    snapshot.downloads.active ||
+    snapshot.downloads.pending.length > 0 ||
+    pending;
   const atCapacity = presets.length >= MAX_APPEARANCE_PRESETS;
-  const open = (next: PresetDialog) => {
-    if (blocked) return;
-    setName(next.kind === 'rename' ? next.preset.name : '');
-    setJson('');
-    setError('');
+  const selected =
+    dialog && 'id' in dialog ? presets.find((preset) => preset.id === dialog.id) : null;
+  const open: typeof actions.openDialog = (next) => {
     setCopied(false);
-    setDialog(next);
+    actions.openDialog(next);
   };
-  const close = () => {
-    if (!inFlight.current) setDialog(null);
+  const close = actions.cancelDialog;
+  const copy = async () => {
+    if (!dialog || dialog.kind !== 'export') return;
+    try {
+      await actions.copyExport(dialog.id);
+      setCopied(true);
+    } catch {
+      /* Owner retains the error. */
+    }
   };
   const submit = async () => {
-    if (!dialog || inFlight.current || disabled || dialog.kind === 'export') return;
-    inFlight.current = true;
-    setPending(true);
-    setError('');
+    if (!dialog) return;
     try {
       switch (dialog.kind) {
         case 'save':
-          await onSavePreset(validatePresetName(name));
+          await actions.save(name);
           break;
         case 'rename':
-          await onRenamePreset(dialog.preset.id, validatePresetName(name));
+          await actions.rename(dialog.id, name);
           break;
         case 'remove':
-          await onRemovePreset(dialog.preset.id);
+          await actions.remove(dialog.id);
           break;
         case 'import':
-          await onImportPreset(json);
+          await actions.import(json);
           break;
       }
-      if (mounted.current) setDialog(null);
-    } catch (cause) {
-      if (mounted.current) {
-        setError(
-          cause instanceof PresetValidationError
-            ? t(cause.key)
-            : cause instanceof Error
-              ? cause.message
-              : String(cause),
-        );
-      }
-    } finally {
-      inFlight.current = false;
-      if (mounted.current) setPending(false);
-    }
-  };
-  const copy = async () => {
-    if (!dialog || dialog.kind !== 'export' || inFlight.current) return;
-    inFlight.current = true;
-    setPending(true);
-    setError('');
-    try {
-      await navigator.clipboard.writeText(dialog.json);
-      if (mounted.current) setCopied(true);
     } catch {
-      if (mounted.current) setError(t('presets.errors.clipboard'));
-    } finally {
-      inFlight.current = false;
-      if (mounted.current) setPending(false);
+      /* Owner retains input and the failure. */
     }
   };
 
   const dialogTitle = dialog ? t(`presets.dialog.${dialog.kind}.title`) : '';
   const dialogDescription = dialog
     ? t(`presets.dialog.${dialog.kind}.description`, {
-        name: 'preset' in dialog ? dialog.preset.name : undefined,
+        name: selected?.name,
       })
     : '';
 
@@ -171,7 +114,9 @@ export default function AppearancePresets({
       {presets.length ? (
         <div className="preset-list">
           {presets.map((preset) => {
-            const current = appearancesEqual(currentAppearance, preset.appearance);
+            const current = currentAppearance
+              ? appearancesEqual(currentAppearance, preset.appearance)
+              : false;
             return (
               <div className="preset-card" key={preset.id}>
                 <span
@@ -196,7 +141,7 @@ export default function AppearancePresets({
                     type="button"
                     className="text-button preset-apply"
                     disabled={blocked || current}
-                    onClick={() => onApplyPreset(preset.id)}
+                    onClick={() => actions.apply(preset.id)}
                     aria-label={t('presets.applyAria', { name: preset.name })}
                   >
                     {current && <Check size={14} />}
@@ -208,7 +153,7 @@ export default function AppearancePresets({
                     disabled={blocked}
                     aria-label={t('presets.renameAria', { name: preset.name })}
                     title={t('presets.rename')}
-                    onClick={() => open({ kind: 'rename', preset })}
+                    onClick={() => open({ kind: 'rename', id: preset.id })}
                   >
                     <Pencil size={15} />
                   </button>
@@ -218,9 +163,7 @@ export default function AppearancePresets({
                     disabled={blocked}
                     aria-label={t('presets.exportAria', { name: preset.name })}
                     title={t('presets.export')}
-                    onClick={() =>
-                      open({ kind: 'export', preset, json: exportAppearancePreset(preset) })
-                    }
+                    onClick={() => open({ kind: 'export', id: preset.id })}
                   >
                     <Download size={15} />
                   </button>
@@ -230,7 +173,7 @@ export default function AppearancePresets({
                     disabled={blocked}
                     aria-label={t('presets.removeAria', { name: preset.name })}
                     title={t('presets.remove')}
-                    onClick={() => open({ kind: 'remove', preset })}
+                    onClick={() => open({ kind: 'remove', id: preset.id })}
                   >
                     <Trash2 size={15} />
                   </button>
@@ -272,7 +215,7 @@ export default function AppearancePresets({
                   maxLength={96}
                   value={name}
                   disabled={blocked}
-                  onChange={(event) => setName(event.target.value)}
+                  onChange={(event) => actions.patchDraft({ name: event.target.value })}
                   placeholder={t('presets.namePlaceholder')}
                 />
               </Field>
@@ -287,7 +230,7 @@ export default function AppearancePresets({
                   spellCheck={false}
                   value={json}
                   disabled={blocked}
-                  onChange={(event) => setJson(event.target.value)}
+                  onChange={(event) => actions.patchDraft({ json: event.target.value })}
                   placeholder={t('presets.jsonPlaceholder')}
                 />
               </Field>
@@ -298,14 +241,14 @@ export default function AppearancePresets({
                   readOnly
                   rows={12}
                   spellCheck={false}
-                  value={dialog.json}
+                  value={json}
                   onFocus={(event) => event.target.select()}
                 />
               </Field>
             )}
             {error && (
               <p className="preset-error" role="alert">
-                {error}
+                {t(error)}
               </p>
             )}
             <div className="modal-buttons">
@@ -339,3 +282,9 @@ export default function AppearancePresets({
     </section>
   );
 }
+
+const CustomizedAppearancePresets = customComponent(
+  'component.appearance-presets',
+  AppearancePresets,
+);
+export default CustomizedAppearancePresets;

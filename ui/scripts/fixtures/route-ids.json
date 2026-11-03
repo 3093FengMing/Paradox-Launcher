@@ -1,0 +1,36 @@
+{
+  "valid": [
+    "home",
+    "instances",
+    "downloads",
+    "accounts",
+    "settings",
+    "logs",
+    "content",
+    "custom.help",
+    "custom.a",
+    "custom.a-0",
+    "custom.a-",
+    "custom.abcdefghijklmnopqrstuvwxyz0123456789-abcdefghijklmnopqrstuvwxyz0"
+  ],
+  "invalid": [
+    "",
+    "help",
+    "custom.",
+    "custom.A",
+    "custom.0a",
+    "custom.-a",
+    "custom.a_b",
+    "custom.a.b",
+    "custom.a/b",
+    "custom.é",
+    "custom.ａ",
+    " custom.a",
+    "custom.a ",
+    "custom.a\n",
+    "custom.a\r",
+    "custom.a\u0000",
+    "CUSTOM.a",
+    "custom.abcdefghijklmnopqrstuvwxyz0123456789-abcdefghijklmnopqrstuvwxyz01"
+  ]
+}

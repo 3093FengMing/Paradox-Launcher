@@ -23,7 +23,11 @@ pub fn enqueue_install(
         .downloads
         .enqueue(
             app,
-            DownloadRequest::Install { config, profile },
+            DownloadRequest::Install {
+                config,
+                profile,
+                managed_root: managed_root(&state),
+            },
             state.busy.clone(),
         )
         .map_err(|error| format!("{error:#}"))
@@ -88,13 +92,21 @@ pub fn retry_task(
                 &config,
                 task.profile_key.as_deref().ok_or("任务没有实例信息")?,
             )?;
-            DownloadRequest::Install { config, profile }
+            DownloadRequest::Install {
+                config,
+                profile,
+                managed_root: managed_root(&state),
+            }
         }
         DownloadKind::Java => DownloadRequest::Java {
             settings: config.settings,
             major: task.java_major.ok_or("任务没有 Java 版本信息")?,
             managed_root: managed_root(&state),
         },
+        DownloadKind::Content | DownloadKind::Pack => state
+            .downloads
+            .original_request(&id)
+            .map_err(|e| e.to_string())?,
     };
     state
         .downloads

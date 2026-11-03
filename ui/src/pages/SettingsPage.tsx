@@ -1,11 +1,16 @@
 import { useTranslation } from 'react-i18next';
 import { Check, Folder, Gamepad2, LoaderCircle, Palette, SlidersHorizontal } from 'lucide-react';
 import AppearanceSettings from '../components/AppearanceSettings';
+import PersonalizationSettings from '../components/PersonalizationSettings';
+import ArgumentTemplates from '../components/ArgumentTemplates';
 import { Field, Panel, Toggle } from '../components/ui';
 import type { PatchSettings, SettingsTab } from '../lib/forms';
 import type { Settings } from '../types';
 import type { ReactNode } from 'react';
+import { useLauncherActions, useLauncherSnapshot } from '@paradox/launcher';
 import * as api from '../api';
+import { customComponent } from '../customization/Customizable';
+import { useUiEditorActions } from '../ui-editor/public';
 
 interface SettingsPageProps {
   draft: Settings;
@@ -17,10 +22,12 @@ interface SettingsPageProps {
   onTabChange: (tab: SettingsTab) => void;
   onPatch: PatchSettings;
   onSave: () => void;
-  onReset: () => void;
   javaPanel: ReactNode;
   presetsPanel: ReactNode;
   onChooseDirectory: () => void;
+  background: string | null;
+  choosingBackground: boolean;
+  onChooseBackground: () => void;
 }
 
 const settingsTabs = [
@@ -29,7 +36,7 @@ const settingsTabs = [
   { id: 'advanced', label: 'settings.tabs.advanced', icon: SlidersHorizontal },
 ] as const;
 
-export default function SettingsPage({
+function SettingsPage({
   draft,
   configPath,
   tab: settingsTab,
@@ -39,12 +46,17 @@ export default function SettingsPage({
   onTabChange,
   onPatch,
   onSave,
-  onReset,
   javaPanel,
   presetsPanel,
   onChooseDirectory,
+  background,
+  choosingBackground,
+  onChooseBackground,
 }: SettingsPageProps) {
   const { t } = useTranslation();
+  const customization = useUiEditorActions();
+  const { settings: settingsActions } = useLauncherActions();
+  const { routes } = useLauncherSnapshot().navigation;
   return (
     <>
       <div className="settings-tabs">
@@ -52,6 +64,7 @@ export default function SettingsPage({
           <button
             className={settingsTab === tab.id ? 'active' : ''}
             key={tab.id}
+            disabled={saving || choosingBackground}
             onClick={() => onTabChange(tab.id)}
           >
             <tab.icon size={17} />
@@ -84,9 +97,28 @@ export default function SettingsPage({
               </div>
             </div>
             {presetsPanel}
+            <div className="settings-intro">
+              <h2>{t('uiSuiteEditor.title')}</h2>
+              <p>{t('uiSuiteEditor.description')}</p>
+              <button type="button" className="secondary" onClick={() => customization.open()}>
+                {t('uiSuiteEditor.open')}
+              </button>
+            </div>
             <AppearanceSettings
               appearance={draft.appearance}
-              onChange={(next) => onPatch('appearance', next)}
+              onPatch={settingsActions.patchAppearance}
+            />
+            <PersonalizationSettings
+              section="appearance"
+              value={draft.personalization}
+              desktop={api.desktop}
+              disabled={busy || saving}
+              choosing={choosingBackground}
+              background={background}
+              onChooseBackground={onChooseBackground}
+              onPatch={settingsActions.patchPersonalization}
+              routes={routes}
+              onSetStartupRoute={settingsActions.setStartupRoute}
             />
           </>
         )}
@@ -182,6 +214,19 @@ export default function SettingsPage({
         )}
         {settingsTab === 'advanced' && (
           <>
+            <PersonalizationSettings
+              section="behavior"
+              value={draft.personalization}
+              desktop={api.desktop}
+              disabled={busy || saving}
+              choosing={choosingBackground}
+              background={background}
+              onChooseBackground={onChooseBackground}
+              onPatch={settingsActions.patchPersonalization}
+              routes={routes}
+              onSetStartupRoute={settingsActions.setStartupRoute}
+            />
+            <ArgumentTemplates />
             <div className="settings-intro">
               <h2>{t('settings.advancedTitle')}</h2>
               <p>{t('settings.argumentsDescription')}</p>
@@ -324,12 +369,16 @@ export default function SettingsPage({
           )}
         </span>
         <div>
-          <button className="secondary" onClick={() => onReset()}>
+          <button
+            className="secondary"
+            disabled={saving || choosingBackground}
+            onClick={settingsActions.reset}
+          >
             {t('settings.reset')}
           </button>
           <button
             className="primary"
-            disabled={!!busy || saving || !dirty}
+            disabled={!!busy || saving || choosingBackground || !dirty}
             onClick={() => onSave()}
           >
             {saving ? <LoaderCircle className="spin" size={16} /> : <Check size={16} />}
@@ -340,3 +389,6 @@ export default function SettingsPage({
     </>
   );
 }
+
+const CustomSettingsPage = customComponent('page.settings', SettingsPage);
+export default CustomSettingsPage;

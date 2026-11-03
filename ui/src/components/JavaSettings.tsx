@@ -1,5 +1,6 @@
+import { customComponent } from '../customization/Customizable';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useLauncherActions, useLauncherSnapshot } from '@paradox/launcher';
 import {
   AlertCircle,
   Check,
@@ -10,19 +11,6 @@ import {
   Search,
 } from 'lucide-react';
 import { Badge, Field, Panel } from './ui';
-import type { JavaDiscovery } from '../types';
-
-interface JavaSettingsProps {
-  discovery: JavaDiscovery | null;
-  busy: boolean;
-  desktop: boolean;
-  gameRunning: boolean;
-  onDiscover: () => void;
-  onChoose: () => void;
-  onInspect: () => void;
-  onSelect: (path: string) => void;
-  onDownload: (major: number) => void;
-}
 
 function architectureLabel(architecture: string): string {
   if (['amd64', 'x86_64', 'x64'].includes(architecture.toLowerCase())) return 'java.architecture64';
@@ -32,19 +20,13 @@ function architectureLabel(architecture: string): string {
   return architecture;
 }
 
-export default function JavaSettings({
-  discovery,
-  busy,
-  desktop,
-  gameRunning,
-  onDiscover,
-  onChoose,
-  onInspect,
-  onSelect,
-  onDownload,
-}: JavaSettingsProps) {
+function JavaSettings() {
   const { t } = useTranslation();
-  const [otherMajor, setOtherMajor] = useState('');
+  const snapshot = useLauncherSnapshot();
+  const actions = useLauncherActions();
+  const { discovery, busy, downloadMajorDraft: otherMajor } = snapshot.java;
+  const desktop = snapshot.window.desktop;
+  const gameRunning = snapshot.activity !== null;
   const major = Number(otherMajor);
   const validMajor = Number.isInteger(major) && major >= 8 && major <= 99;
   const canDownload = desktop && !gameRunning && discovery?.download_supported !== false;
@@ -61,7 +43,9 @@ export default function JavaSettings({
             type="button"
             className="secondary small"
             disabled={!desktop || busy}
-            onClick={onDiscover}
+            onClick={() => {
+              void actions.java.discover();
+            }}
           >
             {busy ? <LoaderCircle size={15} className="spin" /> : <Search size={15} />}
             {busy ? t('java.checking') : t('java.discover')}
@@ -70,7 +54,9 @@ export default function JavaSettings({
             type="button"
             className="secondary small"
             disabled={!desktop || busy}
-            onClick={onChoose}
+            onClick={() => {
+              void actions.java.chooseForSettings();
+            }}
           >
             <FolderOpen size={15} />
             {t('java.chooseFile')}
@@ -79,7 +65,9 @@ export default function JavaSettings({
             type="button"
             className="secondary small"
             disabled={!desktop || busy}
-            onClick={onInspect}
+            onClick={() => {
+              void actions.java.inspect(snapshot.settings.draft?.java_executable ?? '');
+            }}
           >
             <Check size={15} />
             {t('java.checkPath')}
@@ -127,7 +115,7 @@ export default function JavaSettings({
                       major: installation.major_version,
                       path: installation.executable,
                     })}
-                    onClick={() => onSelect(installation.executable)}
+                    onClick={() => actions.java.selectForSettings(installation.executable)}
                   >
                     {t('java.useRuntime')}
                   </button>
@@ -171,7 +159,9 @@ export default function JavaSettings({
               className="secondary small"
               key={version}
               disabled={!canDownload}
-              onClick={() => onDownload(version)}
+              onClick={() => {
+                void actions.downloads.java(version);
+              }}
             >
               <Download size={15} />
               Java {version}
@@ -181,21 +171,21 @@ export default function JavaSettings({
       </div>
       <Field label={t('java.otherMajor')} description={t('java.otherMajorDescription')}>
         <input
-          type="number"
-          min={8}
-          max={99}
-          step={1}
+          type="text"
+          inputMode="numeric"
           placeholder={t('java.majorPlaceholder')}
           value={otherMajor}
           disabled={!canDownload}
-          onChange={(event) => setOtherMajor(event.target.value)}
+          onChange={(event) => actions.java.patchDownloadMajor(event.target.value)}
         />
       </Field>
       <button
         type="button"
         className="secondary small"
         disabled={!canDownload || !validMajor}
-        onClick={() => onDownload(major)}
+        onClick={() => {
+          void actions.java.downloadEnteredMajor();
+        }}
       >
         <Download size={15} />
         {t('java.downloadVersion')}
@@ -207,3 +197,6 @@ export default function JavaSettings({
     </section>
   );
 }
+
+const CustomizedJavaSettings = customComponent('component.java-settings', JavaSettings);
+export default CustomizedJavaSettings;

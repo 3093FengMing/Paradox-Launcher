@@ -11,7 +11,7 @@ pub fn run(argument: &str, store: &ConfigStore) -> Result<()> {
         }
         "--help" | "-h" => {
             println!(
-                "Paradox Launcher {}\n  --version        Show the application version\n  --check-catalog  Fetch the Elemental / Mojang catalog\n  --inspect        Scan installed instances\nConfig: {}",
+                "Paradox Launcher {}\n  --version        Show the application version\n  --check-catalog  Fetch the QuintElement / Mojang catalog\n  --inspect        Scan installed instances\n  --ui-safe        Open UI recovery without executing custom UI code\nConfig: {}",
                 env!("CARGO_PKG_VERSION"),
                 store.path().display()
             );
@@ -30,7 +30,7 @@ pub fn run(argument: &str, store: &ConfigStore) -> Result<()> {
         if argument == "--check-catalog" {
             let versions =
                 tokio::time::timeout(Duration::from_secs(30), service.catalog()).await??;
-            println!("Elemental catalog: {} versions", versions.len());
+            println!("QuintElement catalog: {} versions", versions.len());
             for version in versions.iter().take(10) {
                 println!("{} ({})", version.id, version.kind);
             }

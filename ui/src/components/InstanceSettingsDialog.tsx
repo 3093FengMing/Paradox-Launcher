@@ -1,32 +1,30 @@
+import { customComponent } from '../customization/Customizable';
 import { useTranslation } from 'react-i18next';
-import { useRef, useState } from 'react';
 import { Check, Folder, LoaderCircle } from 'lucide-react';
-import * as api from '../api';
+import { useLauncherSnapshot, useLauncherActions } from '@paradox/launcher';
 import LauncherDialog, { type DialogAppearance } from './LauncherDialog';
-import { Field } from './ui';
-import type { GameProfile, ProfileOverrides, Settings } from '../types';
+import { Field, Select } from './ui';
+import { EnvironmentEditor } from './ArgumentTemplates';
+import type { ProfileOverrides } from '../types';
 
-interface Props extends DialogAppearance {
-  profile: GameProfile;
-  settings: Settings;
-  saving: boolean;
-  onClose: () => void;
-  onError: (error: unknown) => void;
-  onSave: (profile: GameProfile) => Promise<boolean>;
-}
+// This detached identity keeps per-instance customization targets addressable.
+// Editable values and operations still come only from the permanent controller.
+type Props = DialogAppearance & { profile: { instance_key: string } };
 interface OverrideFieldProps {
   label: string;
   value: string | number | null | undefined;
   inherited: string | number;
+  source?: string;
   numeric?: boolean;
   multiline?: boolean;
   disabled: boolean;
   onChange: (value: string | number | null) => void;
 }
-function OverrideField({
+function DefaultOverrideField({
   label,
   value,
   inherited,
+  source,
   numeric = false,
   multiline = false,
   disabled,
@@ -48,7 +46,8 @@ function OverrideField({
       <small>
         {enabled
           ? t('instanceDialog.overrideDescription')
-          : t('instanceDialog.inherited', {
+          : t(source ? 'argumentTemplates.inheritedFrom' : 'instanceDialog.inherited', {
+              source,
               value: inherited === '' ? t('instanceDialog.emptyInherited') : inherited,
             })}
       </small>
@@ -75,52 +74,22 @@ function OverrideField({
     </div>
   );
 }
-export default function InstanceSettingsDialog({
-  profile,
-  settings,
-  saving,
-  onClose,
-  onError,
-  onSave,
-  ...appearance
-}: Props) {
+function InstanceSettingsDialog({ profile: identity, ...appearance }: Props) {
   const { t } = useTranslation();
-  const [draft, setDraft] = useState(() => structuredClone(profile));
-  const [picking, setPicking] = useState(false);
-  const pending = useRef(false);
+  const snapshot = useLauncherSnapshot();
+  const actions = useLauncherActions().instanceDraft;
+  const { profile: draft, environment, picking, pending, canSubmit } = snapshot.instanceDraft;
+  const settings = snapshot.config.value?.settings;
+  const saving = snapshot.settings.saving || pending;
+  const onClose = actions.cancel;
+  const setEnvironment = actions.setEnvironment;
+  if (!draft || !settings || draft.instance_key !== identity.instance_key) return null;
+  const template = settings.argument_templates.find(
+    (value) => value.id === draft.overrides.argument_template,
+  );
+  const argumentSource = template?.name ?? t('argumentTemplates.global');
   const patchOverride = (key: keyof ProfileOverrides, value: string | number | null) =>
-    setDraft((previous) => ({ ...previous, overrides: { ...previous.overrides, [key]: value } }));
-  const pickJava = async () => {
-    setPicking(true);
-    try {
-      const path = await api.chooseJava();
-      if (path) {
-        const installation = await api.inspectJava(path);
-        patchOverride('java_executable', installation.executable);
-      }
-    } catch (error) {
-      onError(error);
-    } finally {
-      setPicking(false);
-    }
-  };
-  const submit = async () => {
-    if (pending.current || saving) return;
-    pending.current = true;
-    try {
-      if (
-        await onSave({
-          ...draft,
-          name: draft.name.trim(),
-        })
-      )
-        onClose();
-    } catch (error) {
-      onError(error);
-    } finally {
-      pending.current = false;
-    }
-  };
+    actions.patchOverride(key, value);
   const numericFields = [
     { key: 'minimum_memory_mb', label: t('settings.minimumMemory') },
     { key: 'memory_mb', label: t('settings.maximumMemory') },
@@ -133,12 +102,12 @@ export default function InstanceSettingsDialog({
       pending={saving || picking}
       onClose={onClose}
       title={t('instances.settings')}
-      description={t('instanceDialog.description', { version: profile.game_version })}
+      description={t('instanceDialog.description', { version: draft.game_version })}
     >
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          void submit();
+          void actions.submit();
         }}
       >
         <Field label={t('instances.name')}>
@@ -147,9 +116,7 @@ export default function InstanceSettingsDialog({
             maxLength={64}
             disabled={saving}
             value={draft.name}
-            onChange={(event) =>
-              setDraft((previous) => ({ ...previous, name: event.target.value }))
-            }
+            onChange={(event) => actions.patch({ name: event.target.value })}
           />
         </Field>
         <Field
@@ -168,9 +135,9 @@ export default function InstanceSettingsDialog({
         <button
           type="button"
           className="secondary small"
-          disabled={!api.desktop || saving || picking}
+          disabled={!snapshot.window.desktop || saving || picking}
           onClick={() => {
-            void pickJava();
+            void actions.chooseJava();
           }}
         >
           <Folder size={15} />
@@ -189,11 +156,29 @@ export default function InstanceSettingsDialog({
             />
           ))}
         </div>
+        <Field
+          label={t('argumentTemplates.select')}
+          description={t('argumentTemplates.precedence')}
+        >
+          <Select
+            value={draft.overrides.argument_template ?? ''}
+            disabled={saving}
+            onValueChange={(value) => patchOverride('argument_template', value || null)}
+            options={[
+              { value: '', label: t('argumentTemplates.global') },
+              ...settings.argument_templates.map((value) => ({
+                value: value.id,
+                label: value.name,
+              })),
+            ]}
+          />
+        </Field>
         <OverrideField
           label={t('instanceDialog.jvmArguments')}
           multiline
           value={draft.overrides.extra_jvm_arguments}
-          inherited={settings.extra_jvm_arguments}
+          inherited={template?.jvm ?? settings.extra_jvm_arguments}
+          source={argumentSource}
           disabled={saving}
           onChange={(value) => patchOverride('extra_jvm_arguments', value)}
         />
@@ -201,15 +186,36 @@ export default function InstanceSettingsDialog({
           label={t('instanceDialog.gameArguments')}
           multiline
           value={draft.overrides.extra_game_arguments}
-          inherited={settings.extra_game_arguments}
+          inherited={template?.game ?? settings.extra_game_arguments}
+          source={argumentSource}
           disabled={saving}
           onChange={(value) => patchOverride('extra_game_arguments', value)}
         />
+        <h3>{t('argumentTemplates.instanceEnvironment')}</h3>
+        <p className="help-text">{t('argumentTemplates.environmentPrecedence')}</p>
+        {template && Object.keys(template.environment).length > 0 && (
+          <details>
+            <summary>
+              {t('argumentTemplates.inheritedEnvironment', { name: template.name })}
+            </summary>
+            {Object.entries(template.environment).map(([key, value]) => (
+              <Field label={key} key={key}>
+                <textarea readOnly value={value} rows={2} />
+              </Field>
+            ))}
+          </details>
+        )}
+        <EnvironmentEditor
+          rows={environment.map((row) => ({ ...row }))}
+          disabled={saving || picking}
+          onChange={setEnvironment}
+        />
+        <p className="help-text">{t('argumentTemplates.environmentHelp')}</p>
         <div className="modal-buttons">
           <button type="button" className="secondary" disabled={saving} onClick={onClose}>
             {t('common.cancel')}
           </button>
-          <button type="submit" className="primary" disabled={saving || picking}>
+          <button type="submit" className="primary" disabled={!canSubmit}>
             {saving ? <LoaderCircle className="spin" size={16} /> : <Check size={16} />}
             {t('instanceDialog.save')}
           </button>
@@ -218,3 +224,11 @@ export default function InstanceSettingsDialog({
     </LauncherDialog>
   );
 }
+
+const OverrideField = customComponent('control.override-field', DefaultOverrideField);
+
+const CustomizedInstanceSettingsDialog = customComponent(
+  'component.instance-settings-dialog',
+  InstanceSettingsDialog,
+);
+export default CustomizedInstanceSettingsDialog;

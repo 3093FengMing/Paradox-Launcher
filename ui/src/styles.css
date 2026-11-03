@@ -47,7 +47,8 @@ textarea:focus-visible {
   outline-offset: 3px;
 }
 input,
-textarea {
+textarea,
+select {
   min-width: 0;
   width: 100%;
   color: var(--text);
@@ -60,6 +61,14 @@ textarea {
 input::placeholder,
 textarea::placeholder {
   color: var(--faint);
+}
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+select:focus-visible {
+  outline: 2px solid var(--accent, #a3e635);
+  outline-offset: 3px;
 }
 input[type='range'] {
   padding: 0;
@@ -104,6 +113,36 @@ code {
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
+}
+.personalization-settings {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1em;
+  margin: 1em 0 1.5em;
+  min-width: 0;
+  display: grid;
+  gap: 1em;
+}
+.personalization-settings legend {
+  padding: 0 0.45em;
+  font-weight: 650;
+}
+.personalization-settings .field-grid {
+  margin: 0;
+}
+.background-preview {
+  width: 100%;
+  min-height: 140px;
+  max-height: 220px;
+  aspect-ratio: 16 / 7;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--input);
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.personalization-settings .button-group {
+  flex-wrap: wrap;
 }
 .sidebar {
   width: 215px;
@@ -407,7 +446,7 @@ main {
   position: absolute;
   z-index: -2;
   inset: 0;
-  background: url('/landscape.svg') center right / cover;
+  background: url('./ui-suite/builtins/common/assets/landscape.svg') center right / cover;
 }
 .hero::after {
   content: '';
@@ -901,25 +940,6 @@ main {
 .settings-intro p {
   margin-top: 7px;
   font-size: 0.7em;
-}
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  margin-bottom: 22px;
-}
-.field > span {
-  font-size: 0.76em;
-  font-weight: 550;
-}
-.field small {
-  color: var(--faint);
-  font-size: 0.64em;
-  line-height: 1.65;
-}
-.field input,
-.field textarea {
-  font-size: 0.76em;
 }
 .field-grid {
   display: grid;
@@ -1475,4 +1495,44 @@ main {
     grid-template-columns: 1fr 75px 100px;
     gap: 8px;
   }
+}
+/* Account actions wrap naturally in both interface styles and small windows. */
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.account-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+.account-entry,
+.login-prompt {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.account-entry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+}
+.account-entry > div {
+  min-width: 0;
+}
+.account-entry p,
+.login-prompt a {
+  overflow-wrap: anywhere;
+}
+.login-prompt {
+  margin-top: 16px;
+}
+.device-code {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
 }

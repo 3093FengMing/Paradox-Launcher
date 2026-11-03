@@ -1,6 +1,7 @@
+import { customComponent } from '../customization/Customizable';
 import { useTranslation } from 'react-i18next';
-import { useState, type CSSProperties } from 'react';
-import { Menu } from '@base-ui/react/menu';
+import { useState } from 'react';
+import { Menu } from './ui';
 import {
   Box,
   Check,
@@ -17,9 +18,9 @@ import {
   UserRound,
   X,
 } from 'lucide-react';
-import { readableAccent } from '../colors';
 import type { Activity, AppConfig, GameProfile, Page } from '../types';
 import { translateRuntimeMessage } from '../i18n';
+import { canStopLaunch, isCancelling, isLaunchActive } from '../lib/activity';
 
 interface Props {
   config: AppConfig;
@@ -36,7 +37,7 @@ interface Props {
   onCustomize: () => void;
 }
 
-export default function ImmersiveHome({
+function ImmersiveHome({
   config,
   active,
   busy,
@@ -53,16 +54,23 @@ export default function ImmersiveHome({
   const { t } = useTranslation();
   const [showHint, setShowHint] = useState(true);
   const [keyboardNavigation, setKeyboardNavigation] = useState(false);
-  const working = busy?.status === 'started' || busy?.status === 'running';
+  const launchActive = isLaunchActive(busy);
+  const cancelling = isCancelling(busy);
+  const working =
+    launchActive ||
+    (busy?.action === 'install' &&
+      (busy.status === 'started' || busy.status === 'running' || cancelling));
   const blockedByQueue = queueActive && (installed || !active);
   const running = busy?.action === 'launch' && busy.status === 'running';
   const hasProfiles = config.profiles.length > 0;
   const title = working
-    ? running
-      ? t('immersive.running')
-      : busy?.action === 'install'
-        ? t('immersive.preparing')
-        : t('immersive.launching')
+    ? cancelling
+      ? t('common.stopping')
+      : running
+        ? t('immersive.running')
+        : busy?.action === 'install'
+          ? t('immersive.preparing')
+          : t('immersive.launching')
     : blockedByQueue
       ? t('immersive.waitingDownload')
       : active
@@ -77,11 +85,6 @@ export default function ImmersiveHome({
     : hasProfiles
       ? t('immersive.chooseWorld')
       : t('immersive.firstWorld');
-  const menuVariables = {
-    '--menu-accent': readableAccent(config.settings.appearance.accent_color, 'dark'),
-    '--menu-radius': `${config.settings.appearance.border_radius}px`,
-    fontSize: `${config.settings.appearance.ui_scale}%`,
-  } as CSSProperties;
 
   const primaryAction = () => {
     if (active) onLaunch(active);
@@ -129,10 +132,16 @@ export default function ImmersiveHome({
                 ? translateRuntimeMessage(busy.message)
                 : t('immersive.queueBlocked')}
             </span>
-            {running && (
-              <button type="button" onClick={onStop}>
+            {launchActive && (
+              <button type="button" disabled={!canStopLaunch(busy)} onClick={onStop}>
                 <Square size={12} fill="currentColor" />
-                {t('common.stopGame')}
+                {t(
+                  cancelling
+                    ? 'common.stopping'
+                    : running
+                      ? 'common.stopGame'
+                      : 'common.cancelLaunch',
+                )}
               </button>
             )}
           </div>
@@ -177,7 +186,7 @@ export default function ImmersiveHome({
                 align="end"
                 sideOffset={10}
                 className={`immersive-menu-positioner ${keyboardNavigation ? 'keyboard-navigation' : ''} ${config.settings.appearance.reduce_motion ? 'reduce-motion' : ''}`}
-                style={menuVariables}
+                data-ui-root
               >
                 <Menu.Popup className="immersive-instance-menu">
                   <div className="immersive-menu-heading">
@@ -268,3 +277,6 @@ export default function ImmersiveHome({
     </section>
   );
 }
+
+const CustomizedImmersiveHome = customComponent('page.home-immersive', ImmersiveHome);
+export default CustomizedImmersiveHome;

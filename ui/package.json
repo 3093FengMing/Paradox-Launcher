@@ -1,18 +1,32 @@
 {
   "name": "paradox-launcher-ui",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.4.0-dev",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 1420 --strictPort",
     "build": "tsc -b && vite build",
     "check": "tsc -b --pretty false",
     "check:i18n": "node scripts/check-locales.mjs",
-    "lint": "eslint src vite.config.ts --max-warnings 0"
+    "lint": "eslint src vite.config.ts --max-warnings 0",
+    "test:customization-browser": "node scripts/check-ui-customization-browser.mjs",
+    "test:foundation-browser": "node scripts/check-ui-foundation-browser.mjs && node scripts/check-ui-foundation-review-browser.mjs && node scripts/check-ui-notices-browser.mjs",
+    "test:notices": "node scripts/check-ui-notices.mjs",
+    "test:launcher-browser": "node scripts/check-launcher-public-api-browser.mjs",
+    "test:launcher": "node scripts/check-launcher-public-api.mjs",
+    "test": "node scripts/check-launcher-public-api.mjs && node scripts/check-launch-cancellation.mjs && node scripts/check-account-experience.mjs && node scripts/check-config-reload.mjs && node scripts/check-loader-compatibility.mjs && node scripts/check-installed-loaders.mjs && node scripts/check-argument-templates.mjs && node scripts/check-personalization.mjs && node scripts/check-log-preferences.mjs && node scripts/check-ui-customization.mjs && node scripts/check-ui-css.mjs && node scripts/check-ui-customization-lifecycle.mjs && node scripts/check-ui-foundation.mjs && node scripts/check-ui-notices.mjs && node scripts/check-ui-suite-unicode.mjs && node scripts/check-ui-suite-compiler.mjs && node scripts/check-ui-ownership.mjs && node scripts/check-ui-suite-builtins.mjs && node scripts/check-ui-loader-boundary.mjs && node scripts/check-ui-inspector.mjs",
+    "test:suite": "node scripts/check-ui-suite-model.mjs && node scripts/check-ui-suite-unicode.mjs",
+    "test:suite-compiler": "node scripts/check-ui-suite-compiler.mjs",
+    "test:suite-browser": "node scripts/check-ui-suite-browser.mjs",
+    "test:final-browser": "node scripts/check-ui-final-browser.mjs",
+    "test:suite-storage-browser": "node scripts/check-ui-suite-storage-browser.mjs",
+    "test:inspector-browser": "node scripts/check-ui-inspector-browser.mjs && node scripts/check-ui-inspector-overrides-browser.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
     "@tauri-apps/api": "^2.9.0",
+    "css-tree": "^3.2.1",
+    "fflate": "0.8.3",
     "i18next": "^26.5.10",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
@@ -22,6 +36,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/css-tree": "^2.3.11",
+    "@types/node": "^22.20.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",

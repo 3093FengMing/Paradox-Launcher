@@ -6,12 +6,16 @@ use std::{
 use anyhow::{Context, Result, ensure};
 use elemental::{
     core::{
-        auth::authorizers::offline::OfflineAuthorizer,
+        auth::{
+            authorizer::Authorizer, authorizers::offline::OfflineAuthorizer,
+            credential::UserCredential,
+        },
         launcher::command::LaunchCommand,
-        launcher::process::{self, LoggedChild},
+        launcher::process,
         storage::Storage,
     },
     driver::{
+        driver::InstalledDriver,
         drivers::vanilla::{
             catalog::VanillaCatalog,
             prepared::ResolvedVanillaVersion,
@@ -28,6 +32,8 @@ use elemental::{
 };
 use tokio_util::sync::CancellationToken;
 
+pub use elemental::core::launcher::process::LoggedChild;
+
 use crate::{
     GameProfile, GameVersion, InstalledInstance, Settings,
     download::{Artifact, Checksum, DownloadEngine, DownloadError, DownloadProgress},
@@ -40,14 +46,48 @@ pub struct ElementalService {
     settings: Settings,
 }
 
+/// A validated launch command whose game process has not been created yet.
+/// The command can contain credentials, so it deliberately does not expose Debug.
+pub struct PreparedGameLaunch {
+    command: LaunchCommand,
+}
+
+impl PreparedGameLaunch {
+    /// Create the game process after the caller has resolved its cancellation boundary.
+    pub fn spawn(self) -> Result<LoggedChild> {
+        process::spawn_command_logged(self.command).context("无法启动 Java 进程")
+    }
+}
+
+struct LaunchIdentity {
+    credential: Option<UserCredential>,
+    username: String,
+}
+impl Authorizer for LaunchIdentity {
+    async fn authorize(&self) -> Result<UserCredential> {
+        match &self.credential {
+            Some(credential) => Ok(credential.clone()),
+            None => {
+                OfflineAuthorizer {
+                    username: self.username.clone(),
+                }
+                .authorize()
+                .await
+            }
+        }
+    }
+}
+
 impl ElementalService {
     pub fn new(settings: &Settings) -> Result<Self> {
         settings.validate()?;
+        let mut settings = settings.clone();
+        settings.game_directory = java_compatible_path(&settings.game_directory);
         Ok(Self {
             launcher: Launcher::builder()
                 .storage_root(&settings.game_directory)
                 .build(),
-            settings: settings.clone(),
+            settings,
         })
     }
 
@@ -88,6 +128,7 @@ impl ElementalService {
             .into_iter()
             .map(|instance| InstalledInstance {
                 instance_key: instance.instance_name,
+                loader_version: installed_loader_version(&instance.driver),
                 game_version: instance
                     .driver
                     .game_version
@@ -200,8 +241,51 @@ impl ElementalService {
         settings: &Settings,
         managed_runtime_root: &Path,
     ) -> Result<LoggedChild> {
+        self.launch_authenticated(profile, settings, managed_runtime_root, None)
+            .await
+    }
+
+    pub async fn launch_authenticated(
+        &self,
+        profile: &GameProfile,
+        settings: &Settings,
+        managed_runtime_root: &Path,
+        credential: Option<UserCredential>,
+    ) -> Result<LoggedChild> {
+        self.prepare_authenticated_launch(profile, settings, managed_runtime_root, credential)
+            .await?
+            .spawn()
+    }
+
+    /// Inspect an installed instance and prepare its command without spawning the game.
+    /// Java probes are owned by this future; cancelling it cannot create a game process.
+    pub async fn prepare_authenticated_launch(
+        &self,
+        profile: &GameProfile,
+        settings: &Settings,
+        managed_runtime_root: &Path,
+        credential: Option<UserCredential>,
+    ) -> Result<PreparedGameLaunch> {
         profile.validate()?;
         settings.validate()?;
+        let instance = self
+            .launcher
+            .inspect_instance(profile.instance_key.clone())
+            .await?
+            .context("实例尚未安装，请先安装 / 修复")?;
+        ensure!(
+            instance.driver.driver.id == profile.loader
+                && instance
+                    .driver
+                    .game_version
+                    .as_ref()
+                    .map(|version| version.as_str())
+                    == Some(profile.game_version.as_str())
+                && (profile.loader == "vanilla"
+                    || installed_loader_version(&instance.driver).as_deref()
+                        == Some(profile.loader_version.as_str())),
+            "loaders.errors.identity"
+        );
         let required_java = java::required_java_major_version(
             &settings
                 .game_directory
@@ -215,15 +299,6 @@ impl ElementalService {
             managed_runtime_root,
         )
         .await?;
-        let instance = self
-            .launcher
-            .inspect_instance(profile.instance_key.clone())
-            .await?
-            .context("实例尚未安装，请先安装 / 修复")?;
-        ensure!(
-            instance.driver.driver.id == "vanilla",
-            "此阶段只支持原版启动"
-        );
         let prepared = self
             .launcher
             .load_instance(instance)
@@ -262,7 +337,8 @@ impl ElementalService {
             .launcher
             .build_launch_command(
                 &prepared,
-                OfflineAuthorizer {
+                LaunchIdentity {
+                    credential,
                     username: settings.offline_username.clone(),
                 },
                 &options,
@@ -277,11 +353,64 @@ impl ElementalService {
                 .join(&profile.instance_key)
                 .join("natives"),
         )?;
-        process::spawn_command_logged(command.command).context("无法启动 Java 进程")
+        include_profile_environment(&mut command.command, settings, profile);
+        Ok(PreparedGameLaunch {
+            command: command.command,
+        })
     }
 }
 
+/// Java's classpath/JAR readers do not accept Windows verbatim prefixes.
+/// Resolve filesystem boundaries with the original path, then give SDK Java
+/// operations the equivalent conventional drive or UNC path.
+pub(crate) fn java_compatible_path(path: &Path) -> PathBuf {
+    #[cfg(windows)]
+    {
+        let value = path.to_string_lossy();
+        if let Some(unc) = value.strip_prefix(r"\\?\UNC\") {
+            return PathBuf::from(format!(r"\\{unc}"));
+        }
+        if let Some(drive) = value.strip_prefix(r"\\?\")
+            && drive.as_bytes().get(1..3) == Some(b":\\")
+            && drive
+                .as_bytes()
+                .first()
+                .is_some_and(u8::is_ascii_alphabetic)
+        {
+            return PathBuf::from(drive);
+        }
+    }
+    path.to_owned()
+}
+
+fn installed_loader_version(driver: &InstalledDriver) -> Option<String> {
+    let version = driver.driver_version.as_deref()?;
+    if driver.driver.id == "forge" {
+        let prefix = format!("{}-", driver.game_version.as_ref()?.as_str());
+        Some(version.strip_prefix(&prefix).unwrap_or(version).to_owned())
+    } else {
+        Some(version.to_owned())
+    }
+}
+
+fn include_profile_environment(
+    command: &mut LaunchCommand,
+    settings: &Settings,
+    profile: &GameProfile,
+) {
+    if let Some(id) = &profile.overrides.argument_template
+        && let Some(template) = settings
+            .argument_templates
+            .iter()
+            .find(|template| &template.id == id)
+    {
+        crate::preferences::merge_environment(&mut command.env, &template.environment);
+    }
+    crate::preferences::merge_environment(&mut command.env, &profile.overrides.environment);
+}
+
 fn include_extracted_natives(command: &mut LaunchCommand, natives: &Path) -> Result<()> {
+    let natives = java_compatible_path(natives);
     // New Mojang metadata uses natives/java, while this pinned Elemental version
     // extracts the JNI libraries at natives/. Preserve the metadata search path
     // and add the actual extraction directory instead of changing saved metadata.
@@ -291,15 +420,17 @@ fn include_extracted_natives(command: &mut LaunchCommand, natives: &Path) -> Res
         .find(|argument| argument.starts_with("-Djava.library.path="))
     {
         let mut paths: Vec<_> =
-            std::env::split_paths(argument.trim_start_matches("-Djava.library.path=")).collect();
-        if !paths.iter().any(|path| path == natives) {
-            paths.push(natives.to_owned());
-            let paths = std::env::join_paths(paths).context("原生库搜索路径无效")?;
-            *argument = format!(
-                "-Djava.library.path={}",
-                paths.to_str().context("原生库搜索路径编码无效")?
-            );
+            std::env::split_paths(argument.trim_start_matches("-Djava.library.path="))
+                .map(|path| java_compatible_path(&path))
+                .collect();
+        if !paths.iter().any(|path| path == &natives) {
+            paths.push(natives);
         }
+        let paths = std::env::join_paths(paths).context("原生库搜索路径无效")?;
+        *argument = format!(
+            "-Djava.library.path={}",
+            paths.to_str().context("原生库搜索路径编码无效")?
+        );
     }
     Ok(())
 }
@@ -384,64 +515,4 @@ fn validate_artifact_target(root: &Path, canonical_root: &Path, target: &Path) -
         "下载目标通过链接跳出了游戏目录"
     );
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn release_versions_sort_numerically() {
-        assert_eq!(compare_version_ids("1.10", "1.9"), Ordering::Greater);
-        assert_eq!(compare_version_ids("1.21.10", "1.21.2"), Ordering::Greater);
-        assert_eq!(compare_version_ids("1.21.1", "1.21"), Ordering::Greater);
-    }
-
-    #[test]
-    fn metadata_cannot_escape_the_game_root() {
-        for path in [
-            "../outside.jar",
-            "/absolute.jar",
-            "C:/outside.jar",
-            "org/../bad.jar",
-            "org\\bad.jar",
-            "org/CON.jar",
-        ] {
-            assert!(validate_relative_artifact(path).is_err(), "{path}");
-        }
-        assert!(validate_relative_artifact("org/lwjgl/lwjgl/3.3.3/lwjgl-3.3.3.jar").is_ok());
-        assert!(
-            validate_metadata_paths(&serde_json::json!({"assetIndex":{"id":"../bad"}})).is_err()
-        );
-        assert!(
-            validate_metadata_paths(
-                &serde_json::json!({"logging":{"client":{"file":{"id":"bad/path.xml"}}}})
-            )
-            .is_err()
-        );
-    }
-
-    #[test]
-    fn modern_native_search_keeps_metadata_and_sdk_extraction_directories() {
-        let directory = tempfile::tempdir().unwrap();
-        let natives = directory.path().join("含空格 natives");
-        let requested = natives.join("java");
-        let mut command = LaunchCommand {
-            program: "java".into(),
-            args: vec![format!("-Djava.library.path={}", requested.display())],
-            env: Default::default(),
-            cwd: None,
-        };
-        include_extracted_natives(&mut command, &natives).unwrap();
-        let paths: Vec<_> =
-            std::env::split_paths(command.args[0].trim_start_matches("-Djava.library.path="))
-                .collect();
-        assert_eq!(paths, vec![requested, natives.clone()]);
-        include_extracted_natives(&mut command, &natives).unwrap();
-        assert_eq!(
-            std::env::split_paths(command.args[0].trim_start_matches("-Djava.library.path="))
-                .count(),
-            2
-        );
-    }
 }

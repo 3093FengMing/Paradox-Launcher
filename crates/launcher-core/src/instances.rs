@@ -31,6 +31,8 @@ pub struct ProfileOverrides {
     pub extra_jvm_arguments: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extra_game_arguments: Option<String>,
+    pub argument_template: Option<String>,
+    pub environment: std::collections::BTreeMap<String, String>,
 }
 
 impl ProfileOverrides {
@@ -79,6 +81,7 @@ impl ProfileOverrides {
         {
             ensure!(!arguments.contains('\0'), "实例启动参数不能包含空字符");
         }
+        crate::preferences::validate_environment(&self.environment)?;
         Ok(())
     }
 }
@@ -93,6 +96,15 @@ pub fn effective_settings(
     global.validate()?;
     overrides.validate()?;
     let mut effective = global.clone();
+    if let Some(id) = &overrides.argument_template {
+        let template = global
+            .argument_templates
+            .iter()
+            .find(|t| &t.id == id)
+            .context("content.errors.templates")?;
+        effective.extra_jvm_arguments = template.jvm.clone();
+        effective.extra_game_arguments = template.game.clone();
+    }
     if let Some(directory) = game_directory {
         effective.game_directory = directory.to_owned();
     }
@@ -219,6 +231,8 @@ pub fn registration_from_scan(
         instance_key: instance.instance_key.clone(),
         name: name.unwrap_or(&default_name).trim().to_owned(),
         game_version: version.to_owned(),
+        loader: "vanilla".into(),
+        loader_version: String::new(),
         game_directory: (directory != global_directory).then_some(referenced_directory),
         overrides: ProfileOverrides::default(),
     };
@@ -549,6 +563,7 @@ mod tests {
             instance_key: key.to_owned(),
             game_version: Some("1.21.1".into()),
             loader: "vanilla".into(),
+            loader_version: None,
             root: instance_root,
         }
     }
@@ -587,6 +602,38 @@ mod tests {
         assert_eq!(effective.extra_game_arguments, "--demo");
         assert_eq!(global.memory_mb, 4096);
         assert_eq!(global.extra_game_arguments, "--fullscreen");
+    }
+
+    #[test]
+    fn template_arguments_replace_global_then_allow_explicit_instance_values() {
+        let template = crate::preferences::ArgumentTemplate {
+            id: uuid::Uuid::new_v4().to_string(),
+            name: "Template".into(),
+            jvm: "-Dsource=template".into(),
+            game: "--demo".into(),
+            environment: Default::default(),
+        };
+        let mut overrides = ProfileOverrides {
+            argument_template: Some(template.id.clone()),
+            ..ProfileOverrides::default()
+        };
+        let global = Settings {
+            extra_jvm_arguments: "-Dsource=global".into(),
+            extra_game_arguments: "--fullscreen".into(),
+            argument_templates: vec![template],
+            ..Settings::default()
+        };
+        let effective = effective_settings(&global, None, &overrides).unwrap();
+        assert_eq!(effective.extra_jvm_arguments, "-Dsource=template");
+        assert_eq!(effective.extra_game_arguments, "--demo");
+        overrides.extra_jvm_arguments = Some(String::new());
+        overrides.extra_game_arguments = Some("--width 900".into());
+        let effective = effective_settings(&global, None, &overrides).unwrap();
+        assert_eq!(effective.extra_jvm_arguments, "");
+        assert_eq!(effective.extra_game_arguments, "--width 900");
+        assert_eq!(global.extra_jvm_arguments, "-Dsource=global");
+        overrides.argument_template = Some(uuid::Uuid::new_v4().to_string());
+        assert!(effective_settings(&global, None, &overrides).is_err());
     }
 
     #[test]

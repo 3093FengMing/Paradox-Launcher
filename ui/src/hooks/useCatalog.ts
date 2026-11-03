@@ -13,6 +13,8 @@ export function useCatalog(addLog: (level: string, message: string) => void) {
   useEffect(() => {
     const lifecycle = generation;
     lifecycle.current++;
+    pending.current = false;
+    setCatalogBusy(false);
     return () => {
       lifecycle.current++;
     };
@@ -42,8 +44,10 @@ export function useCatalog(addLog: (level: string, message: string) => void) {
         setCatalogError(message);
         addLog('error', message);
       } finally {
-        pending.current = false;
-        if (generation.current === requestGeneration) setCatalogBusy(false);
+        if (generation.current === requestGeneration) {
+          pending.current = false;
+          setCatalogBusy(false);
+        }
       }
     },
     [addLog],

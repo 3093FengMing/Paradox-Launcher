@@ -1,0 +1,58 @@
+.ui-notice-viewport {
+  position: fixed;
+  right: 20px;
+  bottom: var(--ui-notice-viewport-bottom, 20px);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(380px, calc(100vw - 40px));
+  max-height: min(420px, var(--ui-notice-viewport-max-height, 50dvh));
+  overflow: auto;
+  overscroll-behavior: contain;
+  pointer-events: none;
+  font: 14px system-ui;
+}
+.ui-notice-viewport:has(.ui-notice) {
+  pointer-events: auto;
+}
+.ui-notice {
+  display: flex;
+  flex-shrink: 0;
+  align-items: start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface, #202532);
+  color: var(--text, #f0f2f7);
+  border: 1px solid var(--border, #475064);
+  border-radius: 10px;
+  box-shadow: 0 6px 24px #0003;
+  pointer-events: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ui-notice span {
+  flex: 1;
+  max-height: min(180px, calc(50dvh - 32px));
+  overflow: auto;
+}
+.ui-notice button {
+  flex: none;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  border-radius: 4px;
+  padding: 0 5px;
+  cursor: pointer;
+  font: 20px system-ui;
+}
+.ui-notice button:focus-visible {
+  outline: 2px solid var(--accent, #91b8ff);
+  outline-offset: 2px;
+}
+.ui-notice-error {
+  border-color: var(--danger, #e37b7b);
+}
+.ui-notice-warning {
+  border-color: var(--warning, #d7af5d);
+}

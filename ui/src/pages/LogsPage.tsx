@@ -1,3 +1,4 @@
+import { customComponent } from '../customization/Customizable';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownToLine, Terminal } from 'lucide-react';
 import { Panel } from '../components/ui';
@@ -10,7 +11,7 @@ interface LogsPageProps {
   onClear: () => void;
 }
 
-export default function LogsPage({ logs, busy, onClear }: LogsPageProps) {
+function LogsPage({ logs, busy, onClear }: LogsPageProps) {
   const { t } = useTranslation();
   return (
     <>
@@ -59,3 +60,6 @@ export default function LogsPage({ logs, busy, onClear }: LogsPageProps) {
     </>
   );
 }
+
+const CustomizedLogsPage = customComponent('page.logs', LogsPage);
+export default CustomizedLogsPage;

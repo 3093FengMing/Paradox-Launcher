@@ -3,12 +3,21 @@ import { listen } from '@tauri-apps/api/event';
 import i18n from './i18n';
 import { validateSettings } from './lib/forms';
 import {
+  defaultPersonalization,
+  normalizeArgumentTemplates,
+  normalizePersonalization,
+} from './lib/preferences';
+import {
   MAX_APPEARANCE_PRESETS,
   parsePresetAppearance,
   validatePresetName,
 } from './lib/appearance-presets';
 import type {
   Activity,
+  AccountsState,
+  LoginPrompt,
+  ContentEntry,
+  ContentSearch,
   AppearancePreset,
   AppConfig,
   Bootstrap,
@@ -17,11 +26,22 @@ import type {
   DownloadTask,
   GameProfile,
   InstalledInstance,
+  LogEvent,
+  LogIdentity,
+  StoredLog,
   JavaDiscovery,
   JavaInstallation,
 } from './types';
 
 export const desktop = isTauri();
+export {
+  loadSuiteLibrary,
+  saveSuiteLibrary,
+  resetSuiteLibrary,
+  readRecoverableLibrary,
+  inspectSuiteRecovery,
+  resetRecoverableSuiteLibrary,
+} from './ui-suite/storage';
 const previewKey = 'paradox-launcher-preview-v1';
 const previewDefaults: AppConfig = {
   schema_version: 1,
@@ -38,6 +58,8 @@ const previewDefaults: AppConfig = {
     extra_jvm_arguments: '',
     extra_game_arguments: '',
     close_behavior: 'ask',
+    personalization: defaultPersonalization(),
+    argument_templates: [],
     network: {
       timeout_seconds: 30,
       max_concurrent_downloads: 8,
@@ -103,9 +125,13 @@ function loadPreview(): AppConfig {
         ...config.settings,
         appearance: { ...previewDefaults.settings.appearance, ...config.settings.appearance },
         network: { ...previewDefaults.settings.network, ...config.settings.network },
+        personalization: normalizePersonalization(config.settings.personalization),
+        argument_templates: normalizeArgumentTemplates(config.settings.argument_templates),
       },
       profiles: config.profiles.map((profile) => ({
         ...profile,
+        loader: profile.loader ?? 'vanilla',
+        loader_version: profile.loader_version ?? '',
         game_directory: profile.game_directory ?? null,
         overrides: profile.overrides ?? {},
       })),
@@ -133,13 +159,26 @@ export async function saveConfig(config: AppConfig): Promise<AppConfig> {
   if (config.schema_version !== previewDefaults.schema_version)
     throw new Error(i18n.t('api.previewConfigInvalid'));
   validateSettings(config.settings);
+  const normalized = {
+    ...config,
+    settings: {
+      ...config.settings,
+      personalization: normalizePersonalization(config.settings.personalization),
+      argument_templates: normalizeArgumentTemplates(config.settings.argument_templates),
+    },
+  };
   parsePresetAppearance(config.settings.appearance);
   parsePreviewPresets(config.appearance_presets);
-  localStorage.setItem(previewKey, JSON.stringify(config));
-  return config;
+  localStorage.setItem(previewKey, JSON.stringify(normalized));
+  return normalized;
 }
-export async function createProfile(name: string, version: string): Promise<AppConfig> {
-  if (desktop) return invoke('create_profile', { name, version });
+export async function createProfile(
+  name: string,
+  version: string,
+  loader: GameProfile['loader'] = 'vanilla',
+  loaderVersion = '',
+): Promise<AppConfig> {
+  if (desktop) return invoke('create_profile', { name, version, loader, loaderVersion });
   if (!name.trim() || Array.from(name.trim()).length > 64)
     throw new Error(i18n.t('errors.profileName'));
   const gameVersion = version.trim();
@@ -150,6 +189,8 @@ export async function createProfile(name: string, version: string): Promise<AppC
     instance_key: crypto.randomUUID(),
     name: name.trim(),
     game_version: gameVersion,
+    loader,
+    loader_version: loaderVersion,
     game_directory: null,
     overrides: {},
   };
@@ -193,6 +234,53 @@ function invokeDesktop<T>(command: string, args?: Record<string, unknown>): Prom
 }
 
 export const discoverJava = () => invokeDesktop<JavaDiscovery>('discover_java');
+export const searchContent = (query: string, category: string, offset: number) =>
+  invokeDesktop<ContentSearch>('search_content', { query, category, offset });
+export const listContent = (key: string, category: string) =>
+  invokeDesktop<ContentEntry[]>('list_content', { key, category });
+export const toggleMod = (key: string, name: string) =>
+  invokeDesktop<void>('toggle_mod', { key, name });
+export const removeContent = (key: string, category: string, name: string) =>
+  invokeDesktop<void>('remove_content', { key, category, name });
+export const openContentDirectory = (key: string, category: string) =>
+  invokeDesktop<void>('open_content_directory', { key, category });
+export const enqueueContent = (key: string, project: string, category: string) =>
+  invokeDesktop<DownloadTask>('enqueue_content', { key, project, category });
+export const enqueuePack = (source: string, remote: boolean) =>
+  invokeDesktop<DownloadTask>('enqueue_pack', { source, remote });
+export const choosePack = () => invokeDesktop<string | null>('choose_pack');
+export const chooseBackground = () => invokeDesktop<string | null>('choose_background');
+export const readBackground = (id: string) => invokeDesktop<string>('read_background', { id });
+export const storedLogs = () =>
+  desktop ? invoke<StoredLog[]>('stored_logs') : Promise.resolve<StoredLog[]>([]);
+export const clearStoredLogs = () =>
+  desktop ? invoke<LogIdentity>('clear_stored_logs') : Promise.resolve(null);
+export const exportInstance = (key: string, includeSaves: boolean) =>
+  invokeDesktop<boolean>('export_instance', { key, includeSaves });
+export const accountState = () =>
+  desktop
+    ? invoke<AccountsState>('account_state')
+    : Promise.resolve<AccountsState>({ client_id: '', active: null, accounts: [] });
+export const accountSkin = (accountId: string) =>
+  desktop ? invoke<string | null>('account_skin', { accountId }) : Promise.resolve(null);
+export const accountRecovery = () =>
+  desktop ? invoke<string[]>('account_recovery') : Promise.resolve<string[]>([]);
+export const clearAccountRecovery = (accountId: string) =>
+  invokeDesktop<string[]>('clear_account_recovery', { accountId });
+export const configureMicrosoft = (clientId: string) =>
+  invokeDesktop<AccountsState>('configure_microsoft', { clientId });
+export const openLoginPage = (id: string) => invokeDesktop<void>('open_login_page', { id });
+export const loaderVersions = (loader: string, game: string) =>
+  invokeDesktop<{ version: string; stable: boolean }[]>('loader_versions', { loader, game });
+export const beginLogin = (requestId?: string) =>
+  invokeDesktop<LoginPrompt>('begin_login', { requestId });
+export const completeLogin = (id: string) => invokeDesktop<AccountsState>('complete_login', { id });
+export const cancelLogin = (id: string) => invokeDesktop<void>('cancel_login', { id });
+export const selectAccount = (id: string | null) =>
+  invokeDesktop<AccountsState>('select_account', { id });
+export const refreshAccount = (id: string) =>
+  invokeDesktop<AccountsState>('refresh_account', { id });
+export const logoutAccount = (id: string) => invokeDesktop<AccountsState>('logout_account', { id });
 export const inspectJava = (path: string) =>
   invokeDesktop<JavaInstallation>('inspect_java', { path });
 export const enqueueJava = (majorVersion: number) =>
@@ -276,16 +364,14 @@ export async function stopGame(): Promise<void> {
 }
 export async function subscribe(
   onActivity: (event: Activity) => void,
-  onLog: (event: { level: string; message: string }) => void,
+  onLog: (event: LogEvent) => void,
 ): Promise<() => void> {
   if (!desktop) return () => {};
   const activity = await listen<Activity>('launcher://activity', (event) =>
     onActivity(event.payload),
   );
   try {
-    const log = await listen<{ level: string; message: string }>('launcher://log', (event) =>
-      onLog(event.payload),
-    );
+    const log = await listen<LogEvent>('launcher://log', (event) => onLog(event.payload));
     return () => {
       activity();
       log();

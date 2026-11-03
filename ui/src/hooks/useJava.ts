@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as api from '../api';
-import type { JavaDiscovery } from '../types';
+import type { JavaDiscovery, JavaInstallation } from '../types';
 
 export function useJava(onError: (error: unknown) => void) {
-  const [discovery, setDiscovery] = useState<JavaDiscovery | null>(null);
+  const [discovery, setRenderedDiscovery] = useState<JavaDiscovery | null>(null);
+  const discoveryState = useRef(discovery);
+  const setDiscovery = useCallback((value: JavaDiscovery) => {
+    discoveryState.current = value;
+    setRenderedDiscovery(value);
+  }, []);
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
   const discoveryRequested = useRef(false);
@@ -12,6 +17,8 @@ export function useJava(onError: (error: unknown) => void) {
   useEffect(() => {
     const lifecycle = generation;
     lifecycle.current++;
+    pending.current = false;
+    setBusy(false);
     return () => {
       lifecycle.current++;
       discoveryRequested.current = false;
@@ -31,13 +38,17 @@ export function useJava(onError: (error: unknown) => void) {
         if (generation.current === requestGeneration) onError(error);
         return null;
       } finally {
-        pending.current = false;
         if (generation.current === requestGeneration) {
+          pending.current = false;
           setBusy(false);
           if (discoveryRequested.current) {
             discoveryRequested.current = false;
             queueMicrotask(() => {
-              if (generation.current === requestGeneration) void discoverRef.current();
+              // Let a successful chooser hand its result to inspect first. If
+              // inspection reserves this same owner, discover defers again.
+              queueMicrotask(() => {
+                if (generation.current === requestGeneration) void discoverRef.current();
+              });
             });
           }
         }
@@ -53,12 +64,12 @@ export function useJava(onError: (error: unknown) => void) {
     const requestGeneration = generation.current;
     const result = await run(api.discoverJava);
     if (result && generation.current === requestGeneration) setDiscovery(result);
-  }, [run]);
+  }, [run, setDiscovery]);
   useEffect(() => {
     discoverRef.current = discover;
   }, [discover]);
   const inspect = useCallback(
-    async (path: string) => {
+    async (path: string): Promise<JavaInstallation | null> => {
       const requestGeneration = generation.current;
       const result = await run(async () => {
         const installation = await api.inspectJava(path);
@@ -75,9 +86,22 @@ export function useJava(onError: (error: unknown) => void) {
           warnings: detected.warnings,
           download_supported: detected.download_supported,
         });
+        return installation;
       }
+      return null;
     },
-    [run],
+    [run, setDiscovery],
   );
-  return { discovery, busy, discover, inspect, choose: () => run(api.chooseJava) };
+  return {
+    getGuardState: () => ({
+      discovery: discoveryState.current,
+      busy: pending.current,
+      generation: generation.current,
+    }),
+    discovery,
+    busy,
+    discover,
+    inspect,
+    choose: () => run(api.chooseJava),
+  };
 }

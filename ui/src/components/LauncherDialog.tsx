@@ -1,6 +1,7 @@
+import { customComponent } from '../customization/Customizable';
 import { useTranslation } from 'react-i18next';
 import type { CSSProperties, ReactNode } from 'react';
-import { Dialog } from '@base-ui/react/dialog';
+import { Dialog } from './ui';
 import { X } from 'lucide-react';
 
 export interface DialogAppearance {
@@ -16,7 +17,7 @@ interface Props extends DialogAppearance {
   onClose: () => void;
   children: ReactNode;
 }
-export default function LauncherDialog({
+function LauncherDialog({
   title,
   description,
   pending = false,
@@ -30,6 +31,7 @@ export default function LauncherDialog({
   const { t } = useTranslation();
   return (
     <Dialog.Root
+      data-ui-modal-boundary
       open
       onOpenChange={(open) => {
         if (!open && !pending) onClose();
@@ -39,6 +41,7 @@ export default function LauncherDialog({
         <div
           className={`dialog-theme ${reduceMotion ? 'reduce-motion' : ''} ${keyboardNavigation ? 'keyboard-navigation' : ''}`}
           data-theme={theme}
+          data-ui-root
           style={variables}
         >
           <Dialog.Backdrop className="modal-backdrop" />
@@ -63,3 +66,6 @@ export default function LauncherDialog({
     </Dialog.Root>
   );
 }
+
+const CustomizedLauncherDialog = customComponent('component.launcher-dialog', LauncherDialog);
+export default CustomizedLauncherDialog;

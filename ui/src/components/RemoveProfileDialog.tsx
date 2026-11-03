@@ -1,66 +1,51 @@
+import { customComponent } from '../customization/Customizable';
 import { useTranslation } from 'react-i18next';
-import { useRef, useState } from 'react';
 import { LoaderCircle, Trash2 } from 'lucide-react';
-import * as api from '../api';
+import { useLauncherSnapshot, useLauncherActions } from '@paradox/launcher';
 import LauncherDialog, { type DialogAppearance } from './LauncherDialog';
 import { Field } from './ui';
-import type { GameProfile } from '../types';
 
-interface Props extends DialogAppearance {
-  profile: GameProfile;
-  saving: boolean;
-  onClose: () => void;
-  onRemove: (key: string, deleteFiles: boolean) => Promise<boolean>;
-}
-export default function RemoveProfileDialog({
-  profile,
-  saving,
-  onClose,
-  onRemove,
+function RemoveProfileDialog({
+  profile: identity,
   ...appearance
-}: Props) {
+}: DialogAppearance & { profile: { instance_key: string } }) {
   const { t } = useTranslation();
-  const [deleteFiles, setDeleteFiles] = useState(false);
-  const [confirmation, setConfirmation] = useState('');
-  const pending = useRef(false);
-  const submit = async () => {
-    if (pending.current || saving || (deleteFiles && confirmation !== profile.name)) return;
-    pending.current = true;
-    try {
-      if (await onRemove(profile.instance_key, deleteFiles)) onClose();
-    } finally {
-      pending.current = false;
-    }
-  };
+  const snapshot = useLauncherSnapshot();
+  const actions = useLauncherActions().removal;
+  const { profileKey, deleteFiles, confirmation, pending, canSubmit } = snapshot.removal;
+  const saving = snapshot.settings.saving || pending;
+  const onClose = actions.cancel;
+  const profile = snapshot.config.value?.profiles.find((item) => item.instance_key === profileKey);
+  if (!profileKey || profileKey !== identity.instance_key) return null;
+  const name = profile?.name ?? profileKey;
   return (
     <LauncherDialog
       {...appearance}
       pending={saving}
       onClose={onClose}
-      title={t('removeDialog.title', { name: profile.name })}
+      title={t('removeDialog.title', { name })}
       description={t('removeDialog.description')}
     >
       <label className="inline-check">
         <input
           type="checkbox"
-          disabled={saving || !api.desktop}
+          disabled={saving || !snapshot.window.desktop}
           checked={deleteFiles}
           onChange={(event) => {
-            setDeleteFiles(event.target.checked);
-            setConfirmation('');
+            actions.setDeleteFiles(event.target.checked);
           }}
         />
         {t('removeDialog.deleteFiles')}
       </label>
       {deleteFiles && (
         <>
-          <p>{t('removeDialog.fileWarning', { key: profile.instance_key })}</p>
-          <Field label={t('removeDialog.confirmName')} description={profile.name}>
+          <p>{t('removeDialog.fileWarning', { key: profileKey })}</p>
+          <Field label={t('removeDialog.confirmName')} description={name}>
             <input
               required
               disabled={saving}
               value={confirmation}
-              onChange={(event) => setConfirmation(event.target.value)}
+              onChange={(event) => actions.setConfirmation(event.target.value)}
               autoComplete="off"
             />
           </Field>
@@ -72,9 +57,9 @@ export default function RemoveProfileDialog({
         </button>
         <button
           className="primary"
-          disabled={saving || (deleteFiles && confirmation !== profile.name)}
+          disabled={!canSubmit}
           onClick={() => {
-            void submit();
+            void actions.submit();
           }}
         >
           {saving ? <LoaderCircle className="spin" size={16} /> : <Trash2 size={16} />}
@@ -84,3 +69,9 @@ export default function RemoveProfileDialog({
     </LauncherDialog>
   );
 }
+
+const CustomizedRemoveProfileDialog = customComponent(
+  'component.remove-profile-dialog',
+  RemoveProfileDialog,
+);
+export default CustomizedRemoveProfileDialog;

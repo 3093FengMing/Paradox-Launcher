@@ -1,18 +1,6 @@
-import { Download, Home, Layers, UserRound, type LucideIcon } from 'lucide-react';
 import type { Page } from '../types';
-
-interface NavigationItem {
-  id: Page;
-  label: string;
-  icon: LucideIcon;
-}
-
-export const navigation: NavigationItem[] = [
-  { id: 'home', label: 'nav.home', icon: Home },
-  { id: 'instances', label: 'nav.instances', icon: Layers },
-  { id: 'downloads', label: 'nav.downloads', icon: Download },
-  { id: 'accounts', label: 'nav.accounts', icon: UserRound },
-];
+import { validateRouteRegistry, type UiRouteDescriptor } from '../ui-suite/routes';
+export { routeIcon } from '../ui-suite/routes';
 
 export const pageNames: Record<Page, string> = {
   home: 'pages.home.title',
@@ -21,6 +9,7 @@ export const pageNames: Record<Page, string> = {
   accounts: 'pages.accounts.title',
   settings: 'pages.settings.title',
   logs: 'pages.logs.title',
+  content: 'content.title',
 };
 
 export const pageDescriptions: Record<Page, string> = {
@@ -30,4 +19,40 @@ export const pageDescriptions: Record<Page, string> = {
   accounts: 'pages.accounts.description',
   settings: 'pages.settings.description',
   logs: 'pages.logs.description',
+  content: 'content.description',
 };
+
+export const builtinRoutes: readonly UiRouteDescriptor[] = validateRouteRegistry(
+  (['home', 'instances', 'downloads', 'content', 'accounts', 'settings', 'logs'] as const).map(
+    (id, order) => ({
+      id,
+      entry: (
+        {
+          home: 'components/HomePage.tsx',
+          instances: 'pages/InstancesPage.tsx',
+          downloads: 'pages/DownloadsPage.tsx',
+          content: 'pages/ContentPage.tsx',
+          accounts: 'pages/AccountsPage.tsx',
+          settings: 'pages/SettingsPage.tsx',
+          logs: 'pages/LogsPage.tsx',
+        } as const
+      )[id],
+      title: pageNames[id],
+      description: pageDescriptions[id],
+      navigation: true,
+      startupSelectable: true,
+      order,
+      icon: (
+        {
+          home: 'Home',
+          instances: 'Layers',
+          downloads: 'Download',
+          content: 'Package',
+          accounts: 'UserRound',
+          settings: 'Settings2',
+          logs: 'Terminal',
+        } as const
+      )[id],
+    }),
+  ),
+);

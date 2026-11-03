@@ -81,6 +81,9 @@ const runtimeMessages = new Map<string, string>([
   ['Java 下载已取消', 'runtime.javaCancelled'],
   ['正在检查 Java 并构建启动命令', 'runtime.preparingLaunch'],
   ['正在检查 Java 并启动游戏', 'runtime.preparingLaunch'],
+  ['启动已取消', 'runtime.launchCancelled'],
+  ['正在停止启动或游戏进程', 'runtime.cancellingLaunch'],
+  ['停止游戏失败，请重试', 'runtime.stopGameFailed'],
   ['已停止游戏进程', 'runtime.gameStopped'],
   ['游戏已停止', 'runtime.gameStopped'],
   ['没有运行中的游戏', 'runtime.noRunningGame'],
@@ -99,6 +102,8 @@ const runtimeMessages = new Map<string, string>([
 
 /** Translate known launcher statuses while retaining unrecognized diagnostics. */
 export function translateRuntimeMessage(message: string): string {
+  const code = /(?:auth|content|loaders)\.errors\.[A-Za-z]+/.exec(message)?.[0];
+  if (code && i18n.exists(code)) return i18n.t(code);
   const translate = (key: string, variables: Record<string, string> = {}) =>
     i18n.exists(key) ? i18n.t(key, variables) : message;
   const key = runtimeMessages.get(message);

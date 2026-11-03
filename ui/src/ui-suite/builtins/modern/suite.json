@@ -1,0 +1,471 @@
+{
+  "kind": "paradox-ui-suite",
+  "schema_version": 1,
+  "api_version": 1,
+  "id": "c7dcb050-1d85-42f6-9000-000000000001",
+  "version": "1.0.0",
+  "name": "Modern",
+  "views": {
+    "layout.shell": "modern/Shell.tsx",
+    "page.home": "modern/Home.tsx",
+    "tool.editor": "common/editor/Editor.tsx",
+    "page.instances": "common/pages/InstancesPage.tsx",
+    "page.downloads": "common/pages/DownloadsPage.tsx",
+    "page.accounts": "common/pages/AccountsPage.tsx",
+    "page.content": "common/pages/ContentPage.tsx",
+    "page.logs": "common/pages/LogsPage.tsx",
+    "page.settings": "common/pages/SettingsPage.tsx",
+    "component.app-sidebar": "common/components/AppSidebar.tsx",
+    "component.activity-bar": "common/components/ActivityBar.tsx",
+    "component.profile-card": "common/components/ProfileCard.tsx",
+    "component.download-queue": "common/components/DownloadQueue.tsx",
+    "component.account-avatar": "common/components/AccountAvatar.tsx",
+    "component.java-settings": "common/components/JavaSettings.tsx",
+    "component.argument-templates": "common/components/ArgumentTemplates.tsx",
+    "component.appearance-settings": "common/components/AppearanceSettings.tsx",
+    "component.personalization-settings": "common/components/PersonalizationSettings.tsx",
+    "component.appearance-presets": "common/components/AppearancePresets.tsx",
+    "component.window-bar": "common/components/WindowBar.tsx",
+    "component.launcher-dialog": "common/dialogs/LauncherDialog.tsx",
+    "dialog.profile": "common/dialogs/ProfileDialog.tsx",
+    "dialog.instance-settings": "common/dialogs/InstanceSettingsDialog.tsx",
+    "dialog.import-instances": "common/dialogs/ImportInstancesDialog.tsx",
+    "dialog.remove-profile": "common/dialogs/RemoveProfileDialog.tsx",
+    "dialog.close-request": "common/dialogs/CloseRequestDialog.tsx",
+    "dialog.launch-account": "common/dialogs/LaunchAccountDialog.tsx",
+    "dialog.login": "common/dialogs/AccountLoginDialog.tsx",
+    "dialog.preset": "common/dialogs/AppearancePresetDialog.tsx",
+    "dialog.argument-template": "common/dialogs/ArgumentTemplateDialog.tsx",
+    "host.loading": "common/Loading.tsx",
+    "host.error": "common/Error.tsx",
+    "host.notifications": "common/Notifications.tsx",
+    "tool.editor.files": "common/editor/FileTree.tsx",
+    "tool.editor.source": "common/editor/SourceEditor.tsx",
+    "tool.editor.assets": "common/editor/AssetManager.tsx"
+  },
+  "routes": [
+    {
+      "id": "home",
+      "entry": "modern/Home.tsx",
+      "title": "nav.home",
+      "description": "pages.home.description",
+      "navigation": true,
+      "startupSelectable": true,
+      "order": 0,
+      "icon": "House"
+    },
+    {
+      "id": "instances",
+      "entry": "common/pages/InstancesPage.tsx",
+      "title": "nav.instances",
+      "description": "pages.instances.description",
+      "navigation": true,
+      "startupSelectable": true,
+      "order": 10,
+      "icon": "Layers"
+    },
+    {
+      "id": "downloads",
+      "entry": "common/pages/DownloadsPage.tsx",
+      "title": "nav.downloads",
+      "description": "pages.downloads.description",
+      "navigation": true,
+      "startupSelectable": true,
+      "order": 20,
+      "icon": "Download"
+    },
+    {
+      "id": "accounts",
+      "entry": "common/pages/AccountsPage.tsx",
+      "title": "nav.accounts",
+      "description": "pages.accounts.description",
+      "navigation": true,
+      "startupSelectable": true,
+      "order": 30,
+      "icon": "UserRound"
+    },
+    {
+      "id": "content",
+      "entry": "common/pages/ContentPage.tsx",
+      "title": "nav.content",
+      "description": "content.description",
+      "navigation": true,
+      "startupSelectable": true,
+      "order": 40,
+      "icon": "Puzzle"
+    },
+    {
+      "id": "logs",
+      "entry": "common/pages/LogsPage.tsx",
+      "title": "nav.logs",
+      "description": "pages.logs.description",
+      "navigation": true,
+      "startupSelectable": true,
+      "order": 50,
+      "icon": "ScrollText"
+    },
+    {
+      "id": "settings",
+      "entry": "common/pages/SettingsPage.tsx",
+      "title": "nav.settings",
+      "description": "pages.settings.description",
+      "navigation": true,
+      "startupSelectable": true,
+      "order": 60,
+      "icon": "Settings2"
+    }
+  ],
+  "styles": [
+    "common/style.css",
+    "modern/style.css"
+  ],
+  "files": [
+    {
+      "path": "common/Error.tsx",
+      "kind": "tsx",
+      "bytes": 597,
+      "sha256": "acd0d28c636e0ceca3622268d179d54db090c91e71d4f9597877ba780f65654c"
+    },
+    {
+      "path": "common/Loading.tsx",
+      "kind": "tsx",
+      "bytes": 467,
+      "sha256": "6c40e1e00903be4f344684a21ef2323867a7684b4cc0cd52f13cbea93633c299"
+    },
+    {
+      "path": "common/Notifications.tsx",
+      "kind": "tsx",
+      "bytes": 152,
+      "sha256": "e32e3a9bbffca2955c73bcea2622e2e37abcc6039b43a949a1861bb4319142cd"
+    },
+    {
+      "path": "common/assets/background-placeholder.png",
+      "kind": "asset",
+      "bytes": 2596186,
+      "sha256": "44ba8d73d0ec10305ef1b3cda7140d005135f3248d9f56087fd81c26791fee78",
+      "media_type": "image/png"
+    },
+    {
+      "path": "common/assets/background-placeholder.svg",
+      "kind": "asset",
+      "bytes": 2548,
+      "sha256": "0edcbaa0e4491cd0696ac3fd2caa326464e06b799794bfa5beb29f62ca53392d",
+      "media_type": "image/svg+xml"
+    },
+    {
+      "path": "common/assets/landscape.svg",
+      "kind": "asset",
+      "bytes": 3131,
+      "sha256": "3474516756880057721598ff9a4cab12823e04fdade312210d8ed228cbde2d0e",
+      "media_type": "image/svg+xml"
+    },
+    {
+      "path": "common/assets/world.svg",
+      "kind": "asset",
+      "bytes": 3131,
+      "sha256": "d6a9b772b3ec484fc7a07c4ab6fb25d2caedfa8de41a4317368491c7a46c480a",
+      "media_type": "image/svg+xml"
+    },
+    {
+      "path": "common/components/AccountAvatar.tsx",
+      "kind": "tsx",
+      "bytes": 1187,
+      "sha256": "7fae8b9b1406143ef01605e2859ebdc01720182e71fc68a454fc7ee6c246b286"
+    },
+    {
+      "path": "common/components/ActivityBar.tsx",
+      "kind": "tsx",
+      "bytes": 1747,
+      "sha256": "08db719e8e877a97a944a20b0e092d428b3cb8c8d4d269db5e5abdc441d11f03"
+    },
+    {
+      "path": "common/components/AppSidebar.tsx",
+      "kind": "tsx",
+      "bytes": 5063,
+      "sha256": "3dfabee738563db67be5b0aea35b2f9808ced6667b6c93a1e05ecdb2e9f233c2"
+    },
+    {
+      "path": "common/components/AppearancePresets.tsx",
+      "kind": "tsx",
+      "bytes": 6771,
+      "sha256": "4635a16b57f08674c736d3d71f81fb9afbf21dba68c0628554a1b62c6718183d"
+    },
+    {
+      "path": "common/components/AppearanceSettings.tsx",
+      "kind": "tsx",
+      "bytes": 12684,
+      "sha256": "daaf18909e2cb8ff7ff921a40adb8b521366ef1d4da108fc78f848c9ee252596"
+    },
+    {
+      "path": "common/components/ArgumentTemplates.tsx",
+      "kind": "tsx",
+      "bytes": 3763,
+      "sha256": "9cacd63d4309ffa5a4d6cff80183d991d61baf29079b0225e5d98196e43656e6"
+    },
+    {
+      "path": "common/components/DownloadQueue.tsx",
+      "kind": "tsx",
+      "bytes": 6263,
+      "sha256": "ea96fea1bea60348c57c211dc41a930d25146a6d7a964e915da2f73d4997e2b0"
+    },
+    {
+      "path": "common/components/JavaSettings.tsx",
+      "kind": "tsx",
+      "bytes": 9057,
+      "sha256": "6c19cb12eb436a93915323cfb1ac5c69585ac8d25864376d47df7f80be2dd266"
+    },
+    {
+      "path": "common/components/PersonalizationSettings.tsx",
+      "kind": "tsx",
+      "bytes": 7983,
+      "sha256": "af6ed4abd604ac1ba3bbf12fafbe4b51040fd5d3f6b1739bc625543e5ba96b81"
+    },
+    {
+      "path": "common/components/ProfileCard.tsx",
+      "kind": "tsx",
+      "bytes": 6191,
+      "sha256": "9f73624a968c10c37d32553df46632f2e0743b528561970d6c2051d9b13afc13"
+    },
+    {
+      "path": "common/components/WindowBar.tsx",
+      "kind": "tsx",
+      "bytes": 2751,
+      "sha256": "71d94431ebaed4a1fdcf43a8d94d315db35beceff611a58fe4de3c0604603df2"
+    },
+    {
+      "path": "common/dialogs/AccountLoginDialog.tsx",
+      "kind": "tsx",
+      "bytes": 2838,
+      "sha256": "4aa2d43fb6bedae23b075e0fa18366be92fd9fa697b78c8d6771b49d5c8d8422"
+    },
+    {
+      "path": "common/dialogs/AppearancePresetDialog.tsx",
+      "kind": "tsx",
+      "bytes": 5948,
+      "sha256": "168b6eeeb2d80f69244b096fcc08bdeb077416d6033630b4da53b0f757a0ff35"
+    },
+    {
+      "path": "common/dialogs/ArgumentTemplateDialog.tsx",
+      "kind": "tsx",
+      "bytes": 4049,
+      "sha256": "493fb4ed2a42ca8263d090a88ec14eeb03ef605d3bdd1ef8fe0b99dfdcda709d"
+    },
+    {
+      "path": "common/dialogs/CloseRequestDialog.tsx",
+      "kind": "tsx",
+      "bytes": 1870,
+      "sha256": "d7a7bda124792d5bf6ff70b241b6c5d184d7004d98e886d2ce583bab586c1c82"
+    },
+    {
+      "path": "common/dialogs/ImportInstancesDialog.tsx",
+      "kind": "tsx",
+      "bytes": 5355,
+      "sha256": "bacc0dd2f7a816a5cfeb6cbf80a2bf380f0da9eaff187d08a1d7055db0d20c7c"
+    },
+    {
+      "path": "common/dialogs/InstanceSettingsDialog.tsx",
+      "kind": "tsx",
+      "bytes": 10354,
+      "sha256": "6241729bb9ef66574bb69d15d516125f74a1c9df7208bdb89aaf100426dceaa4"
+    },
+    {
+      "path": "common/dialogs/LaunchAccountDialog.tsx",
+      "kind": "tsx",
+      "bytes": 2474,
+      "sha256": "78a4f8e5ddba45751c751b5d939e1b7615faed14c15dc6da87b2e4f35d3826a5"
+    },
+    {
+      "path": "common/dialogs/LauncherDialog.tsx",
+      "kind": "tsx",
+      "bytes": 2756,
+      "sha256": "12805f8cd97db0ea8e03e406ca7b1e1e72588b4b669b6b344632722bf7bb4b9e"
+    },
+    {
+      "path": "common/dialogs/ProfileDialog.tsx",
+      "kind": "tsx",
+      "bytes": 9106,
+      "sha256": "458621d927092330711dab7a347e0640818b3b0a0f8143c467a31f7fa5633d69"
+    },
+    {
+      "path": "common/dialogs/RemoveProfileDialog.tsx",
+      "kind": "tsx",
+      "bytes": 3241,
+      "sha256": "115cc65f1effa2fb22e02c9a272a2926a8a040962fad350d92ed00cbba5a92cc"
+    },
+    {
+      "path": "common/editor/AssetManager.tsx",
+      "kind": "tsx",
+      "bytes": 1549,
+      "sha256": "1bc3ff163aee5d12aa8f1b8e2a94b1054fd8588f40ede3bbb27621bc3b6baccc"
+    },
+    {
+      "path": "common/editor/Editor.tsx",
+      "kind": "tsx",
+      "bytes": 10888,
+      "sha256": "b9d2fe2f9da9d61e8adfc267593443290b57288d29d7fc476120db63f125dd6d"
+    },
+    {
+      "path": "common/editor/FileTree.tsx",
+      "kind": "tsx",
+      "bytes": 991,
+      "sha256": "930b46d367aa406f500fc1875911f421ce2b87c9bd6660e1c2c6a75840ab2af9"
+    },
+    {
+      "path": "common/editor/SourceEditor.tsx",
+      "kind": "tsx",
+      "bytes": 2203,
+      "sha256": "3cfc9d9f62431ece9ccb2e001f6149844d8d161d8ac125702b1069c53a7b32c9"
+    },
+    {
+      "path": "common/editor/TargetCatalog.tsx",
+      "kind": "tsx",
+      "bytes": 4340,
+      "sha256": "b313dfec23bee42d689c786739c039d3b5ba350d20c831e0f484601ad53f736f"
+    },
+    {
+      "path": "common/editor/TargetDetails.tsx",
+      "kind": "tsx",
+      "bytes": 5399,
+      "sha256": "9dc8b09a3db113a5c4a916229826116f581369dbe80c351458be0dfc244f59e3"
+    },
+    {
+      "path": "common/editor/TargetPreview.tsx",
+      "kind": "tsx",
+      "bytes": 2703,
+      "sha256": "491402225b72579ab92db35869dcf073efd793622c49e2addf7e2b18a7a09b53"
+    },
+    {
+      "path": "common/editor/style.css",
+      "kind": "css",
+      "bytes": 5701,
+      "sha256": "2d9c5006d61b07eff490a044bfdba5e9c46dbfff7e7a43f444a016bc0ddd352b"
+    },
+    {
+      "path": "common/lib/EnvironmentEditor.tsx",
+      "kind": "tsx",
+      "bytes": 2825,
+      "sha256": "7ac315a36288719eefa2a643662be8f18ffd3cbc155744f211e5a3b9d54e539c"
+    },
+    {
+      "path": "common/lib/appearance-presets.ts",
+      "kind": "ts",
+      "bytes": 289,
+      "sha256": "abd709bc670c9e6418fb80177f9336fc1f953b5b2b074cbaf31e98da9c6705b0"
+    },
+    {
+      "path": "common/lib/colors.ts",
+      "kind": "ts",
+      "bytes": 513,
+      "sha256": "d8e4e4645f655115db5a7fa22748cb71568260b79a098a1437af3cdc9f50dbf9"
+    },
+    {
+      "path": "common/lib/download.ts",
+      "kind": "ts",
+      "bytes": 700,
+      "sha256": "4f8db96a86a905954f51a45c1fa4f5c8cd2c582c436d12c7e5756855db73dab6"
+    },
+    {
+      "path": "common/lib/navigation.ts",
+      "kind": "ts",
+      "bytes": 213,
+      "sha256": "fdbe4a063967ba952cd594399d6a8c230c66b1505d1cefcacde94eb358a68a4d"
+    },
+    {
+      "path": "common/lib/runtime-message.ts",
+      "kind": "ts",
+      "bytes": 3438,
+      "sha256": "4ee86f4a83163d8f43142a8e0157b1219860b0bfe02f17ecf4b76cec5b494d42"
+    },
+    {
+      "path": "common/lib/version.ts",
+      "kind": "ts",
+      "bytes": 127,
+      "sha256": "3b83b06ce2f5913f00105eaa0f8bcf3cba5adc59478b353722377d1f09935588"
+    },
+    {
+      "path": "common/lib/view.tsx",
+      "kind": "tsx",
+      "bytes": 1224,
+      "sha256": "0aea0483034c65b62d70e1c3554e4d65419489b28d36ec9c31556c014d9515a5"
+    },
+    {
+      "path": "common/pages/AccountsPage.tsx",
+      "kind": "tsx",
+      "bytes": 11833,
+      "sha256": "b765282854767c872721639c1ff66869826f9d1500536567c9596f7b27ee0584"
+    },
+    {
+      "path": "common/pages/ContentPage.tsx",
+      "kind": "tsx",
+      "bytes": 12613,
+      "sha256": "9df54a1fbbe20d56fc90bc98b1a9e73706989d953f55e917bdc686642cf1b366"
+    },
+    {
+      "path": "common/pages/DownloadsPage.tsx",
+      "kind": "tsx",
+      "bytes": 7629,
+      "sha256": "7b224183180f3987cd1526e6593e00020d73a4b62d020224bcd263190ccca7a2"
+    },
+    {
+      "path": "common/pages/InstancesPage.tsx",
+      "kind": "tsx",
+      "bytes": 4562,
+      "sha256": "3d8f6713aeb3867a6acae6c021e900b44c22ee3dfa4d45d28e84981d8383eca5"
+    },
+    {
+      "path": "common/pages/LogsPage.tsx",
+      "kind": "tsx",
+      "bytes": 2706,
+      "sha256": "c3ecc2c2f99172062013198fd70aea5c741e46dc6ba8cef3915601be8b00966d"
+    },
+    {
+      "path": "common/pages/SettingsPage.tsx",
+      "kind": "tsx",
+      "bytes": 17638,
+      "sha256": "c2dd737994cd83a4d5e33a7ecf990882e7acc61aa3c6ff9eeb838520ddb28338"
+    },
+    {
+      "path": "common/style.css",
+      "kind": "css",
+      "bytes": 51869,
+      "sha256": "a86e1e54058db618da6708e755231e2a5c5b685edd3bb08aa8a94f45490ca3ae"
+    },
+    {
+      "path": "common/styles/account-avatar.css",
+      "kind": "css",
+      "bytes": 562,
+      "sha256": "ef0920b28ec65afd283ac7d18e5558a437c3f391b5e7745c88467600c7c0ec26"
+    },
+    {
+      "path": "common/styles/common.css",
+      "kind": "css",
+      "bytes": 67725,
+      "sha256": "0d4b23199b1b692ee1ce55868cf90654c1bf11ce5d068efc62323c43b7e2c916"
+    },
+    {
+      "path": "common/styles/presets.css",
+      "kind": "css",
+      "bytes": 2293,
+      "sha256": "e540a8a7ae9761912b8300a3fd224604ece74713778288b822d0a6785bf64f82"
+    },
+    {
+      "path": "modern/Home.tsx",
+      "kind": "tsx",
+      "bytes": 9971,
+      "sha256": "3829688e51638eaffae508bd21d9fabfea46313d42250912942e4d38b7cc426c"
+    },
+    {
+      "path": "modern/Shell.tsx",
+      "kind": "tsx",
+      "bytes": 5637,
+      "sha256": "c95e5174012470a0dd362fe8606d84f5c40c2d7f75d9d63267de3c5ddda82359"
+    },
+    {
+      "path": "modern/style.css",
+      "kind": "css",
+      "bytes": 337,
+      "sha256": "d70529827dbe00ab33507fcdc2493c24acd44d799311eff8eb36e64b6a65aa6b"
+    }
+  ],
+  "overrides": []
+}

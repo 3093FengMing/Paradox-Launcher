@@ -1,3 +1,4 @@
+import { customComponent } from '../customization/Customizable';
 import { useTranslation } from 'react-i18next';
 import { Download, RotateCcw, X } from 'lucide-react';
 import { Badge, Panel } from './ui';
@@ -18,7 +19,7 @@ function bytes(value: number): string {
   const divider = unit === 'KiB' ? 1024 : unit === 'MiB' ? 1024 ** 2 : 1024 ** 3;
   return `${(value / divider).toFixed(1)} ${unit}`;
 }
-export default function DownloadQueue({
+function DownloadQueue({
   tasks,
   pending,
   desktop,
@@ -129,3 +130,6 @@ export default function DownloadQueue({
     </section>
   );
 }
+
+const CustomizedDownloadQueue = customComponent('component.download-queue', DownloadQueue);
+export default CustomizedDownloadQueue;

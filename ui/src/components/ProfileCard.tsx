@@ -1,21 +1,24 @@
+import { customComponent } from '../customization/Customizable';
 import { useTranslation } from 'react-i18next';
 import {
   Box,
   Check,
   Download,
   MoreHorizontal,
+  Puzzle,
   Play,
   RefreshCw,
   Settings2,
   Trash2,
 } from 'lucide-react';
 import { Badge, Panel } from './ui';
-import type { GameProfile } from '../types';
+import type { GameProfile, InstalledInstance } from '../types';
 
 interface ProfileCardProps {
   profile: GameProfile;
   activeKey: string | null;
   installed: boolean;
+  actualInstance?: InstalledInstance;
   busy: boolean;
   queueActive: boolean;
   installing: boolean;
@@ -26,12 +29,14 @@ interface ProfileCardProps {
   onRename: (profile: GameProfile) => void;
   onSettings: (profile: GameProfile) => void;
   onRemove: (profile: GameProfile) => void;
+  onManageMods: () => void;
 }
 
-export default function ProfileCard({
+function ProfileCard({
   profile,
   activeKey,
   installed,
+  actualInstance,
   busy,
   queueActive,
   installing,
@@ -42,6 +47,7 @@ export default function ProfileCard({
   onRename,
   onSettings,
   onRemove,
+  onManageMods,
 }: ProfileCardProps) {
   const { t } = useTranslation();
   return (
@@ -55,13 +61,32 @@ export default function ProfileCard({
       <div className="profile-info">
         <h3>{profile.name}</h3>
         <p>
-          Minecraft {profile.game_version} <span>·</span> Vanilla
+          Minecraft {profile.game_version} <span>·</span>{' '}
+          {profile.loader === 'vanilla' ? 'Vanilla' : `${profile.loader} ${profile.loader_version}`}
         </p>
+        {actualInstance && (
+          <p className="help-text">
+            {t('loaders.installedDriver', {
+              game: actualInstance.game_version ?? t('common.unknown'),
+              loader: actualInstance.loader,
+              version: actualInstance.loader_version ?? '',
+            })}
+            {!installed && <span> · {t('loaders.repairRequired')}</span>}
+          </p>
+        )}
       </div>
       <Badge muted={!installed}>
         {installed ? t('common.installed') : t('common.notInstalled')}
       </Badge>
       <div className="profile-actions">
+        <button
+          className="icon-button"
+          title={t('loaders.manageMods')}
+          aria-label={t('loaders.manageModsLabel', { name: profile.name })}
+          onClick={onManageMods}
+        >
+          <Puzzle size={17} />
+        </button>
         <button
           className="icon-button"
           title={t('instances.settings')}
@@ -130,3 +155,6 @@ export default function ProfileCard({
     </Panel>
   );
 }
+
+const CustomizedProfileCard = customComponent('component.profile-card', ProfileCard);
+export default CustomizedProfileCard;

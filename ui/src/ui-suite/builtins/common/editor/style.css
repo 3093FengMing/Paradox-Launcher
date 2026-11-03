@@ -1,0 +1,136 @@
+.suite-editor {
+  position: fixed;
+  inset: 12px;
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  pointer-events: auto;
+  box-sizing: border-box;
+  padding: 14px;
+  background: var(--surface, var(--panel, #202431));
+  color: var(--text, #eee);
+  border: 1px solid var(--border, #667);
+  border-radius: var(--radius, 12px);
+  font: 14px var(--ui-font, system-ui);
+}
+.suite-editor * {
+  box-sizing: border-box;
+}
+.suite-editor-title,
+.suite-editor-toolbar,
+.suite-editor-files {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.suite-editor-title h1 {
+  flex: 1;
+  margin: 0;
+}
+.suite-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(0, 3fr);
+  gap: 12px;
+}
+.suite-file-tree {
+  max-height: 420px;
+  overflow: auto;
+}
+.suite-file-tree button {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.suite-source-editor textarea {
+  width: 100%;
+  min-height: 320px;
+  font: 13px monospace;
+}
+.suite-editor textarea[aria-label='Suite manifest'] {
+  width: 100%;
+  min-height: 120px;
+  font: 12px monospace;
+}
+.suite-editor label {
+  display: block;
+}
+.suite-editor input[type='file'] {
+  max-width: 100%;
+}
+.suite-assets {
+  grid-column: 1/-1;
+}
+.suite-editor .ui-notice-viewport {
+  pointer-events: none;
+}
+.suite-editor .ui-notice {
+  pointer-events: auto;
+}
+@media (max-width: 600px) {
+  .suite-editor {
+    inset: 4px;
+    padding: 8px;
+  }
+  .suite-editor-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .suite-file-tree {
+    max-height: 100px;
+  }
+  .suite-source-editor textarea {
+    min-height: 140px;
+  }
+}
+
+/* Header/footer remain reachable while file, manifest and diagnostics share one scroll owner. */
+.suite-editor { display: flex; flex-direction: column; height: calc(100dvh - 24px); overflow: hidden; min-width: 0; }
+.suite-editor header, .suite-editor footer { flex: none; min-width: 0; }
+.suite-editor .ui-editor-body { flex: 1; min-height: 0; min-width: 0; overflow: auto; overscroll-behavior: contain; }
+.suite-editor footer { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding-top: 8px; }
+.suite-editor footer > span { flex: 1; min-width: 80px; font-size: 11px; }
+.suite-editor-title { min-height: 38px; flex-wrap: nowrap; }
+.suite-editor-title h1 { font-size: 18px; white-space: nowrap; }
+.suite-editor-title > span { display: none; }
+.suite-editor .ui-diagnostics { min-height: 40px; overflow-wrap: anywhere; padding: 8px; }
+@media (max-width: 600px) {
+  .suite-editor { height: calc(100dvh - 8px); }
+  .suite-editor-title h1 { font-size: 14px; }
+  .suite-editor-title button { padding: 5px; }
+  .suite-editor footer > span { width: 100%; flex-basis: 100%; }
+  .suite-editor footer button { padding: 5px 8px; min-height: 28px; }
+}
+
+.ui-pick-hint{position:fixed;inset:12px 12px auto;max-height:calc(100dvh - 24px);overflow:auto;pointer-events:auto;background:var(--surface,#202431);color:var(--text,#eee);padding:10px;border:1px solid var(--border,#667);border-radius:8px;font:14px system-ui;display:flex;gap:8px;flex-wrap:wrap;align-items:center;box-sizing:border-box}
+.ui-pick-hint>p{margin:0;flex:1;min-width:120px}.ui-pick-hint .ui-target-details{width:100%;max-height:80px;overflow:auto}.ui-pick-hint .ui-target-details h2{font-size:14px;margin:4px 0}.ui-pick-hint .ui-target-details dl{margin:4px 0}
+/* The ordinary hint cannot cover the business target being picked. Its explicit
+   cancel/ancestor/scope controls remain interactive through the capture lease. */
+.ui-pick-hint { pointer-events: none; }
+.ui-pick-hint [data-ui-inspector-controls] { pointer-events: auto; }
+
+.ui-target-catalog, .ui-target-details { min-width: 0; margin: 12px 0; padding: 10px; border: 1px solid var(--border, #667); border-radius: 8px; overflow-wrap: anywhere; }
+.ui-target-catalog input { max-width: 100%; width: 100%; margin: 6px 0; }
+.ui-target-list { list-style: none; padding: 0; margin: 8px 0; max-height: 320px; overflow: auto; }
+.ui-target-list li { margin: 4px 0; }
+.ui-target-list button { width: 100%; display: flex; flex-direction: column; align-items: start; text-align: left; white-space: normal; gap: 3px; }
+.ui-target-list button[aria-pressed='true'] { border-color: var(--accent, #7af); }
+.ui-target-list code, .ui-target-list span { font-size: 11px; }
+.ui-target-details h2 { font-size: 16px; margin: 0 0 6px; }
+.ui-target-details nav { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+.ui-target-details dl { display: grid; grid-template-columns: minmax(70px, auto) minmax(0, 1fr); gap: 4px 8px; }
+.ui-target-details dd { margin: 0; }
+.ui-target-details > button { margin: 4px; }
+@media (max-width: 600px) { .ui-target-catalog, .ui-target-details { padding: 6px; } .ui-target-list { max-height: 180px; } }
+.ui-target-preview { min-width: 0; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border, #667); }
+.ui-target-preview h3 { font-size: 14px; margin: 4px 0; }
+.ui-target-preview p { margin: 6px 0; overflow-wrap: anywhere; }
+.ui-target-preview-image { width: 100%; min-width: 0; max-height: 344px; overflow: auto; }
+.ui-target-preview-locations { display: flex; flex-wrap: wrap; gap: 4px; }
+.ui-target-preview-locations p { flex-basis: 100%; }
+.ui-target-preview button { max-width: 100%; white-space: normal; }
+.ui-target-source-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0; }
+.ui-target-source-controls button { max-width: 100%; white-space: normal; }
+.ui-target-source-controls button[aria-pressed='true'] { border-color: var(--accent, #7af); }
+.ui-target-source-controls p { flex-basis: 100%; margin: 4px 0; font-size: 12px; }

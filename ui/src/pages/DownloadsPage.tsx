@@ -1,3 +1,4 @@
+import { customComponent } from '../customization/Customizable';
 import { useTranslation } from 'react-i18next';
 import { Box, Download, Layers, Plus, RefreshCw, Search } from 'lucide-react';
 import { Badge, Panel } from '../components/ui';
@@ -19,7 +20,7 @@ interface DownloadsPageProps {
   onSnapshotsChange: (value: boolean) => void;
 }
 
-export default function DownloadsPage({
+function DownloadsPage({
   versions,
   search,
   showSnapshots,
@@ -150,3 +151,6 @@ export default function DownloadsPage({
     </>
   );
 }
+
+const CustomizedDownloadsPage = customComponent('page.downloads', DownloadsPage);
+export default CustomizedDownloadsPage;

@@ -1,3 +1,4 @@
+import { customComponent } from '../customization/Customizable';
 import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 import { Folder, Import, Layers, Plus, RefreshCw, Search } from 'lucide-react';
@@ -15,7 +16,7 @@ interface InstancesPageProps {
   onImport: () => void;
 }
 
-export default function InstancesPage({
+function InstancesPage({
   config,
   search,
   busy,
@@ -71,7 +72,7 @@ export default function InstancesPage({
   );
 }
 
-function EmptyState({ busy, onCreate }: { busy: boolean; onCreate: () => void }) {
+function DefaultEmptyState({ busy, onCreate }: { busy: boolean; onCreate: () => void }) {
   const { t } = useTranslation();
   return (
     <Panel className="empty-state compact-empty">
@@ -89,3 +90,8 @@ function EmptyState({ busy, onCreate }: { busy: boolean; onCreate: () => void })
     </Panel>
   );
 }
+
+const EmptyState = customComponent('component.instances-empty-state', DefaultEmptyState);
+
+const CustomizedInstancesPage = customComponent('page.instances', InstancesPage);
+export default CustomizedInstancesPage;

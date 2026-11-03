@@ -24,6 +24,8 @@ const MAX_RETAINED_TASKS: usize = 100;
 pub enum DownloadKind {
     Install,
     Java,
+    Content,
+    Pack,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -53,21 +55,35 @@ pub struct DownloadTask {
     pub status: DownloadStatus,
     pub message: String,
     pub progress: Option<DownloadProgress>,
+    pub source: Option<String>,
+    pub content_type: Option<String>,
 }
 
 #[derive(Clone)]
-#[expect(
-    clippy::large_enum_variant,
-    reason = "Requests own typed configuration snapshots and the queue has a fixed task limit."
-)]
 pub enum DownloadRequest {
     Install {
         config: AppConfig,
         profile: GameProfile,
+        managed_root: PathBuf,
     },
     Java {
         settings: Settings,
         major: u32,
+        managed_root: PathBuf,
+    },
+    Content {
+        settings: Settings,
+        profile: GameProfile,
+        project: String,
+        category: String,
+    },
+    Pack {
+        settings: Settings,
+        source: String,
+        remote: bool,
+        store: paradox_core::ConfigStore,
+        config: Arc<Mutex<AppConfig>>,
+        registered: Arc<Mutex<Option<GameProfile>>>,
         managed_root: PathBuf,
     },
 }
@@ -75,8 +91,13 @@ pub enum DownloadRequest {
 impl DownloadRequest {
     fn validate(&self) -> Result<()> {
         match self {
-            Self::Install { config, profile } => {
+            Self::Install {
+                config,
+                profile,
+                managed_root,
+            } => {
                 config.validate()?;
+                ensure!(managed_root.is_absolute(), "Java 存储目录必须是绝对路径");
                 profile.effective_settings(&config.settings)?;
             }
             Self::Java {
@@ -89,6 +110,26 @@ impl DownloadRequest {
                 ensure!(java::download_supported(), "当前平台不支持 Java 自动下载");
                 ensure!(managed_root.is_absolute(), "Java 存储目录必须是绝对路径");
             }
+            Self::Content {
+                settings,
+                profile,
+                category,
+                project,
+            } => {
+                settings.validate()?;
+                profile.validate()?;
+                ensure!(
+                    matches!(category.as_str(), "mod" | "resourcepack" | "shader")
+                        && !project.is_empty(),
+                    "content.errors.category"
+                );
+            }
+            Self::Pack {
+                settings, source, ..
+            } => {
+                settings.validate()?;
+                ensure!(!source.is_empty(), "content.errors.pack");
+            }
         }
         Ok(())
     }
@@ -99,6 +140,19 @@ impl DownloadRequest {
                 left.instance_key == right.instance_key
             }
             (Self::Java { major: left, .. }, Self::Java { major: right, .. }) => left == right,
+            (
+                Self::Content {
+                    profile: a,
+                    project: b,
+                    ..
+                },
+                Self::Content {
+                    profile: c,
+                    project: d,
+                    ..
+                },
+            ) => a.instance_key == c.instance_key && b == d,
+            (Self::Pack { source: a, .. }, Self::Pack { source: b, .. }) => a == b,
             _ => false,
         }
     }
@@ -117,6 +171,15 @@ impl DownloadRequest {
                 None,
                 Some(*major),
             ),
+            Self::Content {
+                profile, project, ..
+            } => (
+                DownloadKind::Content,
+                project.clone(),
+                Some(profile.instance_key.clone()),
+                None,
+            ),
+            Self::Pack { source, .. } => (DownloadKind::Pack, source.clone(), None, None),
         };
         DownloadTask {
             id: new_task_id(),
@@ -127,6 +190,15 @@ impl DownloadRequest {
             status: DownloadStatus::Queued,
             message: "等待下载".into(),
             progress: None,
+            source: match self {
+                Self::Content { project, .. } => Some(project.clone()),
+                Self::Pack { source, .. } => Some(source.clone()),
+                _ => None,
+            },
+            content_type: match self {
+                Self::Content { category, .. } => Some(category.clone()),
+                _ => None,
+            },
         }
     }
 }
@@ -156,6 +228,15 @@ pub struct DownloadManager {
 }
 
 impl DownloadManager {
+    pub fn original_request(&self, id: &str) -> Result<DownloadRequest> {
+        let state = self.state.lock().map_err(|_| anyhow!("下载队列锁不可用"))?;
+        state
+            .entries
+            .iter()
+            .find(|entry| entry.task.id == id)
+            .map(|entry| entry.request.clone())
+            .context("下载任务不存在")
+    }
     pub fn list(&self) -> Result<Vec<DownloadTask>> {
         let state = self.state.lock().map_err(|_| anyhow!("下载队列锁不可用"))?;
         Ok(state
@@ -343,6 +424,8 @@ impl DownloadManager {
         entry.task.message = match entry.task.kind {
             DownloadKind::Install => "正在解析游戏文件与下载计划",
             DownloadKind::Java => "正在查询 Java 下载信息",
+            DownloadKind::Content => "正在检查内容版本、依赖与文件冲突",
+            DownloadKind::Pack => "正在读取整合包并检查文件",
         }
         .into();
         Ok(Some(Work {
@@ -478,11 +561,103 @@ async fn run_request(
     on_progress: impl Fn(DownloadProgress) + Send + Sync + 'static,
 ) -> Result<String> {
     match request {
-        DownloadRequest::Install { config, profile } => {
+        DownloadRequest::Content {
+            settings,
+            profile,
+            project,
+            category,
+        } => {
+            paradox_core::content::install(
+                &settings,
+                &profile,
+                &project,
+                &category,
+                cancellation,
+                on_progress,
+            )
+            .await?;
+            Ok("内容安装完成".into())
+        }
+        DownloadRequest::Pack {
+            settings,
+            source,
+            remote,
+            store,
+            config,
+            registered,
+            managed_root,
+        } => {
+            let archive = tempfile::NamedTempFile::new()?;
+            let archive_path = if remote {
+                let file = paradox_core::content::latest_pack(&settings, &source).await?;
+                paradox_core::download::DownloadEngine::new(settings.network.clone())?
+                    .download(
+                        vec![paradox_core::download::Artifact {
+                            url: file.url,
+                            target: archive.path().to_owned(),
+                            expected_size: Some(file.size),
+                            checksum: Some(paradox_core::download::Checksum::Sha1(
+                                file.hashes["sha1"].clone(),
+                            )),
+                        }],
+                        cancellation.clone(),
+                        |_| {},
+                    )
+                    .await?;
+                archive.path().to_owned()
+            } else {
+                PathBuf::from(&source)
+            };
+            ensure!(!cancellation.is_cancelled(), "content.errors.cancelled");
+            let index = paradox_core::packs::inspect(&archive_path)?;
+            let profile = {
+                let mut registered = registered.lock().map_err(|_| anyhow!("配置锁不可用"))?;
+                if let Some(profile) = &*registered {
+                    profile.clone()
+                } else {
+                    let profile = paradox_core::packs::profile(&index)?;
+                    let mut current = config.lock().map_err(|_| anyhow!("配置锁不可用"))?;
+                    let mut updated = current.clone();
+                    updated.active_profile = Some(profile.instance_key.clone());
+                    updated.profiles.push(profile.clone());
+                    store.save(&updated)?;
+                    *current = updated;
+                    *registered = Some(profile.clone());
+                    profile
+                }
+            };
+            paradox_core::packs::install(
+                &settings,
+                &profile,
+                &archive_path,
+                cancellation.clone(),
+                on_progress,
+            )
+            .await?;
+            if profile.loader == "vanilla" {
+                paradox_core::ElementalService::new(&settings)?
+                    .prepare_with_progress(&profile, cancellation, |_| {})
+                    .await?;
+            } else {
+                crate::loader_worker::install(profile, settings, managed_root, cancellation)
+                    .await?;
+            }
+            Ok("整合包安装完成".into())
+        }
+        DownloadRequest::Install {
+            config,
+            profile,
+            managed_root,
+        } => {
             let settings = profile.effective_settings(&config.settings)?;
-            ElementalService::new(&settings)?
-                .prepare_with_progress(&profile, cancellation, on_progress)
-                .await?;
+            if profile.loader != "vanilla" {
+                crate::loader_worker::install(profile, settings, managed_root, cancellation)
+                    .await?;
+            } else {
+                ElementalService::new(&settings)?
+                    .prepare_with_progress(&profile, cancellation, on_progress)
+                    .await?;
+            }
             Ok("实例安装 / 修复完成".into())
         }
         DownloadRequest::Java {
@@ -512,14 +687,8 @@ async fn run_request(
     }
 }
 
-#[derive(Serialize, Clone)]
-struct LogEvent<'a> {
-    level: &'a str,
-    message: &'a str,
-}
-
 fn log(app: &tauri::AppHandle, level: &str, message: &str) {
-    let _ = app.emit("launcher://log", LogEvent { level, message });
+    crate::commands::log(app, level, message);
 }
 
 fn new_task_id() -> String {
@@ -536,6 +705,7 @@ mod tests {
         DownloadRequest::Install {
             config: AppConfig::default(),
             profile: GameProfile::new(name, "1.21.1").unwrap(),
+            managed_root: paradox_core::model::default_data_directory().join("runtimes"),
         }
     }
 

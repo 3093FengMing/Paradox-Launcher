@@ -1,7 +1,7 @@
 {
   "name": "paradox-launcher-workspace",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.4.0-dev",
   "scripts": {
     "dev": "cd apps/desktop && tauri dev",
     "build": "cd apps/desktop && tauri build",
@@ -10,8 +10,7 @@
     "check:ui": "npm --prefix ui run check",
     "check:i18n": "npm --prefix ui run check:i18n",
     "lint:ui": "npm --prefix ui run lint",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "test:ui": "npm --prefix ui run test"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.9.0",

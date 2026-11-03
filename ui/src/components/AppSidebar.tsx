@@ -1,28 +1,54 @@
+import { customComponent } from '../customization/Customizable';
 import { useTranslation } from 'react-i18next';
-import { Box, ChevronRight, Settings2, Terminal } from 'lucide-react';
-import { navigation } from '../lib/navigation';
+import { Box, ChevronRight } from 'lucide-react';
+import { routeIcon } from '../lib/navigation';
 import { appVersion } from '../lib/version';
-import type { AppConfig, Page } from '../types';
+import type { AppConfig, MicrosoftAccount } from '../types';
+import type { DeepReadonly, UiRouteDescriptor, UiRouteId } from '@paradox/launcher';
+import AccountAvatar from './AccountAvatar';
 
 interface AppSidebarProps {
   config: AppConfig;
-  page: Page;
+  page: UiRouteId;
+  routes: readonly DeepReadonly<UiRouteDescriptor>[];
   immersive: boolean;
   desktop: boolean;
   hasErrors: boolean;
-  onNavigate: (page: Page) => void;
+  account?: MicrosoftAccount | null;
+  onNavigate: (page: UiRouteId) => void;
 }
 
-export default function AppSidebar({
+function AppSidebar({
   config,
   page,
+  routes,
   immersive,
   desktop,
   hasErrors,
+  account,
   onNavigate,
 }: AppSidebarProps) {
   const { t } = useTranslation();
-  const username = config.settings.offline_username;
+  const username = account?.name ?? config.settings.offline_username;
+  const visible = routes.filter((route) => route.navigation);
+  const renderRoute = (route: DeepReadonly<UiRouteDescriptor>) => {
+    const Icon = routeIcon(route.icon);
+    const title = t(route.title, { defaultValue: route.title });
+    return (
+      <button
+        key={route.id}
+        title={title}
+        className={`nav-item ${page === route.id ? 'active' : ''}`}
+        onClick={() => onNavigate(route.id)}
+      >
+        {Icon && <Icon size={19} />}
+        <span>{title}</span>
+        {route.id === 'instances' && config.profiles.length > 0 && <b>{config.profiles.length}</b>}
+        {route.id === 'logs' && hasErrors && <i className="error-dot" />}
+      </button>
+    );
+  };
+  const accountRoute = visible.find((route) => route.id === 'accounts');
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -35,18 +61,18 @@ export default function AppSidebar({
           </strong>
         </div>
       </div>
-      {immersive && (
+      {immersive && accountRoute && (
         <>
           <div className="nav-caption account-caption">{t('nav.accountCaption')}</div>
           <button
             className={`sidebar-account ${page === 'accounts' ? 'active' : ''}`}
             onClick={() => onNavigate('accounts')}
-            title={t('nav.accounts')}
+            title={t(accountRoute.title, { defaultValue: accountRoute.title })}
           >
-            <div className="avatar">{username.slice(0, 1).toUpperCase()}</div>
+            <AccountAvatar account={account} name={username} />
             <div>
               <strong>{username}</strong>
-              <small>{t('common.offlineAccount')}</small>
+              <small>{t(account ? 'auth.microsoftIdentity' : 'common.offlineAccount')}</small>
             </div>
             <ChevronRight size={14} />
           </button>
@@ -54,45 +80,21 @@ export default function AppSidebar({
       )}
       <div className="nav-caption">{immersive ? t('nav.gameCaption') : t('nav.workspace')}</div>
       <nav>
-        {navigation
-          .filter((item) => !immersive || item.id !== 'accounts')
-          .map((item) => (
-            <button
-              key={item.id}
-              title={t(item.label)}
-              className={`nav-item ${page === item.id ? 'active' : ''}`}
-              onClick={() => onNavigate(item.id)}
-            >
-              <item.icon size={19} />
-              <span>{t(item.label)}</span>
-              {item.id === 'instances' && config.profiles.length > 0 && (
-                <b>{config.profiles.length}</b>
-              )}
-            </button>
-          ))}
+        {visible
+          .filter(
+            (route) =>
+              route.id !== 'logs' &&
+              route.id !== 'settings' &&
+              (!immersive || route.id !== 'accounts'),
+          )
+          .map(renderRoute)}
       </nav>
       <div className="sidebar-bottom">
-        <button
-          className={`nav-item ${page === 'logs' ? 'active' : ''}`}
-          onClick={() => onNavigate('logs')}
-          title={t('nav.logs')}
-        >
-          <Terminal size={18} />
-          <span>{t('nav.logs')}</span>
-          {hasErrors && <i className="error-dot" />}
-        </button>
-        <button
-          className={`nav-item ${page === 'settings' ? 'active' : ''}`}
-          onClick={() => onNavigate('settings')}
-          title={t('window.settings')}
-        >
-          <Settings2 size={18} />
-          <span>{t('nav.settings')}</span>
-        </button>
+        {visible.filter((route) => route.id === 'logs' || route.id === 'settings').map(renderRoute)}
         <div className="engine">
           <span className="status-dot" />
           <div>
-            <strong>{desktop ? 'Elemental Engine' : t('nav.preview')}</strong>
+            <strong>{desktop ? 'QuintElement Engine' : t('nav.preview')}</strong>
             <small>
               {desktop ? t('nav.rustVersion', { version: appVersion }) : t('nav.desktopRequired')}
             </small>
@@ -102,3 +104,6 @@ export default function AppSidebar({
     </aside>
   );
 }
+
+const CustomizedAppSidebar = customComponent('component.app-sidebar', AppSidebar);
+export default CustomizedAppSidebar;

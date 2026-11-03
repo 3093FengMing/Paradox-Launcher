@@ -1,12 +1,14 @@
+import { customComponent } from '../customization/Customizable';
 import { useTranslation } from 'react-i18next';
-import { useId } from 'react';
+import { useId, useContext } from 'react';
+import { UiEditorSnapshotContext, UiEditorActionsContext } from '../ui-editor/public';
 import { Check, Monitor, Moon, Sun } from 'lucide-react';
 import { accentForeground } from '../colors';
-import type { Appearance } from '../types';
+import type { Appearance, DeepReadonly, LauncherActions } from '@paradox/launcher';
 
 interface Props {
-  appearance: Appearance;
-  onChange: (next: Appearance) => void;
+  appearance: DeepReadonly<Appearance>;
+  onPatch: LauncherActions['settings']['patchAppearance'];
 }
 
 const styles = [
@@ -48,7 +50,7 @@ interface RangeSettingProps {
   onChange: (value: number) => void;
 }
 
-function RangeSetting({
+function DefaultRangeSetting({
   title,
   description,
   value,
@@ -95,7 +97,7 @@ interface ToggleSettingProps {
   onChange: (value: boolean) => void;
 }
 
-function ToggleSetting({ title, description, checked, onChange }: ToggleSettingProps) {
+function DefaultToggleSetting({ title, description, checked, onChange }: ToggleSettingProps) {
   const id = useId();
   return (
     <div className="setting-row">
@@ -118,12 +120,11 @@ function ToggleSetting({ title, description, checked, onChange }: ToggleSettingP
   );
 }
 
-export default function AppearanceSettings({ appearance, onChange }: Props) {
+function AppearanceSettings({ appearance, onPatch: patch }: Props) {
+  const suite = useContext(UiEditorSnapshotContext), suiteActions = useContext(UiEditorActionsContext);
   const { t } = useTranslation();
   const styleLabelId = useId();
   const themeLabelId = useId();
-  const patch = <K extends keyof Appearance>(key: K, value: Appearance[K]) =>
-    onChange({ ...appearance, [key]: value });
 
   return (
     <>
@@ -140,10 +141,11 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
             <button
               type="button"
               key={style.id}
-              className={`style-option ${appearance.interface_style === style.id ? 'selected' : ''}`}
+              className={`style-option ${(suite?.selectedSuiteId ?? 'builtin.' + appearance.interface_style) === 'builtin.' + style.id ? 'selected' : ''}`}
               aria-label={t(style.title)}
-              aria-pressed={appearance.interface_style === style.id}
-              onClick={() => patch('interface_style', style.id)}
+              aria-pressed={(suite?.selectedSuiteId ?? 'builtin.' + appearance.interface_style) === 'builtin.' + style.id}
+              disabled={!suiteActions}
+              onClick={() => void suiteActions?.selectSuite('builtin.' + style.id)}
             >
               <span
                 className={`style-preview ${style.id === 'modern' ? 'modern-preview' : ''}`}
@@ -157,7 +159,7 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
                   <strong>{t(style.title)}</strong>
                   <small>{t(style.description)}</small>
                 </span>
-                {appearance.interface_style === style.id && <Check size={17} aria-hidden="true" />}
+                {(suite?.selectedSuiteId ?? 'builtin.' + appearance.interface_style) === 'builtin.' + style.id && <Check size={17} aria-hidden="true" />}
               </span>
             </button>
           ))}
@@ -295,3 +297,12 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
     </>
   );
 }
+
+const RangeSetting = customComponent('control.range-setting', DefaultRangeSetting);
+const ToggleSetting = customComponent('control.toggle-setting', DefaultToggleSetting);
+
+const CustomizedAppearanceSettings = customComponent(
+  'component.appearance-settings',
+  AppearanceSettings,
+);
+export default CustomizedAppearanceSettings;

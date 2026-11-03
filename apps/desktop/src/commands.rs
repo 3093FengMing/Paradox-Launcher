@@ -1,21 +1,23 @@
-use std::{
-    process::ExitStatus,
-    sync::{
-        Arc,
-        atomic::{AtomicBool, Ordering},
-    },
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
 };
 
 use paradox_core::{AppConfig, ElementalService, GameProfile, InstalledInstance};
 use serde::Serialize;
-use tauri::{Emitter, State};
+use tauri::{Emitter, Manager, State};
 
 use crate::AppState;
 
+pub mod accounts;
 pub mod catalog;
+pub mod content;
 pub mod instances;
 pub mod java;
+pub mod loaders;
+pub mod preferences;
 pub mod tasks;
+pub mod ui_suite;
 pub mod window;
 
 type CommandResult<T> = Result<T, String>;
@@ -30,12 +32,6 @@ pub struct Bootstrap {
 struct ActivityEvent {
     action: String,
     status: String,
-    message: String,
-}
-
-#[derive(Clone, Serialize)]
-struct LogEvent {
-    level: String,
     message: String,
 }
 
@@ -57,7 +53,7 @@ impl Drop for BusyGuard {
     }
 }
 
-fn snapshot(state: &AppState) -> CommandResult<AppConfig> {
+pub(crate) fn snapshot(state: &AppState) -> CommandResult<AppConfig> {
     ensure_config_loaded(state)?;
     state
         .config
@@ -73,7 +69,7 @@ fn ensure_config_loaded(state: &AppState) -> CommandResult<()> {
     }
 }
 
-fn profile(config: &AppConfig, key: &str) -> CommandResult<GameProfile> {
+pub(crate) fn profile(config: &AppConfig, key: &str) -> CommandResult<GameProfile> {
     config
         .profiles
         .iter()
@@ -82,7 +78,7 @@ fn profile(config: &AppConfig, key: &str) -> CommandResult<GameProfile> {
         .ok_or_else(|| "实例不存在".into())
 }
 
-fn sdk_runtime() -> anyhow::Result<tokio::runtime::Runtime> {
+pub(crate) fn sdk_runtime() -> anyhow::Result<tokio::runtime::Runtime> {
     Ok(tokio::runtime::Builder::new_multi_thread()
         .worker_threads(2)
         .enable_all()
@@ -100,7 +96,7 @@ async fn sdk_job<T: Send + 'static>(
         .map_err(|error| format!("{error:#}"))
 }
 
-fn activity(app: &tauri::AppHandle, action: &str, status: &str, message: &str) {
+pub(crate) fn activity(app: &tauri::AppHandle, action: &str, status: &str, message: &str) {
     let _ = app.emit(
         "launcher://activity",
         ActivityEvent {
@@ -116,96 +112,18 @@ fn activity(app: &tauri::AppHandle, action: &str, status: &str, message: &str) {
     );
 }
 
-fn log(app: &tauri::AppHandle, level: &str, message: &str) {
-    let _ = app.emit(
-        "launcher://log",
-        LogEvent {
-            level: level.into(),
-            message: message.into(),
-        },
-    );
-}
-
-struct GameExit {
-    status: ExitStatus,
-    stopped: bool,
-}
-
-// This future stays on the SDK worker's runtime for the entire game lifetime.
-// A failed stop request leaves supervision active so logs and exit status are
-// still collected, and the user can try stopping the process again.
-async fn supervise_game(
-    app: &tauri::AppHandle,
-    config: &AppConfig,
-    profile: &GameProfile,
-    managed_runtime_root: &std::path::Path,
-    mut stop: tokio::sync::mpsc::Receiver<()>,
-) -> anyhow::Result<GameExit> {
-    let effective = profile.effective_settings(&config.settings)?;
-    let service = ElementalService::new(&effective)?;
-    let mut process = service
-        .launch_with_runtime_directory(profile, &effective, managed_runtime_root)
-        .await?;
-    activity(
-        app,
-        "launch",
-        "running",
-        &format!("{} 已启动", profile.name),
-    );
-
-    let mut lines_open = true;
-    let mut stop_open = true;
-    let mut stopped = false;
-    let status = loop {
-        tokio::select! {
-            exit = process.child.wait() => break exit?,
-            line = process.lines.recv(), if lines_open => {
-                if let Some(line) = line {
-                    log(app, "game", &line.line);
-                } else {
-                    lines_open = false;
-                }
-            }
-            request = stop.recv(), if stop_open => {
-                match request {
-                    Some(()) => match process.child.kill().await {
-                        Ok(()) => {
-                            stopped = true;
-                            log(app, "info", "已停止游戏进程");
-                        }
-                        Err(error) => log(app, "error", &format!("停止游戏失败：{error}")),
-                    },
-                    None => stop_open = false,
-                }
-            }
+pub(crate) fn log(app: &tauri::AppHandle, level: &str, message: &str) {
+    let state = app.state::<AppState>();
+    let retain = state
+        .config
+        .lock()
+        .map(|config| config.settings.personalization.retain_logs)
+        .unwrap_or(false);
+    match state.logs.record(level, message, retain) {
+        Ok(record) => {
+            let _ = app.emit("launcher://log", record);
         }
-    };
-
-    while let Ok(line) = process.lines.try_recv() {
-        log(app, "game", &line.line);
-    }
-    Ok(GameExit { status, stopped })
-}
-
-fn report_game_exit(app: &tauri::AppHandle, result: anyhow::Result<GameExit>) {
-    match result {
-        Ok(exit) if exit.stopped => activity(app, "launch", "finished", "游戏已停止"),
-        Ok(exit) => activity(
-            app,
-            "launch",
-            if exit.status.success() {
-                "finished"
-            } else {
-                "error"
-            },
-            &format!("游戏进程已退出：{}", exit.status),
-        ),
-        Err(error) => activity(
-            app,
-            "launch",
-            "error",
-            &format!("启动或等待游戏进程失败：{error:#}"),
-        ),
+        Err(error) => tracing::warn!(%error, "Unable to identify launcher log"),
     }
 }
 
@@ -236,6 +154,8 @@ pub fn save_config(config: AppConfig, state: State<'_, AppState>) -> CommandResu
 pub fn create_profile(
     name: String,
     version: String,
+    loader: Option<String>,
+    loader_version: Option<String>,
     state: State<'_, AppState>,
 ) -> CommandResult<AppConfig> {
     ensure_config_loaded(&state)?;
@@ -243,7 +163,10 @@ pub fn create_profile(
     if state.busy.load(Ordering::Acquire) {
         return Err("请在当前任务结束后创建实例".into());
     }
-    let profile = GameProfile::new(&name, &version).map_err(|error| format!("{error:#}"))?;
+    let mut profile = GameProfile::new(&name, &version).map_err(|error| format!("{error:#}"))?;
+    profile.loader = loader.unwrap_or_else(|| "vanilla".into());
+    profile.loader_version = loader_version.unwrap_or_default();
+    profile.validate().map_err(|error| error.to_string())?;
     let mut config = current.clone();
     config.active_profile = Some(profile.instance_key.clone());
     config.profiles.push(profile);
@@ -323,40 +246,10 @@ pub async fn launch_instance(
     app: tauri::AppHandle,
     state: State<'_, AppState>,
 ) -> CommandResult<()> {
-    let guard = BusyGuard::claim(&state)?;
-    let config = snapshot(&state)?;
-    let profile = profile(&config, &key)?;
-    let (sender, stop) = tokio::sync::mpsc::channel(1);
-    let managed_runtime_root = java::managed_root(&state);
-    let stop_sender = Arc::clone(&state.stop_sender);
-    *stop_sender.lock().map_err(|_| "进程锁不可用")? = Some(sender);
-    activity(&app, "launch", "started", "正在检查 Java 并构建启动命令");
-    tauri::async_runtime::spawn_blocking(move || {
-        let result = sdk_runtime().and_then(|runtime| {
-            runtime.block_on(supervise_game(
-                &app,
-                &config,
-                &profile,
-                &managed_runtime_root,
-                stop,
-            ))
-        });
-        if let Ok(mut sender) = stop_sender.lock() {
-            *sender = None;
-        }
-        drop(guard);
-        report_game_exit(&app, result);
-    });
-    Ok(())
+    crate::launch::start(&key, app, &state).map_err(|error| format!("{error:#}"))
 }
 
 #[tauri::command]
-pub async fn stop_game(state: State<'_, AppState>) -> CommandResult<()> {
-    let sender = state
-        .stop_sender
-        .lock()
-        .map_err(|_| "进程锁不可用")?
-        .clone()
-        .ok_or_else(|| "没有运行中的游戏".to_string())?;
-    sender.send(()).await.map_err(|_| "游戏进程已经退出".into())
+pub async fn stop_game(app: tauri::AppHandle, state: State<'_, AppState>) -> CommandResult<()> {
+    crate::launch::request_stop(&app, &state.launch).map_err(|error| format!("{error:#}"))
 }

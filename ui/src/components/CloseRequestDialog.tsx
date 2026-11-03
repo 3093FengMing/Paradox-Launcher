@@ -1,3 +1,4 @@
+import { customComponent } from '../customization/Customizable';
 import { useTranslation } from 'react-i18next';
 import LauncherDialog, { type DialogAppearance } from './LauncherDialog';
 import type { CloseRequest } from '../types';
@@ -7,7 +8,7 @@ interface Props extends DialogAppearance {
   closing: boolean;
   onChoice: (mode: 'stop' | 'background' | 'stay') => void;
 }
-export default function CloseRequestDialog({ request, closing, onChoice, ...appearance }: Props) {
+function CloseRequestDialog({ request, closing, onChoice, ...appearance }: Props) {
   const { t } = useTranslation();
   return (
     <LauncherDialog
@@ -31,3 +32,9 @@ export default function CloseRequestDialog({ request, closing, onChoice, ...appe
     </LauncherDialog>
   );
 }
+
+const CustomizedCloseRequestDialog = customComponent(
+  'component.close-request-dialog',
+  CloseRequestDialog,
+);
+export default CustomizedCloseRequestDialog;
