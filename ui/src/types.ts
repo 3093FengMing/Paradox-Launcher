@@ -160,6 +160,20 @@ export interface AppConfig {
   active_profile: string | null;
   appearance_presets: AppearancePreset[];
 }
+export interface ProfileRemovalResult {
+  config: AppConfig;
+  file_removal: { instance_root: string; removed: boolean } | null;
+  file_removal_error: string | null;
+  file_removal_retry: string | null;
+  instance_root: string | null;
+}
+export interface FileRemovalIssue {
+  profileKey: string;
+  name: string;
+  token: string;
+  instanceRoot: string;
+  error: string;
+}
 export interface Bootstrap {
   config: AppConfig;
   config_path: string;

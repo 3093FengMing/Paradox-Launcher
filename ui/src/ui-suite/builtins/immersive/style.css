@@ -14,7 +14,7 @@
 .immersive::before {
   z-index: -2;
   inset: -24px;
-  background-image: var(--background-image, url('../common/assets/background-placeholder.png'));
+  background-image: var(--background-image, none);
   background-color: #7daac5;
   background-position: center;
   background-size: var(--background-size, cover);
@@ -775,9 +775,8 @@
 }
 
 .immersive-shell {
-  --builtin-background: url('../common/assets/background-placeholder.png');
   --builtin-banner: url('../common/assets/world.svg');
 }
 .immersive-shell.has-background:before {
-  background-image: var(--background-image, var(--builtin-background));
+  background-image: var(--background-image, none);
 }

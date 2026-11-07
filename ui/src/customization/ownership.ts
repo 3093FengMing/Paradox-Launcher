@@ -74,7 +74,7 @@ export function readonlySet<T>(values: Iterable<T>): ReadonlySet<T> {
   });
   return result;
 }
-const owners = new Map<string, { token: object; record: UiOwnerRecord }>();
+const owners = new Map<string, { token: object; record: UiOwnerRecord; signature: string }>();
 const dom = new Map<Element, Map<object, DomOwnership>>();
 const definitions = new Map<
   string,
@@ -94,6 +94,7 @@ const unkeyedCalls = new Map<string, string | null>();
 const listeners = new Set<() => void>();
 let snapshot: readonly UiOwnerRecord[] = Object.freeze([]),
   byId = new Map<string, UiOwnerRecord>();
+let ownerSignatures = new Map<string, string>();
 let domSnapshot = new Map<Element, DomOwnership>(),
   index = new SelectorIndex<string | null>();
 let dirty = false,
@@ -133,35 +134,57 @@ function ownerSelectors(owner: UiOwnerRecord): UiSelector[] {
     })),
   ];
 }
-function flush() {
-  if (!dirty) return;
-  dirty = false;
+function outerRoots(candidates: readonly Element[]): ReadonlySet<Element> {
+  const all = new Set(candidates), ancestry = new Map<Element, boolean>();
+  return readonlySet(candidates.filter((element) => {
+    const path: Element[] = [];
+    let parent = element.parentElement;
+    while (parent && !all.has(parent) && !ancestry.has(parent)) {
+      path.push(parent);
+      parent = parent.parentElement;
+    }
+    // Element ancestry, like Node.contains, stops at a ShadowRoot/fragment.
+    const contained = parent !== null && parent !== undefined &&
+      (all.has(parent) || ancestry.get(parent) === true);
+    for (const ancestor of path) ancestry.set(ancestor, contained);
+    return !contained;
+  }));
+}
+function writeAttribute(element: Element, name: string, value: string | null): void {
+  if (element.getAttribute(name) === value) return;
+  if (value === null) element.removeAttribute(name);
+  else element.setAttribute(name, value);
+}
+type OwnerLeases = typeof owners;
+function pruneOwnerLeases(registeredOwners: OwnerLeases): void {
   // Parent mount leases bound descendants even when invalid duplicate React keys
   // strand a child without its own cleanup. Replacements register before this flush.
   let removed = true;
   while (removed) {
     removed = false;
-    for (const [id, { record }] of owners)
-      if (record.parentOwnerId && !owners.has(record.parentOwnerId)) {
-        owners.delete(id);
+    for (const [id, { record }] of registeredOwners)
+      if (record.parentOwnerId && !registeredOwners.has(record.parentOwnerId)) {
+        registeredOwners.delete(id);
         removed = true;
       }
   }
+}
+function collectDomOwners(registeredOwners: OwnerLeases, registrationsByElement: typeof dom) {
   const nodes = new Map<string, Set<Element>>(),
     merged = new Map<Element, string[]>();
-  for (const [element, registrations] of dom) {
+  for (const [element, registrations] of registrationsByElement) {
     for (const [token, registration] of registrations)
-      if (registration.ownerIds.length && !registration.ownerIds.some((id) => owners.has(id)))
+      if (registration.ownerIds.length && !registration.ownerIds.some((id) => registeredOwners.has(id)))
         registrations.delete(token);
     if (!registrations.size) {
-      dom.delete(element);
-      element.removeAttribute('data-ui-selector');
-      element.removeAttribute('data-ui-render-root');
-      element.removeAttribute('data-ui-render-layer');
+      registrationsByElement.delete(element);
+      writeAttribute(element, 'data-ui-selector', null);
+      writeAttribute(element, 'data-ui-render-root', null);
+      writeAttribute(element, 'data-ui-render-layer', null);
       continue;
     }
     const ids = [...new Set([...registrations.values()].flatMap((row) => row.ownerIds))].filter(
-      (id) => owners.has(id),
+      (id) => registeredOwners.has(id),
     );
     merged.set(element, ids);
     for (const id of ids) {
@@ -170,8 +193,11 @@ function flush() {
       nodes.set(id, roots);
     }
   }
+  return { nodes, merged };
+}
+function collectUnstableOwners(registeredOwners: OwnerLeases, unkeyed: typeof unkeyedCalls): Set<string> {
   const repeats = new Map<string, UiOwnerRecord[]>();
-  for (const { record } of owners.values()) {
+  for (const { record } of registeredOwners.values()) {
     const key = canonicalSuiteJson([
       record.parentOwnerId,
       record.site,
@@ -183,19 +209,19 @@ function flush() {
     repeats.set(key, group);
   }
   const missing = new Set<string>();
-  for (const [key, parentOwnerId] of unkeyedCalls)
-    if (parentOwnerId ? !owners.has(parentOwnerId) : !repeats.has(key)) unkeyedCalls.delete(key);
+  for (const [key, parentOwnerId] of unkeyed)
+    if (parentOwnerId ? !registeredOwners.has(parentOwnerId) : !repeats.has(key)) unkeyed.delete(key);
   for (const [key, group] of repeats)
     if (group.length > 1 && group[0].locator.calls.at(-1)?.key === null) {
       // Distinct accumulated business identities separate repeated rows. Equal identities do not.
-      unkeyedCalls.set(key, group[0].parentOwnerId);
+      unkeyed.set(key, group[0].parentOwnerId);
     }
   for (const [key, group] of repeats)
-    if (unkeyedCalls.has(key)) for (const row of group) missing.add(row.ownerId);
+    if (unkeyed.has(key)) for (const row of group) missing.add(row.ownerId);
   let propagated = true;
   while (propagated) {
     propagated = false;
-    for (const { record } of owners.values())
+    for (const { record } of registeredOwners.values())
       if (
         record.parentOwnerId &&
         missing.has(record.parentOwnerId) &&
@@ -205,15 +231,21 @@ function flush() {
         propagated = true;
       }
   }
-  const next: UiOwnerRecord[] = [];
-  for (const { record } of owners.values()) {
+  return missing;
+}
+function buildOwnerSnapshot(input: {
+  registeredOwners: OwnerLeases;
+  nodes: Map<string, Set<Element>>;
+  missing: ReadonlySet<string>;
+  previousById: ReadonlyMap<string, UiOwnerRecord>;
+  previousSignatures: ReadonlyMap<string, string>;
+}) {
+  const { registeredOwners, nodes, missing, previousById, previousSignatures } = input;
+  const next: UiOwnerRecord[] = [], nextSignatures = new Map<string, string>();
+  for (const { record, signature } of registeredOwners.values()) {
     const candidates = [...(nodes.get(record.ownerId) ?? record.roots)];
-    const roots = readonlySet(
-      candidates.filter(
-        (element) => !candidates.some((other) => other !== element && other.contains(element)),
-      ),
-    );
-    const old = byId.get(record.ownerId),
+    const roots = outerRoots(candidates);
+    const old = previousById.get(record.ownerId),
       stability = missing.has(record.ownerId) ? 'missing-repeat-key' : record.stability;
     const updated = { ...record, roots, stability };
     const equivalent =
@@ -221,13 +253,14 @@ function flush() {
       old.stability === stability &&
       [...roots].every((root) => old.roots.has(root)) &&
       roots.size === old.roots.size &&
-      canonicalSuiteJson({ ...old, roots: null }) ===
-        canonicalSuiteJson({ ...updated, roots: null });
+      previousSignatures.get(record.ownerId) === signature;
     next.push(equivalent ? old : Object.freeze(updated));
+    nextSignatures.set(record.ownerId, signature);
   }
-  let changed = next.length !== snapshot.length || next.some((row, i) => row !== snapshot[i]);
-  if (changed) snapshot = Object.freeze(next);
-  byId = new Map(next.map((row) => [row.ownerId, row]));
+  return { next, nextSignatures };
+}
+function updateCatalogSnapshots(): boolean {
+  let changed = false;
   const nextDefinitions = [...definitions.values()].flatMap((row) => row.definitions),
     newDefinitionSignature = canonicalSuiteJson(nextDefinitions);
   if (newDefinitionSignature !== definitionSignature) {
@@ -248,24 +281,33 @@ function flush() {
     viewSignature = newViewSignature;
     changed = true;
   }
-  if (changed) revision++;
-  index = new SelectorIndex<string | null>();
-  for (const selector of boundaries.values()) index.add(selector, null);
+  return changed;
+}
+function createOwnerIndex(currentOwners: readonly UiOwnerRecord[]): SelectorIndex<string | null> {
+  const nextIndex = new SelectorIndex<string | null>();
+  for (const selector of boundaries.values()) nextIndex.add(selector, null);
   for (const publication of definitions.values())
     for (const definition of publication.definitions)
-      if (definition.selector) index.add(definition.selector, null);
-  for (const owner of snapshot)
-    for (const selector of ownerSelectors(owner)) index.add(selector, owner.ownerId);
-  domSnapshot = new Map();
+      if (definition.selector) nextIndex.add(definition.selector, null);
+  for (const owner of currentOwners)
+    for (const selector of ownerSelectors(owner)) nextIndex.add(selector, owner.ownerId);
+  return nextIndex;
+}
+function publishDomOwners(
+  merged: Map<Element, string[]>,
+  currentById: ReadonlyMap<string, UiOwnerRecord>,
+  currentIndex: SelectorIndex<string | null>,
+): Map<Element, DomOwnership> {
+  const nextDom = new Map<Element, DomOwnership>();
   for (const [element, ids] of merged) {
-    const rootIds = ids.filter((id) => byId.get(id)!.roots.has(element));
+    const rootIds = ids.filter((id) => currentById.get(id)!.roots.has(element));
     const marks = new Set<string>(),
       roots = new Set<string>();
     for (const id of rootIds) {
-      const owner = byId.get(id)!;
+      const owner = currentById.get(id)!;
       roots.add(owner.locator.renderRoot);
       for (const selector of ownerSelectors(owner)) {
-        const lookup = index.get(selector);
+        const lookup = currentIndex.get(selector);
         if (lookup.collision) continue;
         if (
           selector.kind === 'position' &&
@@ -277,14 +319,11 @@ function flush() {
         marks.add(`s${selectorDigest(selector)}`);
       }
     }
-    if (marks.size) element.setAttribute('data-ui-selector', [...marks].join(' '));
-    else element.removeAttribute('data-ui-selector');
-    if (roots.size) element.setAttribute('data-ui-render-root', [...roots].join(' '));
-    else element.removeAttribute('data-ui-render-root');
-    const layerId = byId.get(ids.at(-1) ?? '')?.layerId;
-    if (layerId) element.setAttribute('data-ui-render-layer', layerBoundaryToken(layerId));
-    else element.removeAttribute('data-ui-render-layer');
-    domSnapshot.set(
+    writeAttribute(element, 'data-ui-selector', marks.size ? [...marks].join(' ') : null);
+    writeAttribute(element, 'data-ui-render-root', roots.size ? [...roots].join(' ') : null);
+    const layerId = currentById.get(ids.at(-1) ?? '')?.layerId;
+    writeAttribute(element, 'data-ui-render-layer', layerId ? layerBoundaryToken(layerId) : null);
+    nextDom.set(
       element,
       Object.freeze({
         ownerIds: Object.freeze(ids),
@@ -293,6 +332,26 @@ function flush() {
       }),
     );
   }
+  return nextDom;
+}
+function flush() {
+  if (!dirty) return;
+  dirty = false;
+  pruneOwnerLeases(owners);
+  const { nodes, merged } = collectDomOwners(owners, dom);
+  const missing = collectUnstableOwners(owners, unkeyedCalls);
+  const { next, nextSignatures } = buildOwnerSnapshot({
+    registeredOwners: owners, nodes, missing,
+    previousById: byId, previousSignatures: ownerSignatures,
+  });
+  const ownersChanged = next.length !== snapshot.length || next.some((row, i) => row !== snapshot[i]);
+  if (ownersChanged) snapshot = Object.freeze(next);
+  byId = new Map(next.map((row) => [row.ownerId, row]));
+  ownerSignatures = nextSignatures;
+  const catalogsChanged = updateCatalogSnapshots();
+  if (ownersChanged || catalogsChanged) revision++;
+  index = createOwnerIndex(snapshot);
+  domSnapshot = publishDomOwners(merged, byId, index);
 }
 export function registerOwner(record: UiOwnerRecord): () => void {
   const token = {},
@@ -302,7 +361,10 @@ export function registerOwner(record: UiOwnerRecord): () => void {
       metadata: metadata(record.metadata),
       roots: readonlySet(record.roots),
     });
-  owners.set(record.ownerId, { token, record: value });
+  // Roots and effective repetition stability are compared separately at flush.
+  // Every other field is a frozen registration value, canonicalized once per lease.
+  owners.set(record.ownerId, { token, record: value,
+    signature: canonicalSuiteJson({ ...value, roots: null, stability: null }) });
   schedule();
   return () => {
     if (owners.get(record.ownerId)?.token !== token) return;
@@ -327,9 +389,9 @@ export function registerDom(element: Element, ownership: DomOwnership): () => vo
     if (!registrations.delete(token)) return;
     if (!registrations.size) {
       dom.delete(element);
-      element.removeAttribute('data-ui-selector');
-      element.removeAttribute('data-ui-render-root');
-      element.removeAttribute('data-ui-render-layer');
+      writeAttribute(element, 'data-ui-selector', null);
+      writeAttribute(element, 'data-ui-render-root', null);
+      writeAttribute(element, 'data-ui-render-layer', null);
     }
     schedule();
   };

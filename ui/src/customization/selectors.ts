@@ -50,8 +50,15 @@ const constants = new Uint32Array([
   0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
   0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 ]);
+// Immutable full canonical keys are safe even when callers mutate their input.
+// Bound both entry count and retained string characters for long imported locators.
+const digestCache = new Map<string, string>();
+const digestCacheEntries = 2048, digestCacheCharacters = 1024 * 1024;
+let retainedDigestCharacters = 0;
 export function selectorDigest(selector: UiSelector): string {
-  const input = utf8(canonicalSuiteJson(selector)),
+  const canonical = canonicalSuiteJson(selector), cached = digestCache.get(canonical);
+  if (cached) return cached;
+  const input = utf8(canonical),
     bytes = new Uint8Array(Math.ceil((input.length + 9) / 64) * 64);
   bytes.set(input);
   bytes[input.length] = 0x80;
@@ -101,23 +108,36 @@ export function selectorDigest(selector: UiSelector): string {
       hash[i] = (hash[i] + v) >>> 0;
     });
   }
-  return [...hash].map((v) => v.toString(16).padStart(8, '0')).join('');
+  const digest = [...hash].map((v) => v.toString(16).padStart(8, '0')).join('');
+  const characters = canonical.length + digest.length;
+  if (characters <= digestCacheCharacters) {
+    while (digestCache.size >= digestCacheEntries || retainedDigestCharacters + characters > digestCacheCharacters) {
+      const first = digestCache.keys().next().value!;
+      retainedDigestCharacters -= first.length + digestCache.get(first)!.length;
+      digestCache.delete(first);
+    }
+    digestCache.set(canonical, digest);
+    retainedDigestCharacters += characters;
+  }
+  return digest;
 }
 /** Index utility, not a registry. Tests inject a colliding index function to verify exact lookup. */
 export class SelectorIndex<T> {
-  private readonly buckets = new Map<string, { selector: UiSelector; value: T }[]>();
+  private readonly buckets = new Map<string, { selector: UiSelector; canonical: string; value: T }[]>();
   constructor(private readonly digest: (selector: UiSelector) => string = selectorDigest) {}
   add(selector: UiSelector, value: T): void {
     const key = this.digest(selector),
       bucket = this.buckets.get(key) ?? [];
-    bucket.push({ selector: copySelector(selector), value });
+    const owned = copySelector(selector);
+    bucket.push({ selector: owned, canonical: canonicalSuiteJson(owned), value });
     this.buckets.set(key, bucket);
   }
   get(selector: UiSelector): { values: readonly T[]; collision: boolean } {
     const bucket = this.buckets.get(this.digest(selector)) ?? [];
+    const canonical = canonicalSuiteJson(selector);
     return {
-      values: bucket.filter((row) => sameSelector(row.selector, selector)).map((row) => row.value),
-      collision: bucket.some((row) => !sameSelector(row.selector, selector)),
+      values: bucket.filter((row) => row.canonical === canonical).map((row) => row.value),
+      collision: bucket.some((row) => row.canonical !== canonical),
     };
   }
 }

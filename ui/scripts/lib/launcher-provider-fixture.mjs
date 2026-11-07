@@ -210,8 +210,19 @@ export async function fixture({
     },
     removeProfile: () => {
       counts.removed++;
-      return domainWrite('remove');
+      return domainWrite('remove').then((result) =>
+        result.config
+          ? result
+          : {
+              config: result,
+              file_removal: null,
+              file_removal_error: null,
+              file_removal_retry: null,
+              instance_root: null,
+            },
+      );
     },
+    retryProfileFiles: (token) => domainWrite(`retry-remove:${token}`),
     createProfile: (name, version, loader, loaderVersion) => {
       const response = deferred();
       profileWrites.push({ ...response, name, version, loader, loaderVersion });
@@ -412,8 +423,21 @@ export async function fixture({
             React.createElement(
               contexts.LauncherSnapshotContext.Provider,
               { value: value.snapshot },
-              React.createElement(app('ui-editor/public.ts').UiEditorActionsContext.Provider,
-                {value: {open() {}}}, React.createElement(Capture)),
+              React.createElement(
+                app('ui-editor/public.ts').UiEditorActionsContext.Provider,
+                { value: { open() {} } },
+                React.createElement(
+                  app('ui-editor/public.ts').UiEditorSnapshotContext.Provider,
+                  { value: {
+                    suites: [],
+                    selectedSuiteId: 'builtin.' + value.snapshot.settings.draft.appearance.interface_style,
+                    draft: { manifest: { views: {
+                      'layout.shell': value.snapshot.settings.draft.appearance.interface_style + '/Shell.tsx',
+                    } } },
+                  } },
+                  React.createElement(Capture),
+                ),
+              ),
             ),
           ),
         );

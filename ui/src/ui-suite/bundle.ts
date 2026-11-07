@@ -38,7 +38,14 @@ function exact(v: unknown, fields: string[], optional: string[] = []): Record<st
   return o;
 }
 function text(v: unknown, min = 0, max = Infinity): string {
-  if (typeof v !== 'string' || [...v].length < min || [...v].length > max) fail();
+  if (typeof v !== 'string') fail();
+  if (min === 0 && max === Infinity) return v;
+  let length = 0;
+  for (let i = 0; i < v.length; i++) {
+    if (v.codePointAt(i)! > 0xffff) i++;
+    if (++length > max) fail();
+  }
+  if (length < min) fail();
   return v;
 }
 function label(v: unknown, min = 1, max = Infinity): string {
@@ -75,7 +82,17 @@ function path(value: unknown): string {
 export function suiteFileBytes(file: UiFile): Uint8Array {
   return file.encoding === 'utf8' ? utf8(file.text) : decodeBase64(file.data);
 }
-function files(value: unknown): Record<string, UiFile> {
+// Only one detached parsing transaction owns this cache; public mutable values never reuse it.
+type OwnedBytes = Map<UiFile, Uint8Array>;
+function bytesOf(file: UiFile, ownedBytes?: OwnedBytes): Uint8Array {
+  let bytes = ownedBytes?.get(file);
+  if (!bytes) {
+    bytes = suiteFileBytes(file);
+    ownedBytes?.set(file, bytes);
+  }
+  return bytes;
+}
+function files(value: unknown, ownedBytes?: OwnedBytes): Record<string, UiFile> {
   const input = object(value),
     names = Object.keys(input);
   uniqueSuitePaths(names);
@@ -86,8 +103,10 @@ function files(value: unknown): Record<string, UiFile> {
     if (o.encoding === 'utf8') {
       exact(o, ['encoding', 'text']);
       const s = text(o.text);
-      if (utf8(s).length > L.source) fail();
+      const bytes = utf8(s);
+      if (bytes.length > L.source) fail();
       result[p] = { encoding: 'utf8', text: s };
+      ownedBytes?.set(result[p], bytes);
     } else {
       exact(o, ['encoding', 'media_type', 'data']);
       if (o.encoding !== 'base64') fail();
@@ -97,6 +116,7 @@ function files(value: unknown): Record<string, UiFile> {
       const bytes = decodeBase64(data);
       inspectSuiteAsset(p, media, bytes);
       result[p] = { encoding: 'base64', media_type: media, data };
+      ownedBytes?.set(result[p], bytes);
     }
   }
   return result;
@@ -219,16 +239,16 @@ export function parseSuiteManifest(value: unknown): UiSuiteManifest {
     views: Object.assign(Object.create(null) as Record<string, unknown>, views),
   } as unknown as UiSuiteManifest;
 }
-function parsedBundle(value: unknown): UiSuiteBundle {
+function parsedBundle(value: unknown, ownedBytes?: OwnedBytes): UiSuiteBundle {
   const o = exact(value, ['manifest', 'files']),
     manifest = parseSuiteManifest(o.manifest),
-    table = files(o.files);
+    table = files(o.files, ownedBytes);
   if (Object.keys(table).length !== manifest.files.length) fail();
   let total = utf8(canonicalSuiteJson(manifest)).length;
   for (const d of manifest.files) {
     if (!Object.hasOwn(table, d.path)) fail();
     const f = table[d.path],
-      bytes = suiteFileBytes(f);
+      bytes = bytesOf(f, ownedBytes);
     if (
       bytes.length !== d.bytes ||
       (d.kind === 'asset'
@@ -308,13 +328,13 @@ export function parseSuiteLibrary(value: unknown): UiSuiteLibrary {
     suites,
   };
 }
-async function verifyHashes(bundle: UiSuiteBundle): Promise<void> {
+async function verifyHashes(bundle: UiSuiteBundle, ownedBytes?: OwnedBytes): Promise<void> {
   for (const d of bundle.manifest.files)
-    if ((await sha256(suiteFileBytes(bundle.files[d.path]))) !== d.sha256)
+    if ((await sha256(bytesOf(bundle.files[d.path], ownedBytes))) !== d.sha256)
       throw new Error('Suite SHA mismatch');
 }
-async function digestOwned(bundle: UiSuiteBundle): Promise<string> {
-  await verifyHashes(bundle);
+async function digestOwned(bundle: UiSuiteBundle, ownedBytes?: OwnedBytes, verified = false): Promise<string> {
+  if (!verified) await verifyHashes(bundle, ownedBytes);
   const parts: Uint8Array[] = [
     Uint8Array.from([80, 65, 82, 65, 68, 79, 88, 45, 85, 73, 45, 66, 85, 78, 68, 76, 69, 0, 1]),
   ];
@@ -331,7 +351,7 @@ async function digestOwned(bundle: UiSuiteBundle): Promise<string> {
   parts.push(u32(names.length));
   for (const p of names) {
     append(utf8(p));
-    append(suiteFileBytes(bundle.files[p]));
+    append(bytesOf(bundle.files[p], ownedBytes));
   }
   const bytes = new Uint8Array(parts.reduce((n, b) => n + b.length, 0));
   let offset = 0;
@@ -344,16 +364,27 @@ async function digestOwned(bundle: UiSuiteBundle): Promise<string> {
 export async function bundleDigest(bundle: UiSuiteBundle): Promise<string> {
   return digestOwned(parseSuiteBundle(bundle));
 }
-async function validateOwned(bundle: UiSuiteBundle): Promise<void> {
-  await verifyHashes(bundle);
+async function validateOwned(bundle: UiSuiteBundle, ownedBytes?: OwnedBytes): Promise<void> {
+  await verifyHashes(bundle, ownedBytes);
   for (const d of bundle.manifest.files)
     if (d.kind === 'asset')
-      await validateSuiteAsset(d.path, d.media_type!, suiteFileBytes(bundle.files[d.path]));
+      await validateSuiteAsset(d.path, d.media_type!, bytesOf(bundle.files[d.path], ownedBytes));
 }
 export async function validateSuiteBundle(bundle: UiSuiteBundle): Promise<UiSuiteBundle> {
   const owned = parseSuiteBundle(bundle);
   await validateOwned(owned);
   return owned;
+}
+/** Package-private compiler transaction: full validation and exact digest of one owned snapshot. */
+export async function validateSuiteBundleAndDigest(bundle: UiSuiteBundle): Promise<{
+  bundle: UiSuiteBundle;
+  digest: string;
+}> {
+  const ownedBytes: OwnedBytes = new Map();
+  const owned = parsedBundle(snapshot(bundle), ownedBytes);
+  await validateOwned(owned, ownedBytes);
+  const digest = await digestOwned(owned, ownedBytes, true);
+  return { bundle: owned, digest };
 }
 export async function validateSuiteLibraryData(library: UiSuiteLibrary): Promise<UiSuiteLibrary> {
   const owned = parseSuiteLibrary(library);

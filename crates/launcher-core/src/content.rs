@@ -412,7 +412,9 @@ pub async fn install(
     let mut projects = BTreeMap::new();
     let mut plan = Vec::new();
     while let Some(version) = pending.pop_front() {
-        ensure!(!cancellation.is_cancelled(), "content.errors.cancelled");
+        if cancellation.is_cancelled() {
+            return Err(crate::download::DownloadError::Cancelled.into());
+        }
         if !seen.insert(version.id.clone()) {
             continue;
         }
@@ -550,7 +552,9 @@ async fn install_files(
     DownloadEngine::new(settings.network.clone())?
         .download(artifacts, cancellation.clone(), progress)
         .await?;
-    ensure!(!cancellation.is_cancelled(), "content.errors.cancelled");
+    if cancellation.is_cancelled() {
+        return Err(crate::download::DownloadError::Cancelled.into());
+    }
     fs::write(stage.path().join(REGISTRY), registry_bytes(&records)?)?;
     paths.push(REGISTRY.into());
     commit(&root, stage.path(), &paths, &remove)

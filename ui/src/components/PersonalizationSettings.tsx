@@ -1,5 +1,4 @@
 import { customComponent } from '../customization/Customizable';
-import defaultBackground from '../ui-suite/builtins/common/assets/background-placeholder.png';
 import { useTranslation } from 'react-i18next';
 import { ImagePlus, LoaderCircle, RotateCcw } from 'lucide-react';
 import { Field, Select, Toggle } from './ui';
@@ -58,9 +57,7 @@ function PersonalizationSettings({
           <div
             className="background-preview"
             style={{
-              backgroundImage: background
-                ? `url("${background}")`
-                : `url("${defaultBackground}")`,
+              backgroundImage: background ? `url("${background}")` : 'none',
               backgroundSize:
                 value.background_fit === 'stretch' ? '100% 100%' : value.background_fit,
             }}

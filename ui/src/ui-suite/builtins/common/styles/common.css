@@ -2775,7 +2775,7 @@ main {
 .immersive::before {
   z-index: -2;
   inset: -24px;
-  background-image: var(--background-image, url('../assets/background-placeholder.png'));
+  background-image: var(--background-image, none);
   background-color: #7daac5;
   background-position: center;
   background-size: var(--background-size, cover);

@@ -4,7 +4,8 @@ import './i18n';
 import App from './App';
 import LauncherProvider from './launcher/LauncherProvider';
 import { UiEditorProvider, UiEditorSourceContext } from './ui-editor/controller';
-import { getBuiltinBundle } from './ui-suite/builtins';
+import { getBuiltinBundle, getBuiltinName } from './ui-suite/builtins';
+import './viewport.css';
 import './window.css';
 import './scrollbars.css';
 import './ui-foundation/foundation.css';
@@ -47,7 +48,7 @@ else
   root.render(
     <React.StrictMode>
       <LauncherProvider initialRouteRegistry="suite">
-        <UiEditorSourceContext.Provider value={{ getBuiltinBundle }}>
+        <UiEditorSourceContext.Provider value={{ getBuiltinBundle, getBuiltinName }}>
           <UiEditorProvider>
             <App />
             {FinalCapture && <React.Suspense fallback={null}><FinalCapture /></React.Suspense>}

@@ -25,7 +25,8 @@ async function runBuiltinNoticeLeases(page){
   await page.clock.runFor(60000);assert.equal(await main().count(),1);assert.equal(await editor().count(),1);
   await editor().getByRole('button').focus();await page.evaluate(()=>window.suiteBuiltinsFixture.controller.actions.close());await page.clock.runFor(3100);assert.equal(await main().count(),0);
   await publish('Task12 focus leases');
-  await main().getByRole('button').dispatchEvent('focusin',{bubbles:true});await editor().getByRole('button').dispatchEvent('focusin',{bubbles:true});await main().getByRole('button').dispatchEvent('focusout',{bubbles:true});
+  // The editor modal hides background notices from the accessibility tree; synthetic events still exercise their leases.
+  await main().getByRole('button',{includeHidden:true}).dispatchEvent('focusin',{bubbles:true});await editor().getByRole('button').dispatchEvent('focusin',{bubbles:true});await main().getByRole('button',{includeHidden:true}).dispatchEvent('focusout',{bubbles:true});
   await page.clock.runFor(60000);assert.equal(await main().count(),1);assert.equal(await editor().count(),1);
   await page.evaluate(()=>window.suiteBuiltinsFixture.controller.actions.close());await page.clock.runFor(3100);assert.equal(await main().count(),0);
   await publish('Task12 replacement leases');await main().dispatchEvent('pointerover',{bubbles:true});await editor().dispatchEvent('pointerover',{bubbles:true});
@@ -49,26 +50,32 @@ async function runBuiltinSourceStylesAndEditor(page, id, theme) {
   await page.locator('.'+id+'-shell[data-theme="'+theme+'"]').waitFor();
   const computed=await page.locator('.app-shell').evaluate(e=>{
     const before=getComputedStyle(e,'::before'),banner=document.querySelector('.banner-illustration');
-    return {theme:e.getAttribute('data-theme'),classes:e.className,before:{content:before.content,background:before.backgroundImage,position:before.position},windowBackground:getComputedStyle(document.querySelector('.window-bar')).backgroundImage,heading:getComputedStyle(document.querySelector('.page-heading')).display,banner:banner?getComputedStyle(banner).backgroundImage:null};
+    const appearance=window.suiteBuiltinsFixture.snapshot.appearance;
+    return {theme:e.getAttribute('data-theme'),classes:e.className,backgroundArt:appearance.value?.background_art,hasCustomBackground:appearance.background?.startsWith('data:image/png;base64,')??false,before:{content:before.content,background:before.backgroundImage,color:before.backgroundColor,position:before.position},windowBackground:getComputedStyle(document.querySelector('.window-bar')).backgroundImage,heading:getComputedStyle(document.querySelector('.page-heading')).display,banner:banner?getComputedStyle(banner).backgroundImage:null};
   });
   assert.equal(computed.theme,theme,'actual saved source theme');
   if(id==='immersive'){
     assert.equal(computed.before.content,'""','original immersive background pseudo-element');
-    assert.notEqual(computed.before.background,'none');
+    assert.equal(computed.before.position,'fixed','original immersive background positioning');
+    assert.notEqual(computed.before.color,'rgba(0, 0, 0, 0)','original immersive solid background');
+    if(computed.backgroundArt&&computed.hasCustomBackground)assert.notEqual(computed.before.background,'none','custom immersive background image');
+    else assert.equal(computed.before.background,'none','canonical immersive background has no packaged image fallback');
     assert.notEqual(computed.windowBackground,'none','original immersive window visuals');
     assert.equal(computed.heading,'none','original immersive landing heading');
   } else assert.ok(computed.banner&&computed.banner!=='none','original modern package artwork');
   await page.evaluate(()=>window.suiteBuiltinsFixture.controller.actions.open());
   const editor=page.locator('#paradox-suite-editor');
-  await editor.getByRole('dialog',{name:'UI Suite Editor',exact:true}).waitFor();
-  await editor.getByRole('combobox',{name:'Builtin suite',exact:true}).click();
+  await editor.getByRole('dialog',{name:/^(?:UI Suite Editor|UI 套件编辑器)$/}).waitFor();
+  await editor.getByRole('combobox',{name:/^(?:UI suite|UI 套件)$/}).click();
   await editor.getByRole('listbox').waitFor();
   assert.equal(await editor.getByRole('listbox').evaluate(e=>e.getRootNode()===document.getElementById('paradox-suite-editor').shadowRoot),true,'actual editor Select Portal root');
   assert.equal(await editor.getByRole('option').count(),2);
   await page.keyboard.press('Escape');
-  assert.equal(await editor.locator('.suite-assets').getByRole('button',{name:/^common\/assets\//}).count(),4,'actual four artwork entries');
+  const assetPaths=(await editor.locator('.suite-assets button:not([aria-label^="Remove "])').allTextContents()).sort();
+  assert.ok(assetPaths.length>0,'actual artwork entries are present');
+  for(const path of assetPaths)assert.equal(await editor.locator('.suite-assets').getByRole('button',{name:path,exact:true}).count(),1,`actual artwork accessible name ${path}`);
   await page.evaluate(()=>window.suiteBuiltinsFixture.controller.actions.close());
-  return {computed,checks:['canonical_original_shell_styles','actual_editor_select_portal_shadowroot','actual_asset_directory']};
+  return {computed,assetPaths,checks:['canonical_original_shell_styles','actual_editor_select_portal_shadowroot','actual_asset_directory']};
 }
 if (process.env.PARADOX_SUITE_BUILTINS === '1') {
   try {
@@ -80,6 +87,9 @@ if (process.env.PARADOX_SUITE_BUILTINS === '1') {
       assert.deepEqual(initial,{active:'builtin.'+initialConfig.settings.appearance.interface_style,revision:1});
       const original=await runBuiltinSourceStylesAndEditor(fixture.page,id,theme);
       const result=await fixture.page.evaluate(({id,theme})=>window.suiteBuiltinsFixture.run(id,theme),{id,theme});
+      const canonicalAssetPaths=result.files.filter(file=>file.kind==='asset').map(file=>file.path).sort();
+      assert.ok(canonicalAssetPaths.length>0,'canonical builtin artwork entries are present');
+      assert.deepEqual(original.assetPaths,canonicalAssetPaths,'actual editor artwork paths match the canonical builtin bundle');
       for(const file of result.files){const bytes=await readFile(resolve('src/ui-suite/builtins',file.path));assert.equal(createHash('sha256').update(bytes).digest('hex'),file.sha256,`actual canonical bytes ${file.path}`)}
       report.rows.push({id,theme,viewport,initial,original,...result});console.log(JSON.stringify({id,theme,viewport,original:original.checks,checks:result.checks,failures:result.failures}));
       await fixture.page.screenshot({path:resolve(out,`${id}-${theme}-${viewport.width}.png`)});

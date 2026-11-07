@@ -78,21 +78,29 @@ export function encodeBase64(bytes: Uint8Array): string {
     out += String.fromCharCode(...bytes.subarray(i, i + 32768));
   return btoa(out);
 }
+const base64Values = new Int16Array(128).fill(-1);
+for (const [index, char] of [...'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'].entries())
+  base64Values[char.charCodeAt(0)] = index;
 export function decodeBase64(value: string): Uint8Array {
-  // A repeated-group regexp over an 8 MiB asset can overflow the engine stack.
-  // Scan the alphabet and terminal padding independently, then round-trip bits.
-  const padding = value.indexOf('='),
-    body = padding < 0 ? value : value.slice(0, padding);
-  if (
-    value.length % 4 !== 0 ||
-    /[^A-Za-z0-9+/]/.test(body) ||
-    (padding >= 0 && !['=', '=='].includes(value.slice(padding)))
-  )
-    throw new Error('Invalid base64');
-  const raw = atob(value),
-    bytes = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-  if (encodeBase64(bytes) !== value) throw new Error('Noncanonical base64');
+  if (value.length % 4 !== 0) throw new Error('Invalid base64');
+  if (!value.length) return new Uint8Array();
+  const padding = value.endsWith('==') ? 2 : value.endsWith('=') ? 1 : 0;
+  const bytes = new Uint8Array((value.length / 4) * 3 - padding);
+  let offset = 0;
+  for (let i = 0; i < value.length; i += 4) {
+    const last = i === value.length - 4;
+    const a = base64Values[value.charCodeAt(i)] ?? -1,
+      b = base64Values[value.charCodeAt(i + 1)] ?? -1,
+      c = last && padding === 2 ? 0 : (base64Values[value.charCodeAt(i + 2)] ?? -1),
+      d = last && padding ? 0 : (base64Values[value.charCodeAt(i + 3)] ?? -1);
+    if ((a | b | c | d) < 0) throw new Error('Invalid base64');
+    // Unused low bits must be zero: exactly the condition enforced by re-encoding.
+    if (last && ((padding === 2 && (b & 15)) || (padding === 1 && (c & 3))))
+      throw new Error('Noncanonical base64');
+    bytes[offset++] = (a << 2) | (b >> 4);
+    if (!last || padding < 2) bytes[offset++] = (b << 4) | (c >> 2);
+    if (!last || !padding) bytes[offset++] = (c << 6) | d;
+  }
   return bytes;
 }
 export async function sha256(bytes: Uint8Array): Promise<string> {

@@ -12,7 +12,7 @@ use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt, BufWriter},
+    io::{AsyncReadExt, AsyncWrite, AsyncWriteExt, BufWriter},
     task::JoinSet,
 };
 use tokio_util::sync::CancellationToken;
@@ -247,9 +247,6 @@ impl DownloadEngine {
         reporter_stop.cancel();
         let _ = reporter.await;
         progress.finish();
-        if cancellation.is_cancelled() {
-            return Err(DownloadError::Cancelled);
-        }
         let errors = errors.lock().expect("download errors poisoned");
         if !errors.is_empty() {
             let first = &errors[0];
@@ -259,6 +256,11 @@ impl DownloadEngine {
             )));
         }
         let snapshot = progress.snapshot();
+        // Cancellation can arrive from the final progress callback. Completed
+        // files and collected failures are execution results, so preserve them.
+        if cancellation.is_cancelled() && snapshot.completed_files != total_files {
+            return Err(DownloadError::Cancelled);
+        }
         Ok(DownloadSummary {
             total_files,
             downloaded_files: snapshot.downloaded_files,
@@ -281,6 +283,9 @@ impl DownloadEngine {
         let mut last_error = String::new();
         for attempt in 0..=self.options.max_retries {
             if cancellation.is_cancelled() {
+                if !last_error.is_empty() {
+                    break;
+                }
                 return Err(DownloadError::Cancelled);
             }
             progress.begin(id, &artifact.target);
@@ -291,18 +296,24 @@ impl DownloadEngine {
                 }
                 Err(DownloadError::Cancelled) => {
                     progress.end_attempt(id);
+                    if !last_error.is_empty() {
+                        break;
+                    }
                     return Err(DownloadError::Cancelled);
                 }
                 Err(DownloadError::Failed(error)) => {
                     progress.end_attempt(id);
                     last_error = error;
+                    if cancellation.is_cancelled() {
+                        break;
+                    }
                 }
             }
             if attempt < self.options.max_retries {
                 let delay = Duration::from_millis(250 * (1u64 << attempt.min(5)));
                 tokio::select! {
                     biased;
-                    () = cancellation.cancelled() => return Err(DownloadError::Cancelled),
+                    () = cancellation.cancelled() => break,
                     () = tokio::time::sleep(delay) => {}
                 }
             }
@@ -374,17 +385,47 @@ impl DownloadEngine {
         };
         // Await any in-flight Tokio file write before dropping its Windows
         // handle. A cancelled transfer may still have a buffered write.
-        let flush = output.flush().await.context("无法完成下载临时文件写入");
-        drop(output);
-        let size = result?;
-        flush?;
-        if cancellation.is_cancelled() {
-            return Err(DownloadError::Cancelled);
+        let result = finish_transfer_output(output, result).await;
+        let size = match result {
+            Ok(size) if !cancellation.is_cancelled() => size,
+            Ok(_) => return Err(discard_temporary(temporary_path, DownloadError::Cancelled)),
+            Err(error) => return Err(discard_temporary(temporary_path, error)),
+        };
+        if let Err(error) = temporary_path.persist(&artifact.target) {
+            return Err(discard_temporary(
+                error.path,
+                DownloadError::Failed(format!("无法提交下载文件：{}", error.error)),
+            ));
         }
-        temporary_path
-            .persist(&artifact.target)
-            .map_err(|error| anyhow::anyhow!("无法提交下载文件：{}", error.error))?;
         Ok(size)
+    }
+}
+
+/// Join the writer before classifying cancellation, and retain both execution
+/// and flush errors when they fail together.
+async fn finish_transfer_output(
+    mut output: impl AsyncWrite + Unpin,
+    result: std::result::Result<u64, DownloadError>,
+) -> std::result::Result<u64, DownloadError> {
+    let flush = output.flush().await.context("无法完成下载临时文件写入");
+    drop(output);
+    match flush {
+        Ok(()) => result,
+        Err(error) => Err(append_failure(result.err(), error)),
+    }
+}
+
+fn append_failure(previous: Option<DownloadError>, error: anyhow::Error) -> DownloadError {
+    DownloadError::Failed(match previous {
+        Some(DownloadError::Failed(previous)) => format!("{previous}；{error:#}"),
+        _ => format!("{error:#}"),
+    })
+}
+
+fn discard_temporary(path: tempfile::TempPath, result: DownloadError) -> DownloadError {
+    match path.close().context("无法移除下载临时文件") {
+        Ok(()) => result,
+        Err(error) => append_failure(Some(result), error),
     }
 }
 
@@ -673,6 +714,199 @@ mod tests {
         .into_bytes();
         response.extend_from_slice(bytes);
         response
+    }
+
+    struct FlushFailure(Arc<AtomicUsize>);
+    impl tokio::io::AsyncWrite for FlushFailure {
+        fn poll_write(
+            self: std::pin::Pin<&mut Self>,
+            _: &mut std::task::Context<'_>,
+            bytes: &[u8],
+        ) -> std::task::Poll<std::io::Result<usize>> {
+            std::task::Poll::Ready(Ok(bytes.len()))
+        }
+        fn poll_flush(
+            self: std::pin::Pin<&mut Self>,
+            _: &mut std::task::Context<'_>,
+        ) -> std::task::Poll<std::io::Result<()>> {
+            std::task::Poll::Ready(Err(std::io::Error::other("injected flush failure")))
+        }
+        fn poll_shutdown(
+            self: std::pin::Pin<&mut Self>,
+            context: &mut std::task::Context<'_>,
+        ) -> std::task::Poll<std::io::Result<()>> {
+            self.poll_flush(context)
+        }
+    }
+    impl Drop for FlushFailure {
+        fn drop(&mut self) {
+            self.0.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    #[tokio::test]
+    async fn flush_failure_overrides_cancellation_and_retains_an_execution_failure() {
+        for initial in [
+            Err(DownloadError::Cancelled),
+            Err(DownloadError::Failed("earlier transfer failed".into())),
+            Ok(3),
+        ] {
+            let retain_execution = matches!(initial, Err(DownloadError::Failed(_)));
+            let drops = Arc::new(AtomicUsize::new(0));
+            let result = finish_transfer_output(FlushFailure(drops.clone()), initial).await;
+            assert_eq!(
+                drops.load(Ordering::SeqCst),
+                1,
+                "the writer must close before returning its result"
+            );
+            let Err(DownloadError::Failed(message)) = result else {
+                panic!("flush failure was hidden: {result:?}");
+            };
+            assert!(message.contains("injected flush failure"));
+            assert_eq!(
+                message.contains("earlier transfer failed"),
+                retain_execution
+            );
+        }
+    }
+
+    #[test]
+    fn staging_cleanup_failure_overrides_cancellation_and_retains_execution_error() {
+        for initial in [
+            DownloadError::Cancelled,
+            DownloadError::Failed("earlier transfer failed".into()),
+        ] {
+            let retain_execution = matches!(initial, DownloadError::Failed(_));
+            let temporary = tempfile::tempdir().unwrap();
+            let path = tempfile::NamedTempFile::new_in(temporary.path())
+                .unwrap()
+                .into_temp_path();
+            let retained = path.to_path_buf();
+            std::fs::remove_file(&retained).unwrap();
+            std::fs::create_dir(&retained).unwrap();
+            let DownloadError::Failed(message) = discard_temporary(path, initial) else {
+                panic!("staging cleanup failure was hidden");
+            };
+            assert!(message.contains("无法移除下载临时文件"));
+            assert_eq!(
+                message.contains("earlier transfer failed"),
+                retain_execution
+            );
+            assert!(retained.is_dir());
+        }
+    }
+
+    #[tokio::test]
+    async fn cancellation_during_a_retry_retains_the_already_observed_failure() {
+        let temporary = tempfile::tempdir().unwrap();
+        let target = temporary.path().join("retry.bin");
+        std::fs::write(&target, b"old").unwrap();
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("http://{}/retry", listener.local_addr().unwrap());
+        let cancellation = CancellationToken::new();
+        let stop_server = cancellation.clone();
+        let (second_request, started) = tokio::sync::oneshot::channel();
+        let server = tokio::spawn(async move {
+            let (mut first, _) = listener.accept().await.unwrap();
+            let mut request = [0u8; 4096];
+            assert!(first.read(&mut request).await.unwrap() > 0);
+            first.write_all(b"HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").await.unwrap();
+            drop(first);
+            let (mut second, _) = listener.accept().await.unwrap();
+            assert!(second.read(&mut request).await.unwrap() > 0);
+            second_request.send(()).unwrap();
+            stop_server.cancelled().await;
+        });
+        let token = cancellation.clone();
+        let artifact = Artifact {
+            url,
+            target: target.clone(),
+            expected_size: Some(5),
+            checksum: None,
+        };
+        let download = tokio::spawn(async move {
+            DownloadEngine::new(test_options())
+                .unwrap()
+                .download(vec![artifact], token, |_| {})
+                .await
+        });
+        tokio::time::timeout(Duration::from_secs(3), started)
+            .await
+            .unwrap()
+            .unwrap();
+        cancellation.cancel();
+        let result = download.await.unwrap();
+        server.await.unwrap();
+        let Err(DownloadError::Failed(message)) = result else {
+            panic!("the first attempt failure was hidden: {result:?}");
+        };
+        assert!(message.contains("服务器返回下载错误"), "{message}");
+        assert_eq!(std::fs::read(target).unwrap(), b"old");
+        assert_eq!(std::fs::read_dir(temporary.path()).unwrap().count(), 1);
+    }
+
+    #[tokio::test]
+    async fn cancellation_after_a_download_failure_preserves_the_public_api_error() {
+        let directory = tempfile::tempdir().unwrap();
+        let parent = directory.path().join("parent-is-file");
+        std::fs::write(&parent, b"keep").unwrap();
+        let cancellation = CancellationToken::new();
+        let request_cancel = cancellation.clone();
+        let result = DownloadEngine::new(NetworkOptions {
+            max_retries: 0,
+            max_concurrent_downloads: 1,
+            ..test_options()
+        })
+        .unwrap()
+        .download(
+            vec![Artifact {
+                url: "http://127.0.0.1:1/file".into(),
+                target: parent.join("file.bin"),
+                expected_size: None,
+                checksum: None,
+            }],
+            cancellation,
+            move |progress| {
+                if progress.failed_files > 0 {
+                    request_cancel.cancel();
+                }
+            },
+        )
+        .await;
+        let Err(DownloadError::Failed(message)) = result else {
+            panic!("a real filesystem failure must survive cancellation: {result:?}");
+        };
+        assert!(message.contains("无法创建下载目录"), "{message}");
+        assert_eq!(std::fs::read(&parent).unwrap(), b"keep");
+    }
+
+    #[tokio::test]
+    async fn cancellation_after_all_files_are_committed_keeps_the_public_api_success() {
+        let directory = tempfile::tempdir().unwrap();
+        let target = directory.path().join("completed.bin");
+        std::fs::write(&target, b"ready").unwrap();
+        let cancellation = CancellationToken::new();
+        let request_cancel = cancellation.clone();
+        let result = DownloadEngine::new(test_options())
+            .unwrap()
+            .download(
+                vec![Artifact {
+                    url: "http://127.0.0.1:1/file".into(),
+                    target: target.clone(),
+                    expected_size: Some(5),
+                    checksum: Some(checksum(b"ready")),
+                }],
+                cancellation,
+                move |progress| {
+                    if progress.completed_files == 1 {
+                        request_cancel.cancel();
+                    }
+                },
+            )
+            .await
+            .unwrap();
+        assert_eq!(result.reused_files, 1);
+        assert_eq!(std::fs::read(target).unwrap(), b"ready");
     }
 
     #[tokio::test]

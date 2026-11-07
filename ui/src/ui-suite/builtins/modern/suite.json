@@ -139,20 +139,6 @@
       "sha256": "e32e3a9bbffca2955c73bcea2622e2e37abcc6039b43a949a1861bb4319142cd"
     },
     {
-      "path": "common/assets/background-placeholder.png",
-      "kind": "asset",
-      "bytes": 2596186,
-      "sha256": "44ba8d73d0ec10305ef1b3cda7140d005135f3248d9f56087fd81c26791fee78",
-      "media_type": "image/png"
-    },
-    {
-      "path": "common/assets/background-placeholder.svg",
-      "kind": "asset",
-      "bytes": 2548,
-      "sha256": "0edcbaa0e4491cd0696ac3fd2caa326464e06b799794bfa5beb29f62ca53392d",
-      "media_type": "image/svg+xml"
-    },
-    {
       "path": "common/assets/landscape.svg",
       "kind": "asset",
       "bytes": 3131,
@@ -217,8 +203,8 @@
     {
       "path": "common/components/PersonalizationSettings.tsx",
       "kind": "tsx",
-      "bytes": 7983,
-      "sha256": "af6ed4abd604ac1ba3bbf12fafbe4b51040fd5d3f6b1739bc625543e5ba96b81"
+      "bytes": 7858,
+      "sha256": "799d6be560755f26b2fbe9f6bbd24ba137169baec9f07fae7f14d7fda513b73f"
     },
     {
       "path": "common/components/ProfileCard.tsx",
@@ -439,8 +425,8 @@
     {
       "path": "common/styles/common.css",
       "kind": "css",
-      "bytes": 67725,
-      "sha256": "0d4b23199b1b692ee1ce55868cf90654c1bf11ce5d068efc62323c43b7e2c916"
+      "bytes": 67686,
+      "sha256": "a266933f7d487a7436b27bb3dfa6dcfd8d111d0fbc311bc305cb9855db19d3fc"
     },
     {
       "path": "common/styles/presets.css",
@@ -463,8 +449,8 @@
     {
       "path": "modern/style.css",
       "kind": "css",
-      "bytes": 337,
-      "sha256": "d70529827dbe00ab33507fcdc2493c24acd44d799311eff8eb36e64b6a65aa6b"
+      "bytes": 261,
+      "sha256": "9e0a5107224a51005ac70f6531e150892ace60efdbe656d080612f43a9186ff8"
     }
   ],
   "overrides": []

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { Folder, Import, Layers, Plus, RefreshCw, Search } from 'lucide-react';
 import { Panel } from '../components/ui';
 import type { AppConfig, GameProfile } from '../types';
+import { useLauncherActions, useLauncherSnapshot } from '@paradox/launcher';
 
 interface InstancesPageProps {
   config: AppConfig;
@@ -27,6 +28,8 @@ function InstancesPage({
   onImport,
 }: InstancesPageProps) {
   const { t } = useTranslation();
+  const snapshot = useLauncherSnapshot(),
+    actions = useLauncherActions();
   const filteredProfiles = config.profiles.filter((profile) =>
     `${profile.name} ${profile.game_version}`.toLowerCase().includes(search.toLowerCase()),
   );
@@ -52,6 +55,20 @@ function InstancesPage({
         </button>
       </div>
       <div className="profile-list">{filteredProfiles.map(renderProfile)}</div>
+      {snapshot.removal.residuals.map((issue) => (
+        <Panel key={issue.token}>
+          <strong>{t('removeDialog.residualTitle', { name: issue.name })}</strong>
+          <p>{issue.error}</p>
+          <code>{issue.instanceRoot}</code>
+          <button
+            className="secondary"
+            disabled={busy}
+            onClick={() => actions.removal.openResidual(issue.token)}
+          >
+            {t('removeDialog.retryFiles')}
+          </button>
+        </Panel>
+      ))}
       {!config.profiles.length && <EmptyState busy={busy} onCreate={onCreate} />}
       {config.profiles.length > 0 && filteredProfiles.length === 0 && (
         <Panel className="empty-state">

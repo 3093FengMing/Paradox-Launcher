@@ -1,6 +1,8 @@
 //! DATA-only container/header checks, mirroring the host inspectors.
 use super::model::ASSET;
 use anyhow::{Result, ensure};
+
+mod fonts;
 fn u16b(b: &[u8], p: usize) -> Result<u16> {
     Ok(u16::from_be_bytes(
         b.get(p..p + 2)
@@ -25,7 +27,7 @@ pub fn inspect(media: &str, b: &[u8]) -> Result<()> {
     ensure!(b.len() <= ASSET, "Suite asset exceeds limit");
     match media {
         "image/png" | "image/jpeg" | "image/webp" => raster(media, b),
-        "font/woff" | "font/woff2" => font(media, b),
+        "font/woff" | "font/woff2" => fonts::inspect(media, b),
         "image/svg+xml" => {
             ensure!(std::str::from_utf8(b)?.trim_start_matches(|c: char| matches!(c, '\u{9}'..='\u{d}' | '\u{20}' | '\u{a0}' | '\u{1680}' | '\u{2000}'..='\u{200a}' | '\u{2028}' | '\u{2029}' | '\u{202f}' | '\u{205f}' | '\u{3000}' | '\u{feff}')).starts_with('<'), "Invalid SVG header");
             Ok(())
@@ -143,171 +145,93 @@ fn raster(media: &str, b: &[u8]) -> Result<()> {
     );
     Ok(())
 }
-fn read(b: &[u8], p: &mut usize) -> Result<u8> {
-    let n = *b
-        .get(*p)
-        .ok_or_else(|| anyhow::anyhow!("Truncated font directory"))?;
-    *p += 1;
-    Ok(n)
-}
-fn base128(b: &[u8], p: &mut usize) -> Result<u64> {
-    let mut n = 0u64;
-    for i in 0..5 {
-        let c = read(b, p)?;
-        ensure!(
-            !(i == 0 && c == 0x80) && n <= 0x1ffffff,
-            "Invalid font integer"
-        );
-        n = n * 128 + (c & 127) as u64;
-        if c & 128 == 0 {
-            return Ok(n);
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn set32(bytes: &mut [u8], offset: usize, value: u32) {
+        bytes[offset..offset + 4].copy_from_slice(&value.to_be_bytes());
+    }
+
+    fn woff() -> Vec<u8> {
+        let mut bytes = vec![0; 68];
+        bytes[..4].copy_from_slice(b"wOFF");
+        set32(&mut bytes, 4, 0x10000);
+        set32(&mut bytes, 8, 68);
+        bytes[12..14].copy_from_slice(&1u16.to_be_bytes());
+        set32(&mut bytes, 16, 32);
+        bytes[44..48].copy_from_slice(b"cmap");
+        set32(&mut bytes, 48, 64);
+        set32(&mut bytes, 52, 4);
+        set32(&mut bytes, 56, 4);
+        bytes
+    }
+
+    fn woff2(directory: &[u8], tables: u16, sfnt_size: u32) -> Vec<u8> {
+        let mut bytes = vec![0; 48 + directory.len() + 1];
+        let len = bytes.len() as u32;
+        bytes[..4].copy_from_slice(b"wOF2");
+        set32(&mut bytes, 4, 0x10000);
+        set32(&mut bytes, 8, len);
+        bytes[12..14].copy_from_slice(&tables.to_be_bytes());
+        set32(&mut bytes, 16, sfnt_size);
+        set32(&mut bytes, 20, 1);
+        bytes[48..48 + directory.len()].copy_from_slice(directory);
+        bytes
+    }
+
+    #[test]
+    fn font_formats_accept_valid_directories_and_separate_optional_blocks() {
+        inspect("font/woff", &woff()).unwrap();
+        inspect("font/woff2", &woff2(&[0, 4], 1, 32)).unwrap();
+        let mut with_blocks = woff();
+        with_blocks.extend_from_slice(&[0; 8]);
+        set32(&mut with_blocks, 8, 76);
+        set32(&mut with_blocks, 24, 68);
+        set32(&mut with_blocks, 28, 4);
+        set32(&mut with_blocks, 32, 4);
+        set32(&mut with_blocks, 36, 72);
+        set32(&mut with_blocks, 40, 4);
+        inspect("font/woff", &with_blocks).unwrap();
+        set32(&mut with_blocks, 36, 68);
+        assert!(inspect("font/woff", &with_blocks).is_err());
+    }
+
+    #[test]
+    fn woff_rejects_truncated_misaligned_and_oversized_tables() {
+        for (offset, value) in [(48, 63), (52, 5), (56, 8), (16, 33), (28, 4)] {
+            let mut bytes = woff();
+            set32(&mut bytes, offset, value);
+            assert!(inspect("font/woff", &bytes).is_err(), "offset {offset}");
         }
+        let mut truncated = woff();
+        truncated.truncate(63);
+        set32(&mut truncated, 8, 63);
+        assert!(inspect("font/woff", &truncated).is_err());
     }
-    anyhow::bail!("Invalid font integer")
-}
-fn u255(b: &[u8], p: &mut usize) -> Result<u16> {
-    Ok(match read(b, p)? {
-        253 => read(b, p)? as u16 * 256 + read(b, p)? as u16,
-        254 => read(b, p)? as u16 + 506,
-        255 => read(b, p)? as u16 + 253,
-        n => n as u16,
-    })
-}
-fn range(
-    ranges: &mut Vec<(usize, usize)>,
-    start: usize,
-    size: usize,
-    header: usize,
-    len: usize,
-) -> Result<()> {
-    ensure!(
-        size > 0 && start >= header && size <= len && start <= len - size,
-        "Invalid font range"
-    );
-    ranges.push((start, start + size));
-    Ok(())
-}
-fn font(media: &str, b: &[u8]) -> Result<()> {
-    let woff = media == "font/woff";
-    let header = if woff { 44 } else { 48 };
-    ensure!(
-        b.len() >= header
-            && u32b(b, 0)? == if woff { 0x774f4646 } else { 0x774f4632 }
-            && u32b(b, 8)? as usize == b.len()
-            && u16b(b, 14)? == 0,
-        "Invalid font header"
-    );
-    let count = u16b(b, 12)? as usize;
-    ensure!(count > 0, "Empty font");
-    let mut ranges = vec![];
-    let mo = u32b(b, if woff { 24 } else { 28 })? as usize;
-    let ml = u32b(b, if woff { 28 } else { 32 })? as usize;
-    let original = u32b(b, if woff { 32 } else { 36 })?;
-    let po = u32b(b, if woff { 36 } else { 40 })? as usize;
-    let pl = u32b(b, if woff { 40 } else { 44 })? as usize;
-    if mo > 0 {
-        ensure!(original > 0, "Invalid font metadata");
-        range(&mut ranges, mo, ml, header, b.len())?;
-    } else {
-        ensure!(ml == 0 && original == 0, "Invalid font metadata");
-    }
-    if po > 0 {
-        range(&mut ranges, po, pl, header, b.len())?;
-    } else {
-        ensure!(pl == 0, "Invalid font private block");
-    }
-    let mut sfnt = 12 + 16 * count as u64;
-    if woff {
-        let end = 44 + 20 * count;
-        ensure!(end <= b.len(), "Truncated WOFF directory");
-        ranges.push((0, end));
-        let mut tags = std::collections::BTreeSet::new();
-        for i in 0..count {
-            let p = 44 + 20 * i;
-            let tag = u32b(b, p)?;
-            let offset = u32b(b, p + 4)? as usize;
-            let compressed = u32b(b, p + 8)? as usize;
-            let length = u32b(b, p + 12)? as usize;
-            ensure!(
-                tags.insert(tag) && compressed <= length && offset.is_multiple_of(4),
-                "Invalid WOFF table"
+
+    #[test]
+    fn woff2_rejects_alias_duplicates_reserved_transforms_and_bad_collections() {
+        for (directory, tables) in [
+            (vec![0, 0, 63, b'c', b'm', b'a', b'p', 0], 2),
+            (vec![64, 0, 0], 1),
+            (vec![74, 0, 0], 1),
+            (vec![11, 0, 1], 1),
+            (vec![0, 0x80, 0], 1),
+        ] {
+            assert!(
+                inspect(
+                    "font/woff2",
+                    &woff2(&directory, tables, 12 + 16 * tables as u32)
+                )
+                .is_err()
             );
-            if length > 0 {
-                range(&mut ranges, offset, compressed, header, b.len())?;
-            } else {
-                ensure!(
-                    compressed == 0 && !(offset > end && offset > b.len()),
-                    "Invalid WOFF empty table"
-                );
-            }
-            sfnt += (length as u64).div_ceil(4) * 4;
         }
-        ensure!(sfnt == u32b(b, 16)? as u64, "Invalid WOFF sfnt size");
-    } else {
-        let known: Vec<_>="cmap head hhea hmtx maxp name OS/2 post cvt_ fpgm glyf loca prep CFF_ VORG EBDT EBLC gasp hdmx kern LTSH PCLT VDMX vhea vmtx BASE GDEF GPOS GSUB EBSC JSTF MATH CBDT CBLC COLR CPAL SVG_ sbix acnt avar bdat bloc bsln cvar fdsc feat fmtx fvar gvar hsty just lcar mort morx opbd prop trak Zapf Silf Glat Gloc Feat Sill".split(' ').map(|s|s.replace('_'," ")).collect();
-        let mut p = 48;
-        let mut tags = std::collections::BTreeSet::new();
-        for _ in 0..count {
-            let flags = read(b, &mut p)?;
-            let index = (flags & 63) as usize;
-            let transform = flags >> 6;
-            let tag = if index == 63 {
-                (0..4)
-                    .map(|_| read(b, &mut p).map(char::from))
-                    .collect::<Result<String>>()?
-            } else {
-                known[index].clone()
-            };
-            ensure!(tags.insert(tag.clone()), "Duplicate font tag");
-            let length = base128(b, &mut p)?;
-            sfnt += length.div_ceil(4) * 4;
-            let glyf = index == 10 || tag == "glyf";
-            let loca = index == 11 || tag == "loca";
-            let transformed = if glyf || loca {
-                transform != 3
-            } else {
-                transform != 0
-            };
-            ensure!(
-                !(glyf || loca) || transform == 0 || transform == 3,
-                "Invalid font transform"
-            );
-            ensure!(
-                glyf || loca || transform == 0 || (tag == "hmtx" && transform == 1),
-                "Invalid font transform"
-            );
-            if transformed {
-                let size = base128(b, &mut p)?;
-                ensure!(!loca || size == 0, "Invalid transformed loca");
-            }
-        }
-        if u32b(b, 4)? == 0x74746366 {
-            for _ in 0..4 {
-                read(b, &mut p)?;
-            }
-            let fonts = u255(b, &mut p)?;
-            ensure!(fonts > 0, "Empty font collection");
-            for _ in 0..fonts {
-                let n = u255(b, &mut p)?;
-                for _ in 0..4 {
-                    read(b, &mut p)?;
-                }
-                for _ in 0..n {
-                    ensure!(
-                        (u255(b, &mut p)? as usize) < count,
-                        "Invalid collection index"
-                    );
-                }
-            }
-        } else {
-            ensure!(sfnt == u32b(b, 16)? as u64, "Invalid WOFF2 sfnt size");
-        }
-        ranges.push((0, p));
-        range(&mut ranges, p, u32b(b, 20)? as usize, header, b.len())?;
+        // cmap, TTC version, one font with one table, flavor, table index.
+        let mut collection = woff2(&[0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0], 1, 28);
+        set32(&mut collection, 4, 0x74746366);
+        inspect("font/woff2", &collection).unwrap();
+        collection[60] = 1;
+        assert!(inspect("font/woff2", &collection).is_err());
     }
-    ranges.sort_unstable();
-    for pair in ranges.windows(2) {
-        ensure!(pair[1].0 >= pair[0].1, "Overlapping font blocks");
-    }
-    Ok(())
 }

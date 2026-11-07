@@ -135,14 +135,29 @@ function pathData(value: string): void {
     whitespace();
   }
 }
-export function validateStaticSvg(source: string): void {
+type SvgReferenceKind = 'gradient' | 'clipPath' | 'mask';
+interface SvgReference {
+  readonly from: Element;
+  readonly id: string;
+  readonly kind: SvgReferenceKind;
+}
+interface SvgAttributeIndex {
+  readonly ids: ReadonlyMap<string, Element>;
+  readonly references: readonly SvgReference[];
+}
+interface SvgAttributes extends SvgAttributeIndex {
+  readonly ids: Map<string, Element>;
+  readonly references: SvgReference[];
+}
+
+function parseSvgDocument(source: string): Document {
   if (typeof DOMParser !== 'function') throw new Error('XML parser unavailable');
   // Reject declarations before parsing so no external entity resolver is reached.
   const withoutComments = source.replace(/<!--[\s\S]*?-->/g, '');
   if (/<!DOCTYPE|<!ENTITY/i.test(withoutComments) || /<\?(?!xml(?:\s|\?>))/i.test(withoutComments))
     fail();
-  const document = new DOMParser().parseFromString(source, 'image/svg+xml'),
-    root = document.documentElement;
+  const document = new DOMParser().parseFromString(source, 'image/svg+xml');
+  const root = document.documentElement;
   if (
     !root ||
     root.namespaceURI !== ns ||
@@ -151,43 +166,12 @@ export function validateStaticSvg(source: string): void {
     document.doctype
   )
     fail();
-  const ids = new Map<string, Element>(),
-    edges = new Map<Element, Element[]>(),
-    references: { from: Element; id: string; kind: string }[] = [];
-  const stack: Node[] = [document];
-  const reference = (from: Element, value: string, kind: string) => {
-    if (!/^#[^\s\u0000-\u001f\u007f-\u009f%?#]+$/u.test(value)) fail();
-    references.push({ from, id: value.slice(1), kind });
-  };
-  const declaration = (element: Element, property: string, value: css.CssNode) => {
-    property = css.ident.decode(property).toLowerCase();
-    if (!presentation.has(property)) fail();
-    const matched = css.lexer.matchProperty(property, value);
-    if (matched.error) fail();
-    css.walk(value, (node) => {
-      if (node.type === 'Raw' || node.type === 'Atrule') fail();
-      if (
-        (node.type === 'Number' || node.type === 'Dimension' || node.type === 'Percentage') &&
-        !Number.isFinite(Number(node.value))
-      )
-        fail();
-      if (
-        node.type === 'Function' &&
-        !['rgb', 'rgba', 'hsl', 'hsla', 'hwb', 'lab', 'lch', 'oklab', 'oklch', 'color'].includes(
-          css.ident.decode(node.name).toLowerCase(),
-        )
-      )
-        fail();
-      if (node.type === 'Url') {
-        if (!['fill', 'stroke', 'clip-path', 'mask'].includes(property)) fail();
-        reference(
-          element,
-          node.value,
-          property === 'clip-path' ? 'clipPath' : property === 'mask' ? 'mask' : 'gradient',
-        );
-      }
-    });
-  };
+  return document;
+}
+
+/** Admit the complete XML tree before attribute and resource-reference validation. */
+function admitSvgElements(document: Document): Element[] {
+  const elements: Element[] = [], stack: Node[] = [document];
   while (stack.length) {
     const node = stack.pop()!;
     if (node.nodeType === 7) fail();
@@ -200,114 +184,189 @@ export function validateStaticSvg(source: string): void {
       continue;
     }
     if (node.nodeType === 1) {
-      const element = node as Element,
-        tag = element.localName;
+      const element = node as Element;
       if (
         element.namespaceURI !== ns ||
-        !Object.hasOwn(families, tag) ||
-        (tag === 'svg' && element !== root)
+        !Object.hasOwn(families, element.localName) ||
+        (element.localName === 'svg' && element !== document.documentElement)
       )
         fail();
-      let href: string | undefined;
-      for (const attribute of Array.from(element.attributes)) {
-        const name = attribute.localName,
-          value = attribute.value;
-        if (attribute.namespaceURI === xmlns) {
-          if (![ns, xlink].includes(value)) fail();
-          continue;
-        }
-        if (attribute.namespaceURI === xml) {
-          if (name !== 'space' || !['default', 'preserve'].includes(value)) fail();
-          continue;
-        }
-        if (attribute.namespaceURI && !(attribute.namespaceURI === xlink && name === 'href'))
-          fail();
-        if (name === 'id') {
-          if (!value || /[\s\u0000-\u001f\u007f-\u009f]/u.test(value) || ids.has(value)) fail();
-          ids.set(value, element);
-          continue;
-        }
-        if (name === 'class') continue;
-        if (name === 'style') {
-          const tree = css.parse(value, { context: 'declarationList', onParseError: fail });
-          if (tree.type !== 'DeclarationList') return fail();
-          tree.children.forEach((d) => {
-            if (d.type !== 'Declaration' || d.important) return fail();
-            declaration(element, d.property, d.value);
-          });
-          continue;
-        }
-        if (presentation.has(name)) {
-          declaration(element, name, css.parse(value, { context: 'value', onParseError: fail }));
-          continue;
-        }
-        if (
-          name === 'transform' ||
-          (name === 'gradientTransform' && families[tag].includes(name))
-        ) {
-          transform(value);
-          continue;
-        }
-        if (!families[tag].includes(name)) fail();
-        if (name === 'href') {
-          if (
-            !['linearGradient', 'radialGradient'].includes(tag) ||
-            (href !== undefined && href !== value)
-          )
-            fail();
-          href = value;
-          reference(element, value, 'gradient');
-        } else if (name === 'd') pathData(value);
-        else if (name === 'viewBox') {
-          const n = numbers(value);
-          if (n.length !== 4 || n[2] <= 0 || n[3] <= 0) fail();
-        } else if (name === 'pathLength') {
-          const scalar = value.trim();
-          if (!scalarNumber.test(scalar) || !Number.isFinite(Number(scalar)) || Number(scalar) < 0)
-            fail();
-        } else if (name === 'offset') {
-          const scalar = value.trim();
-          if (!numberOrPercentage.test(scalar) || !Number.isFinite(parseFloat(scalar))) fail();
-        } else if (name === 'points') {
-          if (numbers(value).length % 2) fail();
-        } else if (name === 'rotate') {
-          numbers(value);
-        } else if (
-          ['gradientUnits', 'clipPathUnits', 'maskUnits', 'maskContentUnits'].includes(name)
-        ) {
-          if (!['userSpaceOnUse', 'objectBoundingBox'].includes(value)) fail();
-        } else if (name === 'spreadMethod') {
-          if (!['pad', 'reflect', 'repeat'].includes(value)) fail();
-        } else if (name === 'lengthAdjust') {
-          if (!['spacing', 'spacingAndGlyphs'].includes(value)) fail();
-        } else if (name === 'preserveAspectRatio') {
-          if (
-            !/^(?:defer\s+)?(?:none|x(?:Min|Mid|Max)Y(?:Min|Mid|Max))(?:\s+(?:meet|slice))?$/.test(
-              value.trim(),
-            )
-          )
-            fail();
-        } else if (name === 'version') {
-          if (!['1.0', '1.1', '2.0'].includes(value)) fail();
-        } else {
-          if (/^\s*,|,\s*,|,\s*$/.test(value)) fail();
-          const list =
-            ['text', 'tspan'].includes(tag) && ['x', 'y', 'dx', 'dy'].includes(name)
-              ? value.trim().split(/[\s,]+/)
-              : [value.trim()];
-          if (list.some((v) => !length.test(v) || !Number.isFinite(parseFloat(v)))) fail();
-          if (
-            ['width', 'height', 'r', 'rx', 'ry', 'fr', 'textLength'].includes(name) &&
-            list.some((v) => parseFloat(v) < 0)
-          )
-            fail();
-        }
-      }
+      elements.push(element);
     }
     for (let child = node.lastChild; child; child = child.previousSibling) stack.push(child);
   }
-  for (const { from, id, kind } of references) {
-    const target = ids.get(id);
+  return elements;
+}
+
+function addSvgReference(
+  references: SvgReference[],
+  from: Element,
+  value: string,
+  kind: SvgReferenceKind,
+): void {
+  if (!/^#[^\s\u0000-\u001f\u007f-\u009f%?#]+$/u.test(value)) fail();
+  references.push({ from, id: value.slice(1), kind });
+}
+
+function validatePresentation(
+  element: Element,
+  property: string,
+  value: css.CssNode,
+  references: SvgReference[],
+): void {
+  property = css.ident.decode(property).toLowerCase();
+  if (!presentation.has(property)) fail();
+  const matched = css.lexer.matchProperty(property, value);
+  if (matched.error) fail();
+  css.walk(value, (node) => {
+    if (node.type === 'Raw' || node.type === 'Atrule') fail();
+    if (
+      (node.type === 'Number' || node.type === 'Dimension' || node.type === 'Percentage') &&
+      !Number.isFinite(Number(node.value))
+    )
+      fail();
+    if (
+      node.type === 'Function' &&
+      !['rgb', 'rgba', 'hsl', 'hsla', 'hwb', 'lab', 'lch', 'oklab', 'oklch', 'color'].includes(
+        css.ident.decode(node.name).toLowerCase(),
+      )
+    )
+      fail();
+    if (node.type === 'Url') {
+      if (!['fill', 'stroke', 'clip-path', 'mask'].includes(property)) fail();
+      addSvgReference(
+        references,
+        element,
+        node.value,
+        property === 'clip-path' ? 'clipPath' : property === 'mask' ? 'mask' : 'gradient',
+      );
+    }
+  });
+}
+
+function validatePresentationStyle(element: Element, value: string, references: SvgReference[]): void {
+  const tree = css.parse(value, { context: 'declarationList', onParseError: fail });
+  if (tree.type !== 'DeclarationList') return fail();
+  tree.children.forEach((declaration) => {
+    if (declaration.type !== 'Declaration' || declaration.important) return fail();
+    validatePresentation(element, declaration.property, declaration.value, references);
+  });
+}
+
+/** Return true only for namespace metadata whose complete value was checked. */
+function validateNamespaceAttribute(attribute: Attr): boolean {
+  if (attribute.namespaceURI === xmlns) {
+    if (![ns, xlink].includes(attribute.value)) fail();
+    return true;
+  }
+  if (attribute.namespaceURI === xml) {
+    if (attribute.localName !== 'space' || !['default', 'preserve'].includes(attribute.value))
+      fail();
+    return true;
+  }
+  if (attribute.namespaceURI && !(attribute.namespaceURI === xlink && attribute.localName === 'href'))
+    fail();
+  return false;
+}
+
+function validateLengthAttribute(tag: string, name: string, value: string): void {
+  if (/^\s*,|,\s*,|,\s*$/.test(value)) fail();
+  const list =
+    ['text', 'tspan'].includes(tag) && ['x', 'y', 'dx', 'dy'].includes(name)
+      ? value.trim().split(/[\s,]+/)
+      : [value.trim()];
+  if (list.some((v) => !length.test(v) || !Number.isFinite(parseFloat(v)))) fail();
+  if (
+    ['width', 'height', 'r', 'rx', 'ry', 'fr', 'textLength'].includes(name) &&
+    list.some((v) => parseFloat(v) < 0)
+  )
+    fail();
+}
+
+const attributeKeywords: Readonly<Record<string, readonly string[]>> = {
+  gradientUnits: ['userSpaceOnUse', 'objectBoundingBox'],
+  clipPathUnits: ['userSpaceOnUse', 'objectBoundingBox'],
+  maskUnits: ['userSpaceOnUse', 'objectBoundingBox'],
+  maskContentUnits: ['userSpaceOnUse', 'objectBoundingBox'],
+  spreadMethod: ['pad', 'reflect', 'repeat'],
+  lengthAdjust: ['spacing', 'spacingAndGlyphs'],
+  version: ['1.0', '1.1', '2.0'],
+};
+
+/** The caller already checked that this attribute belongs to the element family. */
+function validateGeometryAttribute(tag: string, name: string, value: string): void {
+  if (Object.hasOwn(attributeKeywords, name)) {
+    if (!attributeKeywords[name].includes(value)) fail();
+  } else if (name === 'd') pathData(value);
+  else if (name === 'viewBox') {
+    const n = numbers(value);
+    if (n.length !== 4 || n[2] <= 0 || n[3] <= 0) fail();
+  } else if (name === 'pathLength') {
+    const scalar = value.trim();
+    if (!scalarNumber.test(scalar) || !Number.isFinite(Number(scalar)) || Number(scalar) < 0)
+      fail();
+  } else if (name === 'offset') {
+    const scalar = value.trim();
+    if (!numberOrPercentage.test(scalar) || !Number.isFinite(parseFloat(scalar))) fail();
+  } else if (name === 'points') {
+    if (numbers(value).length % 2) fail();
+  } else if (name === 'rotate') numbers(value);
+  else if (name === 'preserveAspectRatio') {
+    if (
+      !/^(?:defer\s+)?(?:none|x(?:Min|Mid|Max)Y(?:Min|Mid|Max))(?:\s+(?:meet|slice))?$/.test(
+        value.trim(),
+      )
+    )
+      fail();
+  } else validateLengthAttribute(tag, name, value);
+}
+
+function validateSvgAttributes(element: Element, state: SvgAttributes): void {
+  const tag = element.localName;
+  let href: string | undefined;
+  for (const attribute of Array.from(element.attributes)) {
+    const name = attribute.localName, value = attribute.value;
+    if (validateNamespaceAttribute(attribute)) continue;
+    if (name === 'id') {
+      if (!value || /[\s\u0000-\u001f\u007f-\u009f]/u.test(value) || state.ids.has(value)) fail();
+      state.ids.set(value, element);
+    } else if (name === 'class') continue;
+    else if (name === 'style') validatePresentationStyle(element, value, state.references);
+    else if (presentation.has(name))
+      validatePresentation(
+        element,
+        name,
+        css.parse(value, { context: 'value', onParseError: fail }),
+        state.references,
+      );
+    else if (name === 'transform' || (name === 'gradientTransform' && families[tag].includes(name)))
+      transform(value);
+    else {
+      if (!families[tag].includes(name)) fail();
+      if (name === 'href') {
+        if (!['linearGradient', 'radialGradient'].includes(tag) || (href !== undefined && href !== value))
+          fail();
+        href = value;
+        addSvgReference(state.references, element, value, 'gradient');
+      } else validateGeometryAttribute(tag, name, value);
+    }
+  }
+}
+
+function addGraphEdge(edges: Map<Element, Element[]>, from: Element, target: Element): void {
+  const next = edges.get(from) ?? [];
+  next.push(target);
+  edges.set(from, next);
+}
+
+/** Resolve only local fragments of the expected resource type; containment participates in cycles. */
+function createSvgReferenceGraph(
+  elements: readonly Element[],
+  state: SvgAttributeIndex,
+): Map<Element, Element[]> {
+  const edges = new Map<Element, Element[]>();
+  for (const { from, id, kind } of state.references) {
+    const target = state.ids.get(id);
     if (
       !target ||
       (kind === 'gradient'
@@ -315,19 +374,15 @@ export function validateStaticSvg(source: string): void {
         : target.localName !== kind)
     )
       return fail();
-    const next = edges.get(from) ?? [];
-    next.push(target);
-    edges.set(from, next);
+    addGraphEdge(edges, from, target);
   }
-  // Include containment: a resource containing a node that references itself cycles too.
-  for (const element of document.getElementsByTagName('*'))
-    for (const child of element.children) {
-      const next = edges.get(element) ?? [];
-      next.push(child);
-      edges.set(element, next);
-    }
-  const done = new Set<Element>(),
-    active = new Set<Element>();
+  for (const element of elements)
+    for (const child of element.children) addGraphEdge(edges, element, child);
+  return edges;
+}
+
+function rejectSvgCycles(edges: ReadonlyMap<Element, readonly Element[]>): void {
+  const done = new Set<Element>(), active = new Set<Element>();
   for (const start of edges.keys()) {
     const work: { node: Element; exit: boolean }[] = [{ node: start, exit: false }];
     while (work.length) {
@@ -344,4 +399,12 @@ export function validateStaticSvg(source: string): void {
       for (const next of edges.get(item.node) ?? []) work.push({ node: next, exit: false });
     }
   }
+}
+
+export function validateStaticSvg(source: string): void {
+  const document = parseSvgDocument(source);
+  const elements = admitSvgElements(document);
+  const attributes: SvgAttributes = { ids: new Map(), references: [] };
+  for (const element of elements) validateSvgAttributes(element, attributes);
+  rejectSvgCycles(createSvgReferenceGraph(elements, attributes));
 }

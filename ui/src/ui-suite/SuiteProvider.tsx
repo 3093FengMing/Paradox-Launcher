@@ -86,6 +86,9 @@ function rich(prepared: PreparedUiSuite): PreparedSuiteRuntime | null {
     ? (prepared as PreparedSuiteRuntime)
     : null;
 }
+const emptyOwners = Object.freeze([]);
+const getEmptyOwners = () => emptyOwners;
+const skipOwners = () => () => {};
 class ViewBoundary extends Component<
   { identity: unknown; fallback: ReactNode; children: ReactNode; onError?: (error: unknown) => void },
   { identity: unknown; failed: boolean }
@@ -256,7 +259,6 @@ function ResolveView(options: UiViewOptions): React.JSX.Element {
   const protectedMode = !!options.protectedMode || protectedInherited || environment.protectedMode;
   const snapshot = useLauncherSnapshot(),
     actions = useLauncherActions();
-  useSyncExternalStore(subscribeOwners, listOwners, listOwners);
   const candidates: Candidate[] = [];
   // UiRuntimeView registers this exact final call. Match a picked view against
   // that complete locator; automatic subject aliases retain their callsite frame.
@@ -264,6 +266,17 @@ function ResolveView(options: UiViewOptions): React.JSX.Element {
   const layers = protectedMode
     ? [runtime.trusted]
     : runtime.layers.slice(Math.max(0, owningLayer ? runtime.layers.indexOf(owningLayer) : 0));
+  // Only a matching structural position override depends on owner safety.
+  // Keep the Hook unconditional as suites/locators change, but avoid subscribing
+  // native and broad surfaces to every unrelated registry publication.
+  const needsOwners = layers.some((layer) => rich(layer.prepared)?.targetBindings.some(
+    (binding) => binding.Component && binding.selector.kind === 'position' &&
+      [options.id, ...(options.targets ?? [])].some((target) =>
+        selectorMatches(binding.selector, target, owner.locator) ||
+        (target === options.id && selectorMatches(binding.selector, target, viewLocator))),
+  ));
+  useSyncExternalStore(needsOwners ? subscribeOwners : skipOwners,
+    needsOwners ? listOwners : getEmptyOwners, needsOwners ? listOwners : getEmptyOwners);
   for (const layer of layers) {
     const prepared = rich(layer.prepared),
       metadata = prepared?.viewMetadata.get(options.id);

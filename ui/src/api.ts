@@ -20,6 +20,7 @@ import type {
   ContentSearch,
   AppearancePreset,
   AppConfig,
+  ProfileRemovalResult,
   Bootstrap,
   CatalogSnapshot,
   CloseRequest,
@@ -313,15 +314,27 @@ export async function updateProfile(profile: GameProfile): Promise<AppConfig> {
   return saveConfig(config);
 }
 
-export async function removeProfile(key: string, deleteFiles: boolean): Promise<AppConfig> {
+export async function removeProfile(
+  key: string,
+  deleteFiles: boolean,
+): Promise<ProfileRemovalResult> {
   if (desktop) return invoke('remove_profile', { key, deleteFiles });
   if (deleteFiles) throw new Error(i18n.t('api.removeFilesDesktopOnly'));
   const config = loadPreview();
   config.profiles = config.profiles.filter((profile) => profile.instance_key !== key);
   if (config.active_profile === key)
     config.active_profile = config.profiles[0]?.instance_key ?? null;
-  return saveConfig(config);
+  return {
+    config: await saveConfig(config),
+    file_removal: null,
+    file_removal_error: null,
+    file_removal_retry: null,
+    instance_root: null,
+  };
 }
+
+export const retryProfileFiles = (token: string) =>
+  invokeDesktop<ProfileRemovalResult>('retry_profile_files', { token });
 
 export async function subscribeDownloads(
   callback: (tasks: DownloadTask[]) => void,

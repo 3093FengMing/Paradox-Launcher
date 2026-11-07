@@ -7,7 +7,10 @@ mod launch;
 mod loader_worker;
 mod logs;
 
-use std::sync::{Arc, Mutex, atomic::AtomicBool};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex, atomic::AtomicBool},
+};
 
 use anyhow::Result;
 use paradox_core::{AppConfig, ConfigStore};
@@ -20,6 +23,8 @@ pub struct AppState {
     pub busy: Arc<AtomicBool>,
     pub launch: Arc<launch::LaunchController>,
     pub downloads: downloads::DownloadManager,
+    pub profile_file_removals:
+        Mutex<HashMap<String, paradox_core::instances::PreparedProfileRemoval>>,
     pub accounts: Arc<paradox_core::accounts::AccountsManager>,
     pub logs: Arc<logs::LogStore>,
     pub ui_suite: Arc<paradox_core::ui_suite::UiSuiteStore>,
@@ -117,6 +122,7 @@ fn main() -> Result<()> {
             busy: Arc::new(AtomicBool::new(false)),
             launch: Arc::new(launch::LaunchController::default()),
             downloads: downloads::DownloadManager::default(),
+            profile_file_removals: Mutex::new(HashMap::new()),
             accounts,
             logs,
             ui_suite,
@@ -141,6 +147,7 @@ fn main() -> Result<()> {
             commands::instances::import_instances,
             commands::instances::update_profile,
             commands::instances::remove_profile,
+            commands::instances::retry_profile_files,
             commands::java::discover_java,
             commands::java::inspect_java,
             commands::tasks::download_tasks,

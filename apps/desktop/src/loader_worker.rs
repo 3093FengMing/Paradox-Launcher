@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, bail, ensure};
+use anyhow::{Context, Result, ensure};
 use paradox_core::{GameProfile, Settings};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -41,7 +41,7 @@ pub async fn install(
     cancellation: CancellationToken,
 ) -> Result<()> {
     if cancellation.is_cancelled() {
-        bail!("loaders.errors.cancelled");
+        return Err(paradox_core::download::DownloadError::Cancelled.into());
     }
     let mut request = tempfile::NamedTempFile::new()?;
     serde_json::to_writer(
@@ -102,9 +102,10 @@ pub async fn install(
         () = cancellation.cancelled() => {
             // Closing the job/process group terminates all installation descendants.
             drop(job);
-            let _ = child.kill().await; let _ = child.wait().await;
-            let _ = reader.await;
-            bail!("loaders.errors.cancelled");
+            child.kill().await.context("loaders.errors.worker")?;
+            child.wait().await.context("loaders.errors.worker")?;
+            reader.await.context("loaders.errors.worker")?.context("loaders.errors.worker")?;
+            return Err(paradox_core::download::DownloadError::Cancelled.into());
         }
         result = child.wait() => result?,
     };

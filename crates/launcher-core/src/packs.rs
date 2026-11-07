@@ -231,13 +231,17 @@ pub async fn install(
     DownloadEngine::new(settings.network.clone())?
         .download(artifacts, cancellation.clone(), progress)
         .await?;
-    ensure!(!cancellation.is_cancelled(), "content.errors.cancelled");
+    if cancellation.is_cancelled() {
+        return Err(crate::download::DownloadError::Cancelled.into());
+    }
     let mut total = 0u64;
     let mut overridden = BTreeSet::new();
     // Client-specific overrides intentionally replace generic overrides from the same archive.
     for prefix in ["overrides/", "client-overrides/"] {
         for i in 0..zip.len() {
-            ensure!(!cancellation.is_cancelled(), "content.errors.cancelled");
+            if cancellation.is_cancelled() {
+                return Err(crate::download::DownloadError::Cancelled.into());
+            }
             let file = zip.by_index(i)?;
             let Some(relative) = file.name()?.strip_prefix(prefix).map(str::to_owned) else {
                 continue;
@@ -279,7 +283,9 @@ pub async fn install(
     // Compare installed files only after client overrides have replaced generic ones.
     let mut replacements = Vec::new();
     for relative in paths {
-        ensure!(!cancellation.is_cancelled(), "content.errors.cancelled");
+        if cancellation.is_cancelled() {
+            return Err(crate::download::DownloadError::Cancelled.into());
+        }
         let existing = content::path(&root, &relative)?;
         if existing.exists() {
             ensure!(
@@ -292,7 +298,9 @@ pub async fn install(
             replacements.push(relative);
         }
     }
-    ensure!(!cancellation.is_cancelled(), "content.errors.cancelled");
+    if cancellation.is_cancelled() {
+        return Err(crate::download::DownloadError::Cancelled.into());
+    }
     content::commit(&root, staging.path(), &replacements, &[])
 }
 pub fn export(

@@ -60,6 +60,20 @@ function InstancesPage() {
         </button>
       </div>
       <div className="profile-list" data-ui-site="InstancesPage-10">
+        {snapshot.removal.residuals.map((issue) => (
+          <Panel key={issue.token}>
+            <strong>{t('removeDialog.residualTitle', { name: issue.name })}</strong>
+            <p>{issue.error}</p>
+            <code>{issue.instanceRoot}</code>
+            <button
+              className="secondary"
+              disabled={busy}
+              onClick={() => actions.removal.openResidual(issue.token)}
+            >
+              {t('removeDialog.retryFiles')}
+            </button>
+          </Panel>
+        ))}
         {filteredProfiles.map((profile) => (
           <Card
             key={profile.instance_key}

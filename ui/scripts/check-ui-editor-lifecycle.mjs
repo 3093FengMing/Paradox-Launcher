@@ -292,6 +292,7 @@ test('asset_read_owned_by_original_suite_and_invalid_import_never_executes', asy
 });
 test('draft_explicit_targets_reconcile_without_waiting_for_runtime_mount', async () => {
   const f = await editor();
+  f.actions.open();
   f.actions.patchManifest({ overrides: [{ selector: { kind: 'type', target: 'control.future' }, enabled: false, stylesheet: null, entry: null }] });
   assert.ok(f.snapshot().targets.some((descriptor) => descriptor.selector.target === 'control.future'));
   f.actions.patchManifest({ overrides: [] });

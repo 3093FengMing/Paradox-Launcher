@@ -282,6 +282,11 @@
     "description": "Choose how to handle this close request."
   },
   "removeDialog": {
+    "partialDescription": "The launcher record has been removed, but file deletion failed. Retry after resolving the cause; already deleted files cannot be restored.",
+    "retryFiles": "Retry file deletion",
+    "close": "Close",
+    "residualTitle": "Files remaining for “{{name}}”",
+    "manualCleanup": "You can also inspect and handle the remaining files at this path. Retry entries are available during this launcher session.",
     "description": "Remove only the launcher record by default. Game files remain available for importing later.",
     "deleteFiles": "Also delete instance files",
     "confirmName": "Enter the instance name to confirm",
@@ -598,7 +603,7 @@
     "cancellingDownload": "Stopping downloads and cleaning temporary files",
     "resolvingGameFiles": "Resolving game files and the download plan",
     "resolvingJava": "Looking up Java download information",
-    "downloadCancelled": "Download cancelled; temporary files cleaned up",
+    "downloadCancelled": "Download cancelled",
     "finishingInstall": "Files downloaded; finishing installation",
     "verifyingFiles": "Verifying existing files",
     "preparingDownload": "Preparing download",

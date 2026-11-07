@@ -254,6 +254,7 @@ pub async fn prepare(
             .any(|v| v.version == profile.loader_version),
         "loaders.errors.compatibility"
     );
+    validate_installation_paths(profile, settings)?;
     std::fs::create_dir_all(&settings.game_directory)?;
     let storage = Storage::new(&settings.game_directory, BaseRootLayout);
     let instance = storage
@@ -338,59 +339,11 @@ pub async fn prepare(
     Ok(instance.path)
 }
 
-fn validate_installation_paths(profile: &GameProfile, settings: &Settings) -> Result<PathBuf> {
-    ensure!(
-        settings.game_directory.is_absolute()
-            && !settings
-                .game_directory
-                .components()
-                .any(|part| matches!(part, std::path::Component::ParentDir)),
-        "loaders.errors.path"
-    );
-    let versions = settings.game_directory.join("versions");
-    let instance = versions.join(&profile.instance_key);
-    reject_link(&versions)?;
-    reject_link(&instance)?;
-    // The installer can overwrite metadata, extract natives and run processors
-    // in these trees. Inspect existing targets before networking or creating any
-    // directory, including junctions and broken links which Path::exists misses.
-    for target in [
-        settings.game_directory.join("assets"),
-        settings.game_directory.join("libraries"),
-        instance.join(".elemental"),
-        instance.join("natives"),
-        instance.join(format!("{}.json", profile.instance_key)),
-        instance.join(format!("{}.jar", profile.instance_key)),
-    ] {
-        let mut pending = vec![target];
-        while let Some(path) = pending.pop() {
-            if let Some(metadata) = reject_link(&path)?
-                && metadata.is_dir()
-            {
-                for entry in std::fs::read_dir(path)? {
-                    pending.push(entry?.path());
-                }
-            }
-        }
-    }
-    Ok(instance)
-}
+mod installation_paths;
+pub(crate) use installation_paths::{InstallationPaths, validate_target};
 
-fn reject_link(path: &Path) -> Result<Option<std::fs::Metadata>> {
-    match std::fs::symlink_metadata(path) {
-        Ok(metadata) => {
-            let mut linked = metadata.file_type().is_symlink();
-            #[cfg(windows)]
-            {
-                use std::os::windows::fs::MetadataExt;
-                linked |= metadata.file_attributes() & 0x400 != 0;
-            }
-            ensure!(!linked, "loaders.errors.path");
-            Ok(Some(metadata))
-        }
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
-        Err(error) => Err(error.into()),
-    }
+fn validate_installation_paths(profile: &GameProfile, settings: &Settings) -> Result<PathBuf> {
+    Ok(InstallationPaths::new(&settings.game_directory, &profile.instance_key)?.instance)
 }
 
 #[cfg(test)]
@@ -427,7 +380,7 @@ mod tests {
     #[tokio::test]
     async fn forge_catalog_hides_unsupported_legacy_games_without_networking() {
         let temp = tempfile::tempdir().unwrap();
-        let settings = offline_settings(temp.path().join("minecraft"));
+        let settings = offline_settings(temp.path().canonicalize().unwrap().join("minecraft"));
         for game in ["1.7.10", "1.12.2", "1.13.2", "1.16.5"] {
             assert!(versions(&settings, "forge", game).await.unwrap().is_empty());
         }
@@ -443,7 +396,7 @@ mod tests {
     #[tokio::test]
     async fn forge_install_rejects_unsupported_legacy_games_before_network_or_writes() {
         let temp = tempfile::tempdir().unwrap();
-        let settings = offline_settings(temp.path().join("minecraft"));
+        let settings = offline_settings(temp.path().canonicalize().unwrap().join("minecraft"));
         for game in ["1.7.10", "1.12.2", "1.13.2", "1.16.5"] {
             let mut profile = GameProfile::new("Legacy Forge", game).unwrap();
             profile.loader = "forge".into();
@@ -459,12 +412,24 @@ mod tests {
     #[tokio::test]
     async fn loader_install_rejects_parent_traversal_before_network_or_file_writes() {
         let temp = tempfile::tempdir().unwrap();
-        let settings = offline_settings(temp.path().join("minecraft").join("..").join("outside"));
+        let settings = offline_settings(
+            crate::sdk::java_compatible_path(&temp.path().canonicalize().unwrap())
+                .join("minecraft")
+                .join("..")
+                .join("outside"),
+        );
         let error = prepare(&fabric_profile(), &settings, &temp.path().join("runtimes"))
             .await
             .unwrap_err();
         assert_eq!(error.to_string(), "loaders.errors.path");
-        assert!(!temp.path().join("minecraft").exists());
+        assert!(
+            !temp
+                .path()
+                .canonicalize()
+                .unwrap()
+                .join("minecraft")
+                .exists()
+        );
         assert!(!temp.path().join("outside").exists());
     }
 
@@ -472,7 +437,7 @@ mod tests {
     #[tokio::test]
     async fn loader_install_rejects_linked_versions_before_network_or_file_writes() {
         let temp = tempfile::tempdir().unwrap();
-        let root = temp.path().join("minecraft");
+        let root = temp.path().canonicalize().unwrap().join("minecraft");
         let outside = temp.path().join("outside");
         std::fs::create_dir_all(&root).unwrap();
         std::fs::create_dir_all(&outside).unwrap();
@@ -501,7 +466,7 @@ mod tests {
             "natives",
         ] {
             let temp = tempfile::tempdir().unwrap();
-            let root = temp.path().join("minecraft");
+            let root = temp.path().canonicalize().unwrap().join("minecraft");
             let outside = temp.path().join("outside");
             std::fs::create_dir_all(&outside).unwrap();
             let profile = fabric_profile();
@@ -527,7 +492,7 @@ mod tests {
             assert_eq!(std::fs::read_dir(&outside).unwrap().count(), 0);
         }
         let temp = tempfile::tempdir().unwrap();
-        let root = temp.path().join("minecraft");
+        let root = temp.path().canonicalize().unwrap().join("minecraft");
         let profile = fabric_profile();
         let instance = root.join("versions").join(&profile.instance_key);
         std::fs::create_dir_all(&instance).unwrap();

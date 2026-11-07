@@ -236,6 +236,10 @@ export function installSuiteAssetsFixture(): void {
           ),
           svg('<text xml:space="preserve">hello &amp; 世界<tspan dx="1 2">!</tspan></text>'),
           svg('<path d="M0 0 A1 1 0 012 2 L.5-.2Z"/>'),
+          svg('<!-- <!DOCTYPE svg> and <?example?> are inert comments --><rect width="2" height="3"/>'),
+          svg('<defs><radialGradient id="forward" href="#base"/><linearGradient id="base"><stop offset="1e2%" stop-color="rgb(1,2,3)"/></linearGradient></defs><rect width="2" height="3" fill="url(#forward)" stroke="url(#base)"/>'),
+          svg('<defs><clipPath id="shared"><circle r="1"/></clipPath><mask id="left"><path clip-path="url(#shared)"/></mask><mask id="right"><path clip-path="url(#shared)"/></mask></defs><g mask="url(#left)"><path clip-path="url(#shared)"/></g><path mask="url(#right)"/>'),
+          svg('<defs><linearGradient xmlns:xlink="http://www.w3.org/1999/xlink" id="alias" href="#base" xlink:href="#base"/><linearGradient id="base"/></defs><path style="f\\69ll:url(#alias);stroke:hsl(30 50% 40%)"/>'),
         ];
         for (const [i, s] of good.entries())
           await check('static SVG allowed ' + i, () =>
@@ -273,6 +277,21 @@ export function installSuiteAssetsFixture(): void {
           '<!DOCTYPE svg [<!ENTITY bad SYSTEM "http://example.com">]>' + svg('<text>&bad;</text>'),
           svg('<path fill="url(&#104;ttps://example.com)"/>'),
           svg('<path xml:base="http://example.com"/>'),
+          '<?example value?>' + svg('<path/>'),
+          svg('<g><?example value?></g>'),
+          svg('<g>unexpected text</g>'),
+          svg('<path><![CDATA[unexpected text]]></path>'),
+          svg('<g xmlns:other="urn:evil"/>'),
+          svg('<defs><linearGradient id="g"/></defs><path fill="url(#g%20)"/>'),
+          svg('<defs><linearGradient id="g"/></defs><path fill="url(#g?query)"/>'),
+          svg('<defs><linearGradient id="g"/></defs><path style="fill:url(#g);stroke:calc(1px + 2px)"/>'),
+          svg('<defs><linearGradient id="g"/></defs><path fill="url(#g)" mask="url(#g)"/>'),
+          svg('<defs><mask id="a"><path mask="url(#b)"/></mask><mask id="b"><path mask="url(#c)"/></mask><mask id="c"><path mask="url(#a)"/></mask></defs>'),
+          svg('<defs><linearGradient xmlns:xlink="http://www.w3.org/1999/xlink" href="#a" xlink:href="#b"/><linearGradient id="a"/><linearGradient id="b"/></defs>'),
+          svg('<rect width="1e999"/>'),
+          svg('<path stroke-width="1e999px"/>'),
+          svg('<path d="M0 0 A-1 1 0 0 1 2 2"/>'),
+          svg('<path pathLength="-1"/>'),
         ];
         for (const [i, s] of bad.entries())
           await check('static SVG rejects ' + i, () =>

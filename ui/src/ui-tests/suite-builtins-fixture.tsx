@@ -244,7 +244,7 @@ export async function installSuiteBuiltinsFixture(root: Root) {
           .suites.find((r) => r.instance_id === c.getSnapshot().selectedSuiteId)!;
         equal(materializeSuite(record).files, builtin.files, 'fixed parent materialization');
         assert(
-          record.parent_snapshot?.bundle.files['common/assets/background-placeholder.png'],
+          record.parent_snapshot?.bundle.files['common/assets/world.svg'],
           'asset bytes in parent snapshot',
         );
       });
@@ -365,11 +365,11 @@ export async function installSuiteBuiltinsFixture(root: Root) {
           () =>
             !!document
               .getElementById('paradox-suite-editor')
-              ?.shadowRoot?.querySelector('[aria-label="UI Suite Editor"]'),
+              ?.shadowRoot?.querySelector(`[role="dialog"][aria-label="${i18n.t('uiSuiteEditor.title')}"]`),
         );
         const shadow = document.getElementById('paradox-suite-editor')!.shadowRoot!;
-        assert(shadow.querySelector('[aria-label="Suite source"]'), 'actual source editor');
-        assert(shadow.querySelector('[aria-label="Builtin suite"]'), 'foundation Select');
+        assert(shadow.querySelector(`[aria-label="${i18n.t('uiSuiteEditor.source')}"]`), 'actual source editor');
+        assert(shadow.querySelector(`[role="combobox"][aria-label="${i18n.t('uiSuiteEditor.suite')}"]`), 'foundation Select');
         assert(shadow.querySelector('.suite-assets'), 'actual asset manager');
         assert(shadow.querySelector('.ui-notice-viewport'), 'same editor notice host');
         const notice = a.notifications.publish('info', 'Task12 dual root lease');

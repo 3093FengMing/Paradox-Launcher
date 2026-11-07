@@ -474,16 +474,23 @@ impl DownloadManager {
             .iter_mut()
             .find(|entry| entry.task.id == id)
             .context("运行中的下载任务不存在")?;
-        if entry.cancellation.is_cancelled() {
-            entry.task.status = DownloadStatus::Cancelled;
-            entry.task.message = "下载已取消，临时文件已清理".into();
-        } else {
-            match result {
-                Ok(message) => {
-                    entry.task.status = DownloadStatus::Completed;
-                    entry.task.message = message;
-                }
-                Err(error) => {
+        // Cancellation is a request, not an execution result. A committed
+        // success or recovery/cleanup failure can race with that request.
+        match result {
+            Ok(message) => {
+                entry.task.status = DownloadStatus::Completed;
+                entry.task.message = message;
+            }
+            Err(error) => {
+                if matches!(
+                    error
+                        .root_cause()
+                        .downcast_ref::<paradox_core::download::DownloadError>(),
+                    Some(paradox_core::download::DownloadError::Cancelled)
+                ) {
+                    entry.task.status = DownloadStatus::Cancelled;
+                    entry.task.message = "下载已取消".into();
+                } else {
                     entry.task.status = DownloadStatus::Failed;
                     entry.task.message = format!("{error:#}");
                 }
@@ -608,7 +615,9 @@ async fn run_request(
             } else {
                 PathBuf::from(&source)
             };
-            ensure!(!cancellation.is_cancelled(), "content.errors.cancelled");
+            if cancellation.is_cancelled() {
+                return Err(paradox_core::download::DownloadError::Cancelled.into());
+            }
             let index = paradox_core::packs::inspect(&archive_path)?;
             let profile = {
                 let mut registered = registered.lock().map_err(|_| anyhow!("配置锁不可用"))?;
@@ -667,7 +676,7 @@ async fn run_request(
         } => {
             let package = tokio::select! {
                 biased;
-                () = cancellation.cancelled() => return Err(anyhow!("Java 下载已取消")),
+                () = cancellation.cancelled() => return Err(paradox_core::download::DownloadError::Cancelled.into()),
                 package = java::resolve_package(major, &settings.network) => package?,
             };
             let installation = java::download_and_install(
@@ -775,11 +784,87 @@ mod tests {
         assert!(manager.has_pending());
         assert!(busy.load(Ordering::Acquire));
         let task = manager
-            .finish_task(&work.id, Err(anyhow!("cancelled")))
+            .finish_task(
+                &work.id,
+                Err(paradox_core::download::DownloadError::Cancelled.into()),
+            )
             .unwrap();
         assert_eq!(task.status, DownloadStatus::Cancelled);
         assert!(manager.take_next(&busy).unwrap().is_none());
         assert!(!busy.load(Ordering::Acquire));
+    }
+
+    #[test]
+    fn cancellation_does_not_replace_a_completed_result_or_a_real_failure() {
+        for result in [Ok("installed".into()), Err(anyhow!("network failed"))] {
+            let manager = DownloadManager::default();
+            let busy = AtomicBool::new(false);
+            let (task, _) = manager.insert(request("first"), &busy).unwrap();
+            let work = manager.take_next(&busy).unwrap().unwrap();
+            manager.cancel_task(&task.id).unwrap();
+            let completed = result.is_ok();
+            let task = manager.finish_task(&work.id, result).unwrap();
+            assert_eq!(
+                task.status,
+                if completed {
+                    DownloadStatus::Completed
+                } else {
+                    DownloadStatus::Failed
+                }
+            );
+            assert_eq!(
+                task.message,
+                if completed {
+                    "installed"
+                } else {
+                    "network failed"
+                }
+            );
+        }
+    }
+
+    #[test]
+    fn cancellation_preserves_the_recovery_directory_and_cleanup_failure() {
+        for message in [
+            "content.errors.recovery: C:/game/backups/recovery",
+            "unable to clean staging directory",
+        ] {
+            let manager = DownloadManager::default();
+            let busy = AtomicBool::new(false);
+            let (task, _) = manager.insert(request("first"), &busy).unwrap();
+            let work = manager.take_next(&busy).unwrap().unwrap();
+            manager.cancel_task(&task.id).unwrap();
+            let error = anyhow!(message).context("installation failed");
+            let task = manager.finish_task(&work.id, Err(error)).unwrap();
+            assert_eq!(task.status, DownloadStatus::Failed);
+            assert!(task.message.contains(message));
+        }
+    }
+
+    #[test]
+    fn only_typed_cooperative_cancellation_finishes_as_cancelled() {
+        let manager = DownloadManager::default();
+        let busy = AtomicBool::new(false);
+        let (task, _) = manager.insert(request("first"), &busy).unwrap();
+        manager.take_next(&busy).unwrap().unwrap();
+        let error = anyhow::Error::new(paradox_core::download::DownloadError::Cancelled)
+            .context("content installation stopped");
+        let task = manager.finish_task(&task.id, Err(error)).unwrap();
+        assert_eq!(task.status, DownloadStatus::Cancelled);
+        assert_eq!(task.message, "下载已取消");
+        assert!(!task.message.contains("临时文件已清理"));
+
+        let (task, _) = manager.insert(request("second"), &busy).unwrap();
+        manager.take_next(&busy).unwrap().unwrap();
+        manager.cancel_task(&task.id).unwrap();
+        let task = manager
+            .finish_task(&task.id, Err(anyhow!("cancelled")))
+            .unwrap();
+        assert_eq!(
+            task.status,
+            DownloadStatus::Failed,
+            "a cancellation request cannot classify an arbitrary execution failure"
+        );
     }
 
     #[test]

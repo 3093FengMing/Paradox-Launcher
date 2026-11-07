@@ -8,36 +8,45 @@ import { Field } from './ui';
 function RemoveProfileDialog({
   profile: identity,
   ...appearance
-}: DialogAppearance & { profile: { instance_key: string } }) {
+}: DialogAppearance & { profile?: { instance_key: string } }) {
   const { t } = useTranslation();
   const snapshot = useLauncherSnapshot();
   const actions = useLauncherActions().removal;
-  const { profileKey, deleteFiles, confirmation, pending, canSubmit } = snapshot.removal;
+  const { profileKey, deleteFiles, confirmation, pending, canSubmit, recovery } = snapshot.removal;
   const saving = snapshot.settings.saving || pending;
   const onClose = actions.cancel;
   const profile = snapshot.config.value?.profiles.find((item) => item.instance_key === profileKey);
-  if (!profileKey || profileKey !== identity.instance_key) return null;
-  const name = profile?.name ?? profileKey;
+  if (!profileKey || (identity && profileKey !== identity.instance_key)) return null;
+  const name = recovery?.name ?? profile?.name ?? profileKey;
   return (
     <LauncherDialog
       {...appearance}
       pending={saving}
       onClose={onClose}
       title={t('removeDialog.title', { name })}
-      description={t('removeDialog.description')}
+      description={t(recovery ? 'removeDialog.partialDescription' : 'removeDialog.description')}
     >
-      <label className="inline-check">
-        <input
-          type="checkbox"
-          disabled={saving || !snapshot.window.desktop}
-          checked={deleteFiles}
-          onChange={(event) => {
-            actions.setDeleteFiles(event.target.checked);
-          }}
-        />
-        {t('removeDialog.deleteFiles')}
-      </label>
-      {deleteFiles && (
+      {recovery && (
+        <div role="alert">
+          <p>{recovery.error}</p>
+          <code>{recovery.instanceRoot}</code>
+          <p>{t('removeDialog.manualCleanup')}</p>
+        </div>
+      )}
+      {!recovery && (
+        <label className="inline-check">
+          <input
+            type="checkbox"
+            disabled={saving || !snapshot.window.desktop}
+            checked={deleteFiles}
+            onChange={(event) => {
+              actions.setDeleteFiles(event.target.checked);
+            }}
+          />
+          {t('removeDialog.deleteFiles')}
+        </label>
+      )}
+      {deleteFiles && !recovery && (
         <>
           <p>{t('removeDialog.fileWarning', { key: profileKey })}</p>
           <Field label={t('removeDialog.confirmName')} description={name}>
@@ -53,7 +62,7 @@ function RemoveProfileDialog({
       )}
       <div className="modal-buttons">
         <button className="secondary" disabled={saving} onClick={onClose}>
-          {t('removeDialog.keep')}
+          {t(recovery ? 'removeDialog.close' : 'removeDialog.keep')}
         </button>
         <button
           className="primary"
@@ -63,7 +72,11 @@ function RemoveProfileDialog({
           }}
         >
           {saving ? <LoaderCircle className="spin" size={16} /> : <Trash2 size={16} />}
-          {deleteFiles ? t('removeDialog.deleteAndRemove') : t('removeDialog.removeRecord')}
+          {recovery
+            ? t('removeDialog.retryFiles')
+            : deleteFiles
+              ? t('removeDialog.deleteAndRemove')
+              : t('removeDialog.removeRecord')}
         </button>
       </div>
     </LauncherDialog>

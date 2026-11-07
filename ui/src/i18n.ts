@@ -73,6 +73,7 @@ const runtimeMessages = new Map<string, string>([
   ['正在解析游戏文件与下载计划', 'runtime.resolvingGameFiles'],
   ['正在查询 Java 下载信息', 'runtime.resolvingJava'],
   ['下载已取消，临时文件已清理', 'runtime.downloadCancelled'],
+  ['下载已取消', 'runtime.downloadCancelled'],
   ['文件已下载，正在完成安装', 'runtime.finishingInstall'],
   ['正在校验已有文件', 'runtime.verifyingFiles'],
   ['正在准备下载', 'runtime.preparingDownload'],

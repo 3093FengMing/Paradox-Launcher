@@ -1,5 +1,4 @@
 .modern-shell {
-  --builtin-background: url('../common/assets/background-placeholder.png');
   --builtin-banner: url('../common/assets/world.svg');
 }
 .modern-shell .banner-illustration {

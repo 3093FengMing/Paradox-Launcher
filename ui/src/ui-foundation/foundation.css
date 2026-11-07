@@ -189,9 +189,68 @@ select[data-user-authored] {
   align-items: center;
   gap: 0.6em;
 }
-.ui-checkbox input {
-  width: auto;
-  accent-color: var(--accent-ink, var(--accent));
+/* Keep native input behavior while sharing the drawing with inline built-in
+   checkboxes and the editor's ShadowRoot. */
+input[type='checkbox'] {
+  appearance: none;
+  box-sizing: border-box;
+  display: inline-grid;
+  place-content: center;
+  flex-shrink: 0;
+  width: 1.125em;
+  min-width: 1.125em;
+  height: 1.125em;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  vertical-align: -0.125em;
+  border: 1px solid color-mix(in srgb, var(--text, #ededf1) 28%, var(--input, #18181c));
+  border-radius: 4px;
+  background: var(--input, #18181c);
+  color: var(--accent-fg, #15200d);
+  cursor: pointer;
+}
+input[type='checkbox']::before {
+  content: '';
+  width: 0.65em;
+  height: 0.4em;
+  border-left: 0.125em solid currentColor;
+  border-bottom: 0.125em solid currentColor;
+  transform: translateY(-0.07em) rotate(-45deg);
+  opacity: 0;
+}
+input[type='checkbox']:hover:not(:disabled) {
+  border-color: var(--accent-ink, var(--accent, #a3e635));
+}
+input[type='checkbox']:checked,
+input[type='checkbox']:indeterminate {
+  border-color: var(--accent, #a3e635);
+  background: var(--accent, #a3e635);
+}
+input[type='checkbox']:checked::before,
+input[type='checkbox']:indeterminate::before {
+  opacity: 1;
+}
+input[type='checkbox']:indeterminate::before {
+  height: 0;
+  border-left: 0;
+  transform: none;
+}
+input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--accent-ink, var(--accent, #a3e635));
+  outline-offset: 2px;
+}
+input[type='checkbox']:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+@media (forced-colors: active) {
+  input[type='checkbox'] {
+    appearance: auto;
+  }
+  input[type='checkbox']::before {
+    display: none;
+  }
 }
 .ui-slider,
 .ui-progress {

@@ -2,24 +2,15 @@ import * as ts from 'typescript';
 import { canonicalSuiteJson, compareCodePoints } from './canonical';
 import { resolveSuitePath } from './paths';
 import type { UiSuiteBundle } from './model';
+import { createModuleGraph } from './module-graph-runtime';
+import type { GraphModule, SuiteModuleGraph } from './module-graph-runtime';
+export { moduleBlobSource } from './module-graph-runtime';
+export type { SuiteModuleGraph } from './module-graph-runtime';
 
 /** Shared source transformation runs here, before JSX/type erasure. */
 export interface SuiteSourceTransform {
   readonly cacheKey: string;
   before(sourcePath: string): ts.TransformerFactory<ts.SourceFile>[];
-}
-interface GraphModule {
-  path: string;
-  kind: 'ts' | 'tsx' | 'css' | 'asset';
-  code: string;
-  dependencies: Record<string, string>;
-  runtimeDependencies: string[];
-}
-export interface SuiteModuleGraph {
-  readonly modules: ReadonlyMap<string, GraphModule>;
-  readonly entries: readonly string[];
-  readonly identity: string;
-  stylesFor(entry: string): readonly string[];
 }
 function fail(file: ts.SourceFile, node: ts.Node, message: string): never {
   const pos = file.getLineAndCharacterOfPosition(node.getStart(file));
@@ -153,53 +144,6 @@ export function buildModuleGraph(
   const uniqueEntries = [...new Set(entries)];
   for (const entry of uniqueEntries) visit(entry);
   identity.sort((a, b) => compareCodePoints((a as string[])[0], (b as string[])[0]));
-  return {
-    modules,
-    entries: uniqueEntries,
-    identity: canonicalSuiteJson([transform?.cacheKey ?? '', identity, uniqueEntries]),
-    stylesFor(entry) {
-      const seen = new Set<string>(),
-        styles: string[] = [];
-      const scan = (path: string) => {
-        if (seen.has(path)) return;
-        seen.add(path);
-        const m = modules.get(path);
-        if (!m) return;
-        if (m.kind === 'css') styles.push(path);
-        else for (const dep of m.runtimeDependencies) scan(dep);
-      };
-      scan(entry);
-      return styles;
-    },
-  };
-}
-
-/** Blob evaluation only defines factories. User code begins inside initialize. */
-export function moduleBlobSource(graph: SuiteModuleGraph): string {
-  const factories = [...graph.modules.values()].map((m) => {
-    const code =
-      m.kind === 'asset'
-        ? `module.exports={__esModule:true,default:assets[${JSON.stringify(m.path)}]};`
-        : m.kind === 'css'
-          ? ''
-          : m.code;
-    return `[${JSON.stringify(m.path)},function(module,exports,require,assets){\n${code}\n}]`;
-  });
-  const dependencies = Object.fromEntries(
-    [...graph.modules].map(([id, m]) => [id, m.dependencies]),
-  );
-  return `const factories=Object.fromEntries([${factories.join(',\n')}]);
-const dependencies=${JSON.stringify(dependencies)};
-export function initialize(publicModules,assets){
- const cache=Object.create(null);
- const load=(id)=>{
-  if(Object.hasOwn(cache,id))return cache[id].exports;
-  if(!Object.hasOwn(factories,id))throw Error('Missing suite module: '+id);
-  const module={exports:{}};cache[id]=module;
-  const require=(name)=>{const dep=dependencies[id][name];if(dep===undefined)throw Error('Unsupported module: '+name);return Object.hasOwn(publicModules,dep)?publicModules[dep]:load(dep);};
-  try{factories[id](module,module.exports,require,assets);}catch(error){delete cache[id];throw error;}
-  return module.exports;
- };
- return Object.fromEntries(${JSON.stringify(graph.entries)}.map(id=>[id,load(id)]));
-}`;
+  return createModuleGraph(modules, uniqueEntries,
+    canonicalSuiteJson([transform?.cacheKey ?? '', identity, uniqueEntries]));
 }

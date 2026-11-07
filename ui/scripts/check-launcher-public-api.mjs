@@ -1373,6 +1373,57 @@ await test('import_and_delete_validate_inside_actions: current scan eligibility 
   assert.equal(f.counts.removed, 1);
   f.host.unmount();
 });
+await test('removal_partial_result_keeps_config_current_and_exposes_protected_retry', async () => {
+  const f = await fixture({ holdDomainWrites: true });
+  let a = await f.current();
+  a.actions.removal.open('original-instance');
+  a.actions.removal.setDeleteFiles(true);
+  a.actions.removal.setConfirmation('Original world');
+  const removing = a.actions.removal.submit();
+  await f.current();
+  const config = { ...structuredClone(f.server.config), profiles: [], active_profile: null };
+  const partial = {
+    config,
+    file_removal: null,
+    file_removal_error: 'permission denied',
+    file_removal_retry: 'bound-token',
+    instance_root: 'C:/game/versions/original-instance',
+  };
+  f.server.config = config;
+  f.domainWrites[0].resolve(partial);
+  assert.equal(await removing, false, 'file deletion failure must not report full success');
+  a = await f.current();
+  assert.equal(a.snapshot.config.value.profiles.length, 0, 'committed record removal is published');
+  assert.equal(a.snapshot.removal.recovery.error, 'permission denied');
+  assert.equal(a.snapshot.removal.canSubmit, true, 'retry survives absent profile');
+  a.actions.removal.cancel();
+  a = await f.current();
+  assert.equal(a.snapshot.removal.profileKey, null);
+  assert.equal(a.snapshot.removal.residuals.length, 1, 'closing retains a retry entry');
+  a.actions.removal.openResidual('bound-token');
+  const retry = a.actions.removal.submit();
+  assert.equal(await a.actions.removal.submit(), false, 'same-tick retries serialize');
+  await f.current();
+  assert.equal(f.domainWrites[1].kind, 'retry-remove:bound-token');
+  f.domainWrites[1].resolve({ ...partial, file_removal_error: 'still locked' });
+  assert.equal(await retry, false);
+  a = await f.current();
+  assert.equal(a.snapshot.removal.recovery.error, 'still locked');
+  const completed = a.actions.removal.submit();
+  await f.current();
+  f.domainWrites[2].resolve({
+    ...partial,
+    file_removal: { instance_root: partial.instance_root, removed: true },
+    file_removal_error: null,
+    file_removal_retry: null,
+  });
+  assert.equal(await completed, true);
+  a = await f.current();
+  assert.equal(a.snapshot.removal.profileKey, null);
+  assert.equal(a.snapshot.removal.residuals.length, 0);
+  assert.equal(f.counts.removed, 1, 'retry never attempts record deletion again');
+  f.host.unmount();
+});
 await test('loader_catalog_current_membership: patch invalidates immediately; explicit query shares one owner', async () => {
   const f = await fixture();
   const a = await f.current();

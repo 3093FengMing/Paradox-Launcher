@@ -10,33 +10,42 @@ function RemoveProfileDialog() {
   const { t } = useTranslation();
   const snapshot = useLauncherSnapshot();
   const actions = useLauncherActions().removal;
-  const { profileKey, deleteFiles, confirmation, pending, canSubmit } = snapshot.removal;
+  const { profileKey, deleteFiles, confirmation, pending, canSubmit, recovery } = snapshot.removal;
   const saving = snapshot.settings.saving || pending;
   const onClose = actions.cancel;
   const profile = snapshot.config.value?.profiles.find((item) => item.instance_key === profileKey);
   if (!profileKey) return null;
-  const name = profile?.name ?? profileKey;
+  const name = recovery?.name ?? profile?.name ?? profileKey;
   return (
     <LauncherDialog
       pending={saving}
       onClose={onClose}
       title={t('removeDialog.title', { name })}
-      description={t('removeDialog.description')}
+      description={t(recovery ? 'removeDialog.partialDescription' : 'removeDialog.description')}
       data-ui-site="RemoveProfileDialog-1"
     >
-      <label className="inline-check" data-ui-site="RemoveProfileDialog-2">
-        <input
-          type="checkbox"
-          disabled={saving || !snapshot.window.desktop}
-          checked={deleteFiles}
-          onChange={(event) => {
-            actions.setDeleteFiles(event.target.checked);
-          }}
-          data-ui-site="RemoveProfileDialog-3"
-        />
-        {t('removeDialog.deleteFiles')}
-      </label>
-      {deleteFiles && (
+      {recovery && (
+        <div role="alert">
+          <p>{recovery.error}</p>
+          <code>{recovery.instanceRoot}</code>
+          <p>{t('removeDialog.manualCleanup')}</p>
+        </div>
+      )}
+      {!recovery && (
+        <label className="inline-check" data-ui-site="RemoveProfileDialog-2">
+          <input
+            type="checkbox"
+            disabled={saving || !snapshot.window.desktop}
+            checked={deleteFiles}
+            onChange={(event) => {
+              actions.setDeleteFiles(event.target.checked);
+            }}
+            data-ui-site="RemoveProfileDialog-3"
+          />
+          {t('removeDialog.deleteFiles')}
+        </label>
+      )}
+      {deleteFiles && !recovery && (
         <Fragment data-ui-site="RemoveProfileDialog-4">
           <p data-ui-site="RemoveProfileDialog-5">
             {t('removeDialog.fileWarning', { key: profileKey })}
@@ -64,7 +73,7 @@ function RemoveProfileDialog() {
           onClick={onClose}
           data-ui-site="RemoveProfileDialog-9"
         >
-          {t('removeDialog.keep')}
+          {t(recovery ? 'removeDialog.close' : 'removeDialog.keep')}
         </button>
         <button
           className="primary"
@@ -79,7 +88,11 @@ function RemoveProfileDialog() {
           ) : (
             <Trash2 size={16} data-ui-site="RemoveProfileDialog-12" />
           )}
-          {deleteFiles ? t('removeDialog.deleteAndRemove') : t('removeDialog.removeRecord')}
+          {recovery
+            ? t('removeDialog.retryFiles')
+            : deleteFiles
+              ? t('removeDialog.deleteAndRemove')
+              : t('removeDialog.removeRecord')}
         </button>
       </div>
     </LauncherDialog>

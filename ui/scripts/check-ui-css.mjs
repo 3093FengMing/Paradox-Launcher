@@ -5,7 +5,7 @@ import { loadApp } from './lib/hook-test-host.mjs';
 
 const require = createRequire(new URL('../package.json', import.meta.url));
 const cssTree = require('css-tree');
-const { compileCss } = loadApp()('customization/css.ts');
+const { compileCss, prepareSuiteCss, createSuiteStyleRewriter } = loadApp()('customization/css.ts');
 const { identityToken, safeTargetIdentity } = loadApp()('customization/identity.ts');
 const target = 'component.profile-card';
 const scope = `:where([data-ui-root-target~="${target}"],[data-ui-node="${target}"])`;
@@ -230,4 +230,67 @@ await test('SVG camelCase target identities retain case, limits and selector sco
     assert.throws(() => safeTargetIdentity(bad, 'one'), /Invalid/);
     assert.throws(() => compileCss(':scope { color:red }', bad), /invalid/);
   }
+});
+
+const suiteSource = (sourcePath, text) =>
+  prepareSuiteCss(text, { sourcePath, resolveAsset: (reference) => reference });
+
+await test('suite rewrite collects later-source symbols and leaves prepared ASTs intact across renders', () => {
+  const sources = [
+    suiteSource('consumer.css', ':root{--motion:pulse;--face:My Font;animation-name:var(--motion);font-family:var(--face);content:var(--motion)}'),
+    suiteSource('definitions.css', '@keyframes pulse{to{opacity:1}}@font-face{font-family:My Font;src:local("Arial")}@layer a.b{.x{color:red}}'),
+  ];
+  const before = sources.map(({ ast }) => cssTree.generate(ast));
+  const rewrite = createSuiteStyleRewriter(sources, 'stages');
+  const plain = rewrite.render(sources, false);
+  assert.match(plain, /--motion:pulse;/);
+  assert.match(plain, /--suite-stages-var-animation-name-2d-2d-6d-6f-74-69-6f-6e:suite-stages-animation-0;/);
+  assert.match(plain, /--suite-stages-var-font-family-2d-2d-66-61-63-65:suite-stages-font-0;/);
+  assert.match(plain, /content:var\(--motion\)/);
+  assert.match(plain, /@layer suite-stages-layer-0\.suite-stages-layer-1/);
+  const shadow = rewrite.render(sources, true);
+  assert.match(shadow, /:host\{/);
+  const bounded = rewrite.render(sources, false, '.target', '.owned');
+  assert.ok(bounded.includes(':where(.owned)'));
+  assert.equal(rewrite.render(sources, false), plain);
+  assert.equal(rewrite.render(sources, true), shadow);
+  assert.deepEqual(sources.map(({ ast }) => cssTree.generate(ast)), before);
+});
+
+await test('suite preflight follows all cascade candidates across files and cyclic variable chains', () => {
+  const sources = [
+    suiteSource('owned.css', '@keyframes linear{to{opacity:1}}@keyframes fade{to{opacity:1}}.x{--whole:fade 1s linear;animation:var(--whole)}'),
+    suiteSource('later.css', '.x{--a:var(--b);--b:var(--a);--whole:var(--a) 1s linear}'),
+  ];
+  const before = sources.map(({ ast }) => cssTree.generate(ast));
+  assert.throws(() => createSuiteStyleRewriter(sources, 'stages'), /later\.css:\d+:\d+: Cannot safely namespace/);
+  assert.deepEqual(sources.map(({ ast }) => cssTree.generate(ast)), before);
+  assert.doesNotThrow(() => createSuiteStyleRewriter([
+    suiteSource('safe.css', '@keyframes pulse{to{opacity:1}}.x{--a:var(--b,pulse);--b:var(--a);animation-name:var(--a)}'),
+  ], 'safe'));
+});
+
+await test('inline candidate overrides and failed checks cannot leak into later rewrites or groups', () => {
+  const source = suiteSource('stored.css', '@keyframes linear{to{opacity:1}}@keyframes fade{to{opacity:1}}.x{--whole:fade 1s linear;animation:var(--whole)}');
+  const rewrite = createSuiteStyleRewriter([source], 'one');
+  const plain = rewrite.render([source], false);
+  const input = { '--whole': 'var(--timing) 1s linear', animation: 'var(--whole)' };
+  assert.throws(() => rewrite.inline(input), /<inline-style>:1:1: Cannot safely namespace/);
+  assert.deepEqual(input, { '--whole': 'var(--timing) 1s linear', animation: 'var(--whole)' });
+  assert.doesNotThrow(() => rewrite.inline({ animation: 'var(--whole)' }));
+  assert.equal(rewrite.render([source], false), plain);
+  const other = createSuiteStyleRewriter([source], 'two');
+  assert.equal(rewrite.inline({ animationName: 'fade' }).animationName, 'suite-one-animation-1');
+  assert.equal(other.inline({ animationName: 'fade' }).animationName, 'suite-two-animation-1');
+});
+
+await test('registered constraints follow chained fallback candidates and preserve typed branch rejection', () => {
+  const prefix = '@property --Motion{syntax:"pulse | <color>";inherits:false;initial-value:pulse}@keyframes pulse{to{opacity:1}}';
+  const safe = suiteSource('registered.css', prefix + '.x{--a:var(--b,pulse);--b:red;--Motion:var(--a);animation-name:var(--Motion)}');
+  const rewrite = createSuiteStyleRewriter([safe], 'registered');
+  assert.doesNotThrow(() => rewrite.inline({ animationName: 'var(--Motion)' }));
+  assert.throws(() => rewrite.inline({ '--b': 'var(--missing) pulse', animationName: 'var(--Motion)' }), /Cannot preserve @property/);
+  assert.doesNotThrow(() => rewrite.inline({ animationName: 'var(--Motion)' }));
+  const computed = suiteSource('computed.css', '@property --Motion{syntax:"<color> | <custom-ident>";inherits:false;initial-value:red}@keyframes red{to{opacity:1}}.x{animation-name:var(--Motion)}');
+  assert.throws(() => createSuiteStyleRewriter([computed], 'computed'), /Cannot preserve @property/);
 });

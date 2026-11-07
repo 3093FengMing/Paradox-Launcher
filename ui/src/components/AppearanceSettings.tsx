@@ -4,6 +4,7 @@ import { useId, useContext } from 'react';
 import { UiEditorSnapshotContext, UiEditorActionsContext } from '../ui-editor/public';
 import { Check, Monitor, Moon, Sun } from 'lucide-react';
 import { accentForeground } from '../colors';
+import { hasImmersiveLayoutSource } from '../ui-suite/builtins/common/lib/appearance';
 import type { Appearance, DeepReadonly, LauncherActions } from '@paradox/launcher';
 
 interface Props {
@@ -122,6 +123,7 @@ function DefaultToggleSetting({ title, description, checked, onChange }: ToggleS
 
 function AppearanceSettings({ appearance, onPatch: patch }: Props) {
   const suite = useContext(UiEditorSnapshotContext), suiteActions = useContext(UiEditorActionsContext);
+  const immersiveLayout = suite ? hasImmersiveLayoutSource(suite.draft) : appearance.interface_style === 'immersive';
   const { t } = useTranslation();
   const styleLabelId = useId();
   const themeLabelId = useId();
@@ -248,7 +250,7 @@ function AppearanceSettings({ appearance, onPatch: patch }: Props) {
       <ToggleSetting
         title={t('appearance.background')}
         description={
-          appearance.interface_style === 'immersive'
+          immersiveLayout
             ? t('appearance.backgroundImmersive')
             : t('appearance.backgroundModern')
         }
@@ -256,7 +258,7 @@ function AppearanceSettings({ appearance, onPatch: patch }: Props) {
         onChange={(value) => patch('background_art', value)}
       />
 
-      {appearance.interface_style === 'immersive' && (
+      {immersiveLayout && (
         <>
           <RangeSetting
             title={t('appearance.blur')}

@@ -5,6 +5,7 @@ import { useId } from 'react';
 import { Check, Monitor, Moon, Sun } from 'lucide-react';
 import { sourceView } from '../lib/view';
 import { accentForeground } from '../lib/colors';
+import { hasImmersiveLayoutSource } from '../lib/appearance';
 import { useLauncherActions, useLauncherSnapshot, useUiEditorActions, useUiEditorSnapshot } from '@paradox/launcher';
 const styles = [
   {
@@ -122,6 +123,7 @@ function AppearanceSettings() {
   const snapshot = useLauncherSnapshot(),
     patch = useLauncherActions().settings.patchAppearance;
   const suite = useUiEditorSnapshot(), suiteActions = useUiEditorActions();
+  const immersiveLayout = hasImmersiveLayoutSource(suite.draft);
   const appearance = snapshot.settings.draft?.appearance;
   const { t } = useTranslation();
   const styleLabelId = useId();
@@ -280,7 +282,7 @@ function AppearanceSettings() {
       <ToggleSetting
         title={t('appearance.background')}
         description={
-          suite.selectedSuiteId === 'builtin.immersive'
+          immersiveLayout
             ? t('appearance.backgroundImmersive')
             : t('appearance.backgroundModern')
         }
@@ -289,7 +291,7 @@ function AppearanceSettings() {
         data-ui-site="AppearanceSettings-49"
       />
 
-      {suite.selectedSuiteId === 'builtin.immersive' && (
+      {immersiveLayout && (
         <Fragment data-ui-site="AppearanceSettings-50">
           <RangeSetting
             title={t('appearance.blur')}

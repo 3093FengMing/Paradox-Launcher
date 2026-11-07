@@ -331,6 +331,68 @@ pub struct FileRemoval {
     pub removed: bool,
 }
 
+/// A backend-owned deletion target. The path is fixed before removing its
+/// record; retrying still checks every current registration and shared root.
+#[derive(Clone, Debug)]
+pub struct PreparedProfileRemoval {
+    location: InstanceLocation,
+    pub instance_root: PathBuf,
+}
+
+pub fn prepare_profile_file_removal(
+    config: &AppConfig,
+    key: &str,
+) -> Result<PreparedProfileRemoval> {
+    config.validate()?;
+    let profile = config
+        .profiles
+        .iter()
+        .find(|profile| profile.instance_key == key)
+        .context("实例不存在")?;
+    let settings = profile.effective_settings(&config.settings)?;
+    let location = InstanceLocation::new(&canonical_game_root(&settings.game_directory)?, key)?;
+    let (others, roots) = removal_boundaries(config, Some(key))?;
+    let (instance_root, _) = validate_instance_file_removal(&location, &others, &roots)?;
+    Ok(PreparedProfileRemoval {
+        location,
+        instance_root,
+    })
+}
+
+impl PreparedProfileRemoval {
+    pub fn remove(&self, current: &AppConfig) -> Result<FileRemoval> {
+        current.validate()?;
+        ensure!(
+            !current
+                .profiles
+                .iter()
+                .any(|profile| profile.instance_key == self.location.instance_key),
+            "实例 ID 已重新注册，不能移除残留文件"
+        );
+        let (others, mut roots) = removal_boundaries(current, None)?;
+        roots.push(self.location.game_directory.clone());
+        let (target, exists) = validate_instance_file_removal(&self.location, &others, &roots)?;
+        ensure!(target == self.instance_root, "实例目录在操作期间发生变化");
+        remove_validated_instance_files(&self.location, target, exists)
+    }
+}
+
+fn removal_boundaries(
+    config: &AppConfig,
+    exclude: Option<&str>,
+) -> Result<(Vec<InstanceLocation>, Vec<PathBuf>)> {
+    let mut others = Vec::new();
+    let mut roots = vec![config.settings.game_directory.clone()];
+    for profile in &config.profiles {
+        let directory = profile.effective_settings(&config.settings)?.game_directory;
+        roots.push(directory.clone());
+        if exclude != Some(profile.instance_key.as_str()) {
+            others.push(InstanceLocation::new(&directory, &profile.instance_key)?);
+        }
+    }
+    Ok((others, roots))
+}
+
 /// Resolve every registered profile before deleting files, including shared
 /// resources in the global game root when the target is an external import.
 pub fn remove_profile_files(config: &AppConfig, key: &str) -> Result<FileRemoval> {
@@ -358,8 +420,7 @@ pub fn remove_profile_files(config: &AppConfig, key: &str) -> Result<FileRemoval
 }
 
 /// Delete only one direct child of a verified `versions` directory. The caller
-/// supplies every *other* registered location, claims the task guard, and keeps
-/// the target configuration record intact until deletion completes.
+/// supplies every *other* registered location and claims the task guard.
 pub fn remove_instance_files(
     location: &InstanceLocation,
     other_locations: &[InstanceLocation],
@@ -378,16 +439,22 @@ fn remove_instance_files_with_shared_roots(
     other_locations: &[InstanceLocation],
     game_roots: &[PathBuf],
 ) -> Result<FileRemoval> {
+    let (target, exists) = validate_instance_file_removal(location, other_locations, game_roots)?;
+    remove_validated_instance_files(location, target, exists)
+}
+
+fn validate_instance_file_removal(
+    location: &InstanceLocation,
+    other_locations: &[InstanceLocation],
+    game_roots: &[PathBuf],
+) -> Result<(PathBuf, bool)> {
     validate_instance_key(&location.instance_key)?;
     let directory = canonical_game_root(&location.game_directory)?;
     let location = InstanceLocation::new(&directory, &location.instance_key)?;
     let lexical_target = location.instance_root();
     match fs::symlink_metadata(&lexical_target) {
         Err(error) if error.kind() == ErrorKind::NotFound => {
-            return Ok(FileRemoval {
-                instance_root: lexical_target,
-                removed: false,
-            });
+            return Ok((lexical_target, false));
         }
         Err(error) => return Err(error).context("无法读取实例目录"),
         Ok(_) => {}
@@ -414,11 +481,25 @@ fn remove_instance_files_with_shared_roots(
         }
     }
     reject_links_in_tree(&target)?;
+    Ok((target, true))
+}
+
+fn remove_validated_instance_files(
+    location: &InstanceLocation,
+    target: PathBuf,
+    exists: bool,
+) -> Result<FileRemoval> {
+    if !exists {
+        return Ok(FileRemoval {
+            instance_root: target,
+            removed: false,
+        });
+    }
     // Recheck the boundary immediately before removing files. std's recursive
     // removal does not follow symbolic links; Windows reparse points are also
     // rejected in the explicit subtree check above.
     ensure!(
-        canonical_instance_root(&location)? == target,
+        canonical_instance_root(location)? == target,
         "实例目录在操作期间发生变化"
     );
     fs::remove_dir_all(&target).context("无法移除实例文件")?;
@@ -714,6 +795,54 @@ mod tests {
             Some(next.instance_key.as_str())
         );
         config.validate().unwrap();
+    }
+
+    #[test]
+    fn prepared_removal_survives_record_removal_and_is_idempotent() {
+        let (_temporary, root) = game_root();
+        let instance = installed(&root, "1.21.1");
+        let profile = registration_from_scan(&Settings::default(), &root, &instance, None).unwrap();
+        let mut config = AppConfig {
+            profiles: vec![profile],
+            ..AppConfig::default()
+        };
+        let prepared = prepare_profile_file_removal(&config, "1.21.1").unwrap();
+        assert!(instance.root.exists(), "preflight must not delete files");
+        assert!(
+            prepared.remove(&config).is_err(),
+            "an active registration blocks retry"
+        );
+        remove_profile_record(&mut config, "1.21.1").unwrap();
+        let removal = prepared.remove(&config).unwrap();
+        assert!(removal.removed);
+        assert_eq!(removal.instance_root, prepared.instance_root);
+        assert!(!prepared.remove(&config).unwrap().removed);
+    }
+
+    #[test]
+    fn prepared_removal_rechecks_new_registrations_and_shared_roots_before_retry() {
+        let (_temporary, root) = game_root();
+        let instance = installed(&root, "1.21.1");
+        let profile = registration_from_scan(&Settings::default(), &root, &instance, None).unwrap();
+        let mut config = AppConfig {
+            profiles: vec![profile.clone()],
+            ..AppConfig::default()
+        };
+        let prepared = prepare_profile_file_removal(&config, "1.21.1").unwrap();
+        remove_profile_record(&mut config, "1.21.1").unwrap();
+        config.profiles.push(profile);
+        assert!(prepared.remove(&config).is_err());
+        config.profiles.clear();
+        let mut other = GameProfile::new("Nested root", "1.20.1").unwrap();
+        other.game_directory = Some(instance.root.join("new-game-root"));
+        config.profiles.push(other);
+        assert!(prepared.remove(&config).is_err());
+        assert!(instance.root.join("1.21.1.jar").exists());
+        config.profiles.clear();
+        assert!(
+            prepared.remove(&config).unwrap().removed,
+            "retry succeeds after the conflict is resolved"
+        );
     }
 
     #[test]

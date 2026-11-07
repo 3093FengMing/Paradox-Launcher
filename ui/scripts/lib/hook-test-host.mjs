@@ -53,6 +53,8 @@ export function loadApp(
     }).outputText;
     const localRequire = (name) => {
       if (overrides.has(name)) return overrides.get(name);
+      // Node Hook checks have no Vite build plan; they exercise the lazy source compiler.
+      if (name === 'virtual:ui-suite-graph-plans') return { compilerSignature: 'node-hook-host', plans: [] };
       if (name === '@paradox/launcher')
         return load(resolve(uiRoot, 'src/launcher/public/index.ts'));
       if (name === '@paradox/ui') return load(resolve(uiRoot, 'src/ui-foundation/index.ts'));
@@ -82,13 +84,12 @@ export function loadApp(
 
 // Real suite compilation/resolution for Node integration checks. Only browser
 // blob-module loading is adapted; compiler, public modules and layer selection run unchanged.
-export function suiteRenderHost() {
+export function suiteRenderHost(overrides = new Map()) {
   const React = require('react');
   const { renderToStaticMarkup } = require('react-dom/server');
-  const overrides = new Map();
   const app = loadApp(overrides, { isolateCustomization: false });
-  const graphPath = resolve(uiRoot, 'src/ui-suite/module-graph.ts');
-  const graph = app('ui-suite/module-graph.ts');
+  const graphPath = resolve(uiRoot, 'src/ui-suite/module-graph-runtime.ts');
+  const graph = app('ui-suite/module-graph-runtime.ts');
   let moduleSource;
   overrides.set(graphPath, {
     ...graph,
@@ -114,7 +115,7 @@ export function suiteRenderHost() {
   const el = React.createElement;
   return {
     app,
-    async compile(bundle) {
+    async compile(bundle, scope = preparedApi.createSuiteRuntimeScope(), draft = true, options = {}) {
       const create = URL.createObjectURL, revoke = URL.revokeObjectURL;
       const moduleUrls = new Set();
       URL.createObjectURL = blob => {
@@ -135,9 +136,7 @@ export function suiteRenderHost() {
         else revoke.call(URL, url);
       };
       try {
-        const value = await compiler.compileSuiteDraftInScope(
-          bundle, preparedApi.createSuiteRuntimeScope(),
-        );
+        const value = await (draft ? compiler.compileSuiteDraftInScope : compiler.compileSuiteInScope)(bundle, scope, options);
         prepared.add(value);
         return value;
       } finally {

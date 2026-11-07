@@ -32,6 +32,7 @@ export interface RecoveryActions {
 }
 export interface UiEditorSourceServices {
   getBuiltinBundle(id: 'modern' | 'immersive'): Promise<UiSuiteBundle>;
+  getBuiltinName?(id: 'modern' | 'immersive'): Promise<string>;
 }
 // eslint-disable-next-line react-refresh/only-export-components
 export const UiEditorSourceContext = createContext<UiEditorSourceServices | null>(null);
@@ -121,7 +122,7 @@ export class UiEditorController {
       previewing: false, suspended: deps.safe, resetConfirmationOpen: false });
     this.recoveryVisible = deps.safe;
     this.actions = Object.freeze({
-      open: () => this.publish({ open: true, mode: 'normal' }),
+      open: () => { this.updateTargets(true); this.publish({ open: true, mode: 'normal' }); },
       close: () => { this.clearHighlight(); this.cancelPick(); this.publish({ open: false }); },
       selectSuite: (id) => this.selectSuite(id), copyBuiltin: (id, name) => this.copyBuiltin(id, name),
       selectFile: (path) => { if (this.state.draft?.files[path]) this.publish({ selectedFile: path }); },
@@ -181,7 +182,7 @@ export class UiEditorController {
       },
     } satisfies UiEditorActions);
     this.recovery = Object.freeze({ disable: () => this.disable(), openBuiltinEditor: () => {
-      this.disable(); this.recoveryVisible = false; this.publish({ open: true, mode: 'builtin' });
+      this.disable(); this.recoveryVisible = false; this.updateTargets(true); this.publish({ open: true, mode: 'builtin' });
     }, exportRecoverable: () => this.exportRecoverable(), reset: () => this.reset('recovery') });
   }
   readonly actions: UiEditorActions;
@@ -260,7 +261,7 @@ export class UiEditorController {
       }
     };
     if (typeof window !== 'undefined') window.addEventListener('keydown', keydown, true);
-    void this.load(life);
+    this.initialization = this.load(life);
     const cleanup = () => {
       owners(); i18n.off('languageChanged', language); if (typeof window !== 'undefined') window.removeEventListener('keydown', keydown, true);
       if (this.life !== life) return;
@@ -272,9 +273,14 @@ export class UiEditorController {
     };
     this.connectionCleanup = cleanup; return cleanup;
   }
-  private updateTargets() {
+  private updateTargets(opening = false) {
+    // A closed editor has no catalog consumer. Keep an active selection current
+    // without reading every unrelated target; opening takes a synchronous fresh catalog.
+    if (!opening && !this.state.open && !this.state.selection && !this.state.picking) return;
     const context = this.deps.getTargetContext?.() ?? {};
-    const targets = listCurrentTargets(this.state.draft?.manifest.overrides.map((item) => item.selector) ?? [], context);
+    const targets = opening || this.state.open
+      ? listCurrentTargets(this.state.draft?.manifest.overrides.map((item) => item.selector) ?? [], context)
+      : this.state.targets;
     const selector = this.state.selection?.selector;
     const anchor = this.positionAnchor && resolveSelector(this.positionAnchor);
     const anchorOwner = anchor && anchor.owners.length === 1 ? anchor.owners[0] : null;
@@ -284,10 +290,16 @@ export class UiEditorController {
     const targetAncestors = ownerId ? getTargetAncestors(ownerId, context) : [];
     const scopeChoices = ownerId ? getScopeChoices(ownerId, context) : [];
     const patch = { targets, currentTarget, targetAncestors, scopeChoices };
-    if (Object.entries(patch).some(([key, value]) => canonicalSuiteJson(value) !== canonicalSuiteJson(this.state[key as keyof UiEditorSnapshot]))) this.publish(patch);
+    if (Object.entries(patch).some(([key, value]) => {
+      const before = this.state[key as keyof UiEditorSnapshot];
+      return !Object.is(value, before) && canonicalSuiteJson(value) !== canonicalSuiteJson(before);
+    })) this.publish(patch);
   }
   // Launcher navigation/business snapshots are supplied by the existing provider.
   refreshTargets = (): void => { if (this.connected) this.updateTargets(); };
+  private initialization: Promise<void> = Promise.resolve();
+  /** Completes after this connection has loaded, committed its default and activated or recovered. */
+  whenInitialized = (): Promise<void> => this.initialization;
   private async load(life: number) {
     const load = ++this.loads, activation = this.activations, identity = this.draftIdentity;
     let dataLoaded = false;
@@ -299,10 +311,12 @@ export class UiEditorController {
       if (!this.alive(life) || load !== this.loads) return;
       await this.prepareTrusted(life);
       if (this.deps.waitForConfiguration) {
-        const immersive = await validateSuiteBundle(await this.deps.getBuiltinBundle('immersive'));
+        const immersiveName = this.deps.getBuiltinName
+          ? await this.deps.getBuiltinName('immersive')
+          : (await validateSuiteBundle(await this.deps.getBuiltinBundle('immersive'))).manifest.name;
         if (!this.alive(life) || load !== this.loads) return;
         this.builtinCatalog = [{id:'builtin.modern',name:this.trusted!.bundle.manifest.name,builtin:true},
-          {id:'builtin.immersive',name:immersive.manifest.name,builtin:true}];
+          {id:'builtin.immersive',name:immersiveName,builtin:true}];
         this.publish();
       }
       // Initialize once through the existing writer, after real source readiness.
@@ -749,6 +763,12 @@ export function UiEditorProvider({ children }: { children: ReactNode }): React.J
   useEffect(() => { if (launcherSnapshot.config.ready) current.ready(); }, [current, launcherSnapshot.config.ready]);
   const [controller] = useState(() => createUiEditorController({ storage,
     getBuiltinBundle: (id) => { if (!current.source) throw new Error('Builtin source services are missing'); return current.source.getBuiltinBundle(id); },
+    getBuiltinName: async (id) => {
+      if (!current.source) throw new Error('Builtin source services are missing');
+      return current.source.getBuiltinName
+        ? current.source.getBuiltinName(id)
+        : (await current.source.getBuiltinBundle(id)).manifest.name;
+    },
     createScope: async () => (await import('../ui-suite/prepared')).createSuiteRuntimeScope(),
     compile: async (bundle, scope, options) => (await import('../ui-suite/compiler')).compileSuiteInScope(bundle, scope, options),
     exportFile, acquireInteractionPublisher: () => current.services.acquireInteractionPublisher(),

@@ -32,6 +32,7 @@ import type {
   LogIdentity,
   LogLine,
   Personalization,
+  ProfileRemovalResult,
   Settings,
 } from '../types';
 import { useCatalog } from './useCatalog';
@@ -587,24 +588,55 @@ export function useLauncher() {
     }
   };
 
-  const removeProfile = async (key: string, deleteFiles: boolean): Promise<boolean> => {
+  const removeProfile = async (
+    key: string,
+    deleteFiles: boolean,
+  ): Promise<ProfileRemovalResult | null> => {
     const generation = lifecycle.current;
     try {
-      await enqueueConfig(() => api.removeProfile(key, deleteFiles));
-      if (generation !== lifecycle.current) return false;
+      let result: ProfileRemovalResult | undefined;
+      await enqueueConfig(async () => {
+        result = await api.removeProfile(key, deleteFiles);
+        return result.config;
+      });
+      if (generation !== lifecycle.current || !result) return null;
       await scan();
-      if (generation !== lifecycle.current) return false;
-      notify(i18n.t(deleteFiles ? 'messages.profileRemovedWithFiles' : 'messages.profileRemoved'));
-      return true;
+      if (generation !== lifecycle.current) return null;
+      if (result.file_removal_error) reportError(result.file_removal_error);
+      else
+        notify(
+          i18n.t(deleteFiles ? 'messages.profileRemovedWithFiles' : 'messages.profileRemoved'),
+        );
+      return result;
     } catch (error) {
-      if (generation !== lifecycle.current) return false;
+      if (generation !== lifecycle.current) return null;
       reportError(error);
       try {
         await enqueueConfig(async () => (await api.getConfig()).config);
       } catch (refreshError) {
         if (generation === lifecycle.current) reportError(refreshError);
       }
-      return false;
+      return null;
+    }
+  };
+
+  const retryProfileFiles = async (token: string): Promise<ProfileRemovalResult | null> => {
+    const generation = lifecycle.current;
+    try {
+      let result: ProfileRemovalResult | undefined;
+      await enqueueConfig(async () => {
+        result = await api.retryProfileFiles(token);
+        return result.config;
+      });
+      if (generation !== lifecycle.current || !result) return null;
+      await scan();
+      if (generation !== lifecycle.current) return null;
+      if (result.file_removal_error) reportError(result.file_removal_error);
+      else notify(i18n.t('messages.profileRemovedWithFiles'));
+      return result;
+    } catch (error) {
+      if (generation === lifecycle.current) reportError(error);
+      return null;
     }
   };
 
@@ -716,6 +748,7 @@ export function useLauncher() {
     updateProfile,
     importProfiles,
     removeProfile,
+    retryProfileFiles,
     scan,
     reloadConfig,
     stopGame,

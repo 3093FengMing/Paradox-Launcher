@@ -11,6 +11,7 @@ import type {
   CloseRequest,
   DownloadTask,
   GameProfile,
+  FileRemovalIssue,
   GameVersion,
   InstalledInstance,
   JavaDiscovery,
@@ -115,6 +116,8 @@ export interface RemovalSnapshot {
   confirmation: string;
   pending: boolean;
   canSubmit: boolean;
+  recovery: FileRemovalIssue | null;
+  residuals: FileRemovalIssue[];
 }
 export type ContentCategory = 'mods' | 'resourcepacks' | 'shaderpacks' | 'saves';
 export type ContentKind = 'mod' | 'modpack' | 'resourcepack' | 'shader';
@@ -294,6 +297,7 @@ export interface LauncherActions {
   };
   removal: {
     open(this: void, key: string): void;
+    openResidual(this: void, token: string): void;
     setDeleteFiles(this: void, value: boolean): void;
     setConfirmation(this: void, text: string): void;
     cancel(this: void): void;

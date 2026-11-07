@@ -227,10 +227,7 @@ const { fixture: providerFixture } = await import('./lib/launcher-provider-fixtu
 const f = await providerFixture();
 const current = await f.current();
 const actions = current.actions;
-const appearanceView = await f.renderView('components/AppearanceSettings.tsx', {
-  appearance: current.snapshot.settings.draft.appearance,
-  onPatch: actions.settings.patchAppearance,
-});
+const appearanceView = await f.renderView('ui-suite/builtins/common/components/AppearanceSettings.tsx');
 const children = (node) =>
   !node || typeof node !== 'object'
     ? []
