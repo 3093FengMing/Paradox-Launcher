@@ -11,6 +11,34 @@ assert.ok(existsSync(resolve(uiRoot, 'src/ui-editor/controller.tsx')),
 const app = loadApp(new Map([[resolve(uiRoot, 'src/api.ts'), { desktop: false }]]));
 const { createUiEditorController, draftToSuiteRecord } = app('ui-editor/controller.tsx');
 const tick = () => new Promise((yes) => setImmediate(yes));
+// Native WebCrypto jobs need completion signals, not a fixed number of event-loop turns.
+async function boundary(work, controller, label) {
+  let timeout;
+  try {
+    return await Promise.race([work, new Promise((_, reject) => {
+      timeout = setTimeout(() => reject(new Error(
+        `${label} timed out: ${JSON.stringify(controller.getSnapshot().diagnostics)}`,
+      )), 10_000);
+    })]);
+  } finally { clearTimeout(timeout); }
+}
+function holdSaveAcknowledgement(f) {
+  const submitted = deferred(), held = deferred(), save = f.storage.saveSuiteLibrary;
+  f.storage.saveSuiteLibrary = async (...args) => {
+    const ack = await save(...args);
+    submitted.resolve();
+    await held.promise;
+    return ack;
+  };
+  return {
+    release: held.resolve,
+    whenSubmitted(work) {
+      return boundary(Promise.race([submitted.promise, work.then((result) => {
+        throw new Error(`Save completed (${result}) before submission: ${JSON.stringify(f.snapshot().diagnostics)}`);
+      })]), f.controller, 'Save submitted-write boundary');
+    },
+  };
+}
 function prepared() {
   return { digest: 'fixture', views: new Map(), routes: [], css: '', sourceDefinitions: [],
     viewMetadata: new Map(), targetBindings: [], styleUsages: [], styleGroups: new Map(),
@@ -53,7 +81,8 @@ async function editor(options = {}) {
     }, safe: options.safe ?? false,
   });
   const disconnect = controller.connect();
-  for (let i = 0; i < 20; i++) await tick();
+  if (options.deferInitialization) await tick();
+  else await boundary(controller.whenInitialized(), controller, 'Editor initialization');
   return { controller, actions: controller.actions, recovery: controller.recovery,
     snapshot: controller.getSnapshot, writes, exports, compiles, leases, disconnect, storage };
 }
@@ -70,13 +99,15 @@ test('editor_self_replace_keeps_draft_and_operation', async () => {
   assert.equal(f.snapshot().dirty, true); f.disconnect();
 });
 test('disable_fences_late_compile_save_load', async () => {
-  const held = deferred(); let delay = false; let afterDisable = 0;
+  const held = deferred(), compiling = deferred(); let delay = false; let afterDisable = 0;
   const f = await editor({ compile: async (_b, _s, o) => {
-    if (delay) { await held.promise; if (!o.isCurrent()) throw new DOMException('stale', 'AbortError'); afterDisable++; }
+    if (delay) { compiling.resolve(); await held.promise; if (!o.isCurrent()) throw new DOMException('stale', 'AbortError'); afterDisable++; }
     return prepared();
   } });
   delay = true; f.actions.patchFile('Editor.tsx', 'export default () => null; // late');
-  const work = f.actions.preview(); await tick(); f.recovery.disable(); held.resolve();
+  const work = f.actions.preview();
+  await boundary(compiling.promise, f.controller, 'Preview compilation');
+  f.recovery.disable(); held.resolve();
   assert.equal(await work, false); assert.equal(afterDisable, 0);
     assert.equal(f.snapshot().suspended, true); assert.equal(f.controller.getActivation().primary.layerId, 'trusted.modern');
   f.disconnect();
@@ -94,13 +125,11 @@ test('corrupt_raw_export_in_recovery', async () => {
   assert.deepEqual([...f.exports[0].bytes], [255, 0, 65]); f.disconnect();
 });
 test('saved_ack_retains_post_submit_draft_and_suspension', async () => {
-  const f = await editor(), held = deferred();
-  const save = f.storage.saveSuiteLibrary;
-  f.storage.saveSuiteLibrary = async (...args) => { const ack = await save(...args); await held.promise; return ack; };
+  const f = await editor(), held = holdSaveAcknowledgement(f);
   f.actions.patchFile('a.tsx', 'submitted'); const work = f.actions.save();
-  for (let i = 0; i < 500 && !f.writes.length; i++) await tick();
+  await held.whenSubmitted(work);
   assert.equal(f.writes.length, 1, 'Save must reach the submitted-write boundary');
-  f.actions.patchFile('a.tsx', 'later'); f.recovery.disable(); held.resolve();
+  f.actions.patchFile('a.tsx', 'later'); f.recovery.disable(); held.release();
   assert.equal(await work, true, JSON.stringify(f.snapshot().diagnostics)); assert.equal(f.controller.getLibrary().revision, 8);
   assert.equal(f.snapshot().draft.files['a.tsx'].text, 'later');
   assert.equal(f.snapshot().dirty, true); assert.equal(f.snapshot().suspended, true); f.disconnect();
@@ -145,19 +174,18 @@ test('safe_startup_prepares_only_trusted_and_builtin_editor_retains_draft', asyn
 });
 test('strictmode_stale_read_finally_and_late_compile_are_fenced', async () => {
   const first = deferred(); let reads = 0;
-  const f = await editor({ storage: { loadSuiteLibrary: () => ++reads === 1 ? first.promise : Promise.resolve(library()) } });
+  const f = await editor({ deferInitialization: true, storage: { loadSuiteLibrary: () => ++reads === 1 ? first.promise : Promise.resolve(library()) } });
   assert.equal(f.snapshot().loaded, false); f.disconnect(); const cleanup = f.controller.connect();
-  for (let i = 0; i < 30; i++) await tick();
+  await boundary(f.controller.whenInitialized(), f.controller, 'Reconnected editor initialization');
   const current = f.snapshot(); first.reject(Error('stale load failure')); await tick();
   assert.equal(f.snapshot().loaded, true); assert.deepEqual(f.snapshot().diagnostics, current.diagnostics);
   assert.equal(f.leases.length, 2); assert.equal(f.leases[0].released, true); cleanup();
 });
 test('save_reset_serialization_rejection_recovery_and_actual_revision', async () => {
-  const f = await editor(), held = deferred(); const save = f.storage.saveSuiteLibrary;
-  f.storage.saveSuiteLibrary = async (...args) => { const ack = await save(...args); await held.promise; return ack; };
+  const f = await editor(), held = holdSaveAcknowledgement(f);
   f.actions.patchFile('a.tsx', 'first'); const saving = f.actions.save();
-  for (let i = 0; i < 500 && !f.writes.length; i++) await tick(); assert.equal(f.writes.length, 1);
-  f.actions.requestReset(); const resetting = f.actions.confirmReset(); held.resolve();
+  await held.whenSubmitted(saving); assert.equal(f.writes.length, 1);
+  f.actions.requestReset(); const resetting = f.actions.confirmReset(); held.release();
   assert.equal(await saving, true); assert.equal(await resetting, true);
   assert.equal(f.controller.getLibrary().revision, 9); assert.deepEqual(f.controller.getLibrary().suites, []); f.disconnect();
   const g = await editor(); let rejected = false;
@@ -221,14 +249,16 @@ test('diagnostics_retained_bounded_and_public_snapshot_deep_readonly', async () 
   assert.equal(f.snapshot().diagnostics.length, 20); assert.ok(Object.isFrozen(f.snapshot().draft.files));
   assert.throws(() => { f.snapshot().draft.files['a.tsx'].text = 'unauthorized'; });
   await f.actions.preview(); assert.equal(f.snapshot().diagnostics.length, 20);
-  f.disconnect(); const cleanup = f.controller.connect(); await tick(); assert.equal(f.snapshot().diagnostics.length, 20); cleanup();
+  f.disconnect(); const cleanup = f.controller.connect();
+  await boundary(f.controller.whenInitialized(), f.controller, 'Reconnected editor initialization');
+  assert.equal(f.snapshot().diagnostics.length, 20); cleanup();
 });
 test('reconnect_replays_accepted_source_and_equivalent_actions_keep_snapshot', async () => {
   const f = await editor();
   const accepted = f.controller.getActivation().primary.bundle.files['Editor.tsx'].text;
   f.actions.patchFile('Editor.tsx', 'unsubmitted draft source');
   f.disconnect(); const cleanup = f.controller.connect();
-  for (let i = 0; i < 100; i++) await tick();
+  await boundary(f.controller.whenInitialized(), f.controller, 'Reconnected editor initialization');
   assert.equal(f.controller.getActivation().primary.bundle.files['Editor.tsx'].text, accepted);
   assert.equal(f.snapshot().draft.files['Editor.tsx'].text, 'unsubmitted draft source');
   const snapshot = f.snapshot(), leases = f.leases.length;
@@ -236,7 +266,7 @@ test('reconnect_replays_accepted_source_and_equivalent_actions_keep_snapshot', a
   assert.equal(f.snapshot(), snapshot); assert.equal(f.leases.length, leases); cleanup();
 });
 test('same_path_rename_preserves_snapshot_and_pending_save_ack', async () => {
-  const f = await editor(), held = deferred();
+  const f = await editor(), held = holdSaveAcknowledgement(f);
   f.actions.selectFile('a.tsx');
   let publications = 0; const unsubscribe = f.controller.subscribe(() => { publications++; });
   const before = f.snapshot();
@@ -244,16 +274,14 @@ test('same_path_rename_preserves_snapshot_and_pending_save_ack', async () => {
   assert.equal(f.snapshot().draft.files['a.tsx']?.text, 'a', 'Unchanged-name confirmation must retain the original file');
   assert.equal(f.snapshot(), before, 'Unchanged rename must preserve draft, descriptors, selection and clean state');
   assert.equal(publications, 0, 'Unchanged rename must not publish an edit');
-  const save = f.storage.saveSuiteLibrary;
-  f.storage.saveSuiteLibrary = async (...args) => { const ack = await save(...args); await held.promise; return ack; };
   f.actions.patchFile('a.tsx', 'submitted'); const work = f.actions.save();
-  for (let i = 0; i < 500 && !f.writes.length; i++) await tick();
+  await held.whenSubmitted(work);
   assert.equal(f.writes.length, 1, 'Save must reach the submitted-write boundary');
   const pending = f.snapshot(), beforePendingRename = publications;
   f.actions.renameFile('a.tsx', 'a.tsx');
   assert.equal(f.snapshot(), pending, 'Unchanged rename must preserve the pending submitted draft');
   assert.equal(publications, beforePendingRename);
-  held.resolve(); assert.equal(await work, true);
+  held.release(); assert.equal(await work, true);
   assert.equal(f.snapshot().dirty, false, 'Unchanged rename must not advance edit revision and block save acknowledgement');
   assert.equal(f.snapshot().draft.files['a.tsx'].text, 'submitted');
   assert.equal(f.controller.getLibrary().revision, 8);
@@ -307,9 +335,9 @@ test('safe_fixed_parent_is_data_materialized_without_parent_factory_initializati
   assert.equal(f.snapshot().draft.manifest.id, child.manifest.id); assert.equal(f.snapshot().suspended, true); f.disconnect();
 });
 test('disable_during_startup_read_keeps_checked_editable_data_and_blocks_user_compile', async () => {
-  const read = deferred(), f = await editor({ storage: { loadSuiteLibrary: () => read.promise } });
+  const read = deferred(), f = await editor({ deferInitialization: true, storage: { loadSuiteLibrary: () => read.promise } });
   f.recovery.disable(); read.resolve(library());
-  for (let i = 0; i < 100; i++) await tick();
+  await boundary(f.controller.whenInitialized(), f.controller, 'Disabled startup initialization');
   assert.equal(f.snapshot().loaded, true); assert.ok(f.snapshot().draft);
   assert.equal(f.compiles.length, 1); assert.equal(f.snapshot().suspended, true); f.disconnect();
 });

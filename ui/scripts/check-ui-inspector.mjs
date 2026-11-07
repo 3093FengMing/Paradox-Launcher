@@ -21,6 +21,19 @@ const element = (text, { hidden = false, offscreen = false, aria, label, title }
 const owner = (id, target, locator, root, extra = {}) => ({ ownerId: id, parentOwnerId: null, target, site: locator.calls.at(-1).site, locator, stability: 'stable', roots: new Set(root ? [root] : []), metadata: { nameKey: null, type: 'control', sourcePath: 'views/Home.tsx', routeId: 'home' }, catalogPresentation: false, viewId: null, layerId: null, ...extra });
 const position = (row) => ({ kind: 'position', target: row.target, locator: row.locator });
 const need = () => assert.equal(typeof catalog.describeTarget, 'function', 'readable target descriptors are required');
+async function initialize(controller) {
+  let timer;
+  try {
+    await Promise.race([
+      controller.whenInitialized(),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(
+          `Editor initialization timed out: ${JSON.stringify(controller.getSnapshot().diagnostics)}`,
+        )), 10_000);
+      }),
+    ]);
+  } finally { clearTimeout(timer); }
+}
 
 await test('selection_override_captured_atomic_create_open_reset_and_collision', async () => {
   const selectors = app('customization/selectors.ts');
@@ -31,7 +44,7 @@ await test('selection_override_captured_atomic_create_open_reset_and_collision',
   const first = { kind: 'position', target: 'component.override', locator: loc('source:first', [{ namespace: 'account', value: 'a' }]) };
   const second = { ...first, locator: loc('source:second', [{ namespace: 'account', value: 'a' }]) };
   try {
-    for (let i = 0; i < 20; i++) await new Promise(resolve => setImmediate(resolve));
+    await initialize(c);
     assert.equal(typeof c.actions.createSelectionOverride, 'function', 'public create/open override is required');
     assert.equal(typeof c.actions.setSourceKind, 'function', 'public source tabs are required');
     c.actions.selectTarget(first); c.actions.setSourceKind('html');
@@ -260,7 +273,7 @@ await test('controller_selects_known_source_despite_unknown_owner_provenance', a
   const stopOwner = registry.registerOwner(row);
   const stopDefinitions = registry.publishUiDefinitions({ key: 'nullable-source', definitions: [{ target: row.target, site: row.site, viewId: null, nameKey: null, type: 'control', sourcePath: 'Known.tsx', routeId: 'home' }] });
   try {
-    for (let i = 0; i < 20; i++) await new Promise((yes) => setImmediate(yes));
+    await initialize(c);
     c.actions.selectFile('View.tsx'); c.actions.selectTarget(position(row));
     assert.equal(c.getSnapshot().selectedFile, 'Known.tsx'); assert.equal(c.getSnapshot().selection.filePath, null);
     assert.equal(c.getSnapshot().currentTarget.sourcePath, 'Known.tsx'); assert.equal(c.getSnapshot().currentTarget.routeId, 'home');
@@ -293,7 +306,7 @@ await test('controller_parent_anchor_multiple_business_choices_and_binding', asy
   const c = app('ui-editor/controller.tsx').createUiEditorController({ storage: { loadSuiteLibrary: async () => stored }, getBuiltinBundle: async () => b, createScope: () => ({}), compile: async () => prepared(), exportFile: async () => {}, acquireInteractionPublisher: () => ({ publish() {}, release() {} }), safe: false });
   const disconnect = c.connect(), stops = [registry.registerOwner(parent), registry.registerOwner(child)];
   try {
-    for (let i = 0; i < 20; i++) await new Promise((yes) => setImmediate(yes));
+    await initialize(c);
     c.actions.selectTarget(position(child));
     assert.equal(c.getSnapshot().currentTarget?.ownerId, 'anchor-child');
     c.actions.setScope('business');

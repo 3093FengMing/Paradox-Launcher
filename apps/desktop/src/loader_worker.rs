@@ -67,7 +67,7 @@ pub async fn install(
     }
     #[cfg(unix)]
     {
-        command.as_std_mut().process_group(0);
+        command.process_group(0);
     }
     let mut child = command.spawn().context("loaders.errors.worker")?;
     #[cfg(windows)]
