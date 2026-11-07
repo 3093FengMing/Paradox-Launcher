@@ -4,20 +4,17 @@ use elemental::driver::families::version_json::VersionJsonGameStorageExt;
 use elemental::{
     core::storage::Storage,
     driver::{
+        catalog::{LoaderRelease, LoaderVersionCatalog, ResourceLimits},
         drivers::{
             fabric::{
+                catalog::FabricCatalog,
                 driver::{FabricDriver, FabricDriverFamily},
                 source::{FabricEndpoints, FabricFlavor, FabricSource},
             },
-            forge::{
-                driver::ForgeDriver,
-                source::{ForgeEndpoints, ForgeSource},
-            },
-            neoforge::{
-                driver::NeoForgeDriver,
-                source::{NeoForgeEndpoints, NeoForgeSource},
-            },
+            forge::{ForgeCatalog, ForgeDriver, ForgeEndpoints, ForgeSource},
+            neoforge::{NeoForgeCatalog, NeoForgeDriver, NeoForgeEndpoints, NeoForgeSource},
             quilt::{
+                catalog::QuiltCatalog,
                 driver::{QuiltDriver, QuiltDriverFamily},
                 source::{QuiltEndpoints, QuiltSource},
             },
@@ -77,105 +74,90 @@ pub async fn versions(settings: &Settings, loader: &str, game: &str) -> Result<V
         return Ok(Vec::new());
     }
     let client = settings.network.build_client()?;
-    let url = match loader {
-        "fabric" => format!("https://meta.fabricmc.net/v2/versions/loader/{game}"),
-        "quilt" => format!("https://meta.quiltmc.org/v3/versions/loader/{game}"),
+    let limits = ResourceLimits {
+        max_response_bytes: Some(8 * 1024 * 1024),
+        request_timeout: Some(Duration::from_secs(settings.network.timeout_seconds.into())),
+    };
+    match loader {
+        "fabric" => {
+            versions_from_catalog(
+                loader,
+                game,
+                &FabricCatalog::new(
+                    FabricSource::with_client(FabricEndpoints::official(), client)
+                        .with_resource_limits(limits),
+                ),
+            )
+            .await
+        }
+        "quilt" => {
+            versions_from_catalog(
+                loader,
+                game,
+                &QuiltCatalog::new(
+                    QuiltSource::with_client(QuiltEndpoints::official(), client)
+                        .with_resource_limits(limits),
+                ),
+            )
+            .await
+        }
         "forge" => {
-            "https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml".into()
+            versions_from_catalog(
+                loader,
+                game,
+                &ForgeCatalog::new(
+                    ForgeSource::with_client(ForgeEndpoints::official(), client)
+                        .with_resource_limits(limits),
+                ),
+            )
+            .await
         }
         _ => {
-            "https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml".into()
+            versions_from_catalog(
+                loader,
+                game,
+                &NeoForgeCatalog::new(
+                    NeoForgeSource::with_client(NeoForgeEndpoints::official(), client)
+                        .with_resource_limits(limits),
+                ),
+            )
+            .await
         }
-    };
-    let response = client
-        .get(url)
-        .timeout(Duration::from_secs(settings.network.timeout_seconds.into()))
-        .send()
-        .await
-        .map_err(|_| anyhow::anyhow!("loaders.errors.network"))?
-        .error_for_status()
-        .map_err(|_| anyhow::anyhow!("loaders.errors.network"))?;
-    let body = response.bytes().await?;
-    parse_versions(loader, game, &body)
+    }
 }
 
-fn parse_versions(loader: &str, game: &str, body: &[u8]) -> Result<Vec<LoaderVersion>> {
-    ensure!(body.len() <= 8 * 1024 * 1024, "loaders.errors.response");
-    let mut result = if matches!(loader, "fabric" | "quilt") {
-        #[derive(Deserialize)]
-        struct Entry {
-            loader: CatalogLoader,
-        }
-        #[derive(Deserialize)]
-        struct CatalogLoader {
-            version: String,
-            stable: Option<bool>,
-        }
-        serde_json::from_slice::<Vec<Entry>>(body)
-            .map_err(|_| anyhow::anyhow!("loaders.errors.response"))?
-            .into_iter()
-            .map(|entry| {
-                let version = entry.loader.version;
-                // Quilt's v3 API omits Fabric's `stable` field. A plain numeric
-                // three-part release is stable; prereleases remain opt-in.
-                let stable = entry.loader.stable.unwrap_or_else(|| {
-                    loader == "quilt"
-                        && version.split('.').count() == 3
-                        && version.split('.').all(|part| {
-                            !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit())
-                        })
-                });
-                LoaderVersion { version, stable }
-            })
-            .collect::<Vec<_>>()
-    } else {
-        #[derive(Deserialize)]
-        struct Metadata {
-            versioning: Versioning,
-        }
-        #[derive(Deserialize)]
-        struct Versioning {
-            versions: Versions,
-        }
-        #[derive(Deserialize)]
-        struct Versions {
-            version: Vec<String>,
-        }
-        let text = std::str::from_utf8(body)?;
-        let metadata: Metadata = quick_xml::de::from_str(text)
-            .map_err(|_| anyhow::anyhow!("loaders.errors.response"))?;
-        let prefix = if loader == "forge" {
-            format!("{game}-")
-        } else {
-            let Some(prefix) = neoforge_version_prefix(game) else {
-                return Ok(Vec::new());
-            };
-            prefix
-        };
-        metadata
-            .versioning
-            .versions
-            .version
-            .into_iter()
-            .filter_map(|v| {
-                if loader == "forge" {
-                    v.strip_prefix(&prefix).map(|version| LoaderVersion {
-                        version: version.into(),
-                        stable: !version.contains("beta"),
-                    })
-                } else {
-                    let build = v.strip_prefix(&prefix)?;
-                    let number = build.strip_suffix("-beta").unwrap_or(build);
-                    (!number.is_empty() && number.bytes().all(|byte| byte.is_ascii_digit())).then(
-                        || LoaderVersion {
-                            stable: !v.ends_with("-beta"),
-                            version: v,
-                        },
-                    )
+async fn versions_from_catalog(
+    loader: &str,
+    game: &str,
+    catalog: &impl LoaderVersionCatalog,
+) -> Result<Vec<LoaderVersion>> {
+    let releases = catalog
+        .loader_versions(&game.into())
+        .await
+        .map_err(|error| {
+            use elemental::driver::error::Error;
+            match error {
+                Error::Json(_)
+                | Error::Xml(_)
+                | Error::DecodeMavenMetadata { .. }
+                | Error::ResourceTooLarge { .. } => anyhow::anyhow!("loaders.errors.response"),
+                Error::Io(ref source) if source.kind() == std::io::ErrorKind::InvalidData => {
+                    anyhow::anyhow!("loaders.errors.response")
                 }
-            })
-            .collect()
-    };
+                _ => anyhow::anyhow!("loaders.errors.network"),
+            }
+        })?;
+    Ok(normalize_releases(loader, releases))
+}
+
+fn normalize_releases(loader: &str, releases: Vec<LoaderRelease>) -> Vec<LoaderVersion> {
+    let mut result = releases
+        .into_iter()
+        .map(|release| LoaderVersion {
+            version: release.loader_version.to_string(),
+            stable: release.prerelease.is_some_and(|prerelease| !prerelease),
+        })
+        .collect::<Vec<_>>();
     result.retain(|v| validate_loader(loader, &v.version).is_ok());
     result.sort_by(|a, b| {
         numeric_parts(&b.version)
@@ -183,29 +165,7 @@ fn parse_versions(loader: &str, game: &str, body: &[u8]) -> Result<Vec<LoaderVer
             .then_with(|| b.version.cmp(&a.version))
     });
     result.dedup_by(|a, b| a.version == b.version);
-    Ok(result)
-}
-
-fn neoforge_version_prefix(game: &str) -> Option<String> {
-    let parts: Vec<_> = game.split('.').collect();
-    if parts
-        .iter()
-        .any(|part| part.is_empty() || !part.bytes().all(|byte| byte.is_ascii_digit()))
-    {
-        return None;
-    }
-    // Legacy releases omit Minecraft's leading 1. Year-based releases retain
-    // year, release and hotfix (zero when omitted), followed by the loader build.
-    // Snapshot/pre-release suffixes require their own metadata and are not inferred.
-    match parts.as_slice() {
-        ["1", minor] => Some(format!("{minor}.0.")),
-        ["1", minor, patch] => Some(format!("{minor}.{patch}.")),
-        [year, release] if year.parse::<u32>().ok()? >= 26 => Some(format!("{year}.{release}.0.")),
-        [year, release, hotfix] if year.parse::<u32>().ok()? >= 26 => {
-            Some(format!("{year}.{release}.{hotfix}."))
-        }
-        _ => None,
-    }
+    result
 }
 
 fn numeric_parts(version: &str) -> Vec<u32> {
@@ -291,8 +251,8 @@ pub async fn prepare(
                 FabricDriver::new(
                     FabricDriverFamily::new(FabricFlavor::Fabric),
                     FabricSource::with_client(FabricEndpoints::official(), client),
-                    vanilla,
                 )
+                .with_vanilla_source(vanilla)
                 .prepare(&session, &instance, game, loader)
                 .await?;
             }
@@ -300,8 +260,8 @@ pub async fn prepare(
                 QuiltDriver::new(
                     QuiltDriverFamily,
                     QuiltSource::with_client(QuiltEndpoints::official(), client),
-                    vanilla,
                 )
+                .with_vanilla_source(vanilla)
                 .prepare(&session, &instance, game, loader)
                 .await?;
             }
@@ -326,17 +286,16 @@ pub async fn prepare(
                 let config = elemental::launcher::LaunchOptions::default()
                     .set_runtime_executable_path(runtime.executable);
                 if profile.loader == "forge" {
-                    ForgeDriver::new(
-                        ForgeSource::with_client(ForgeEndpoints::official(), client),
-                        vanilla,
-                    )
-                    .prepare_with_config(&session, &instance, game, loader, &config)
-                    .await?;
+                    ForgeDriver::new(ForgeSource::with_client(ForgeEndpoints::official(), client))
+                        .with_vanilla_source(vanilla)
+                        .prepare_with_config(&session, &instance, game, loader, &config)
+                        .await?;
                 } else {
-                    NeoForgeDriver::new(
-                        NeoForgeSource::with_client(NeoForgeEndpoints::official(), client),
-                        vanilla,
-                    )
+                    NeoForgeDriver::new(NeoForgeSource::with_client(
+                        NeoForgeEndpoints::official(),
+                        client,
+                    ))
+                    .with_vanilla_source(vanilla)
                     .prepare_with_config(&session, &instance, game, loader, &config)
                     .await?;
                 }
@@ -422,8 +381,111 @@ mod tests {
         }
     }
 
+    async fn catalog_fixture(loader: &str, game: &str, body: &[u8]) -> Result<Vec<LoaderVersion>> {
+        use elemental::driver::{
+            drivers::{
+                fabric::source::FabricOrigin, forge::ForgeOrigin, neoforge::NeoForgeOrigin,
+                quilt::source::QuiltOrigin,
+            },
+            url::OriginEndpoints,
+        };
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let origin = format!("http://{}", listener.local_addr().unwrap());
+        let body = body.to_vec();
+        let server = tokio::spawn(async move {
+            let (mut connection, _) = listener.accept().await.unwrap();
+            read_http_request(&mut connection).await;
+            connection
+                .write_all(
+                    format!(
+                        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                        body.len()
+                    )
+                    .as_bytes(),
+                )
+                .await
+                .unwrap();
+            connection.write_all(&body).await.unwrap();
+        });
+        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let limits = ResourceLimits {
+            max_response_bytes: Some(8 * 1024 * 1024),
+            request_timeout: Some(Duration::from_secs(5)),
+        };
+        let result = match loader {
+            "fabric" => {
+                versions_from_catalog(
+                    loader,
+                    game,
+                    &FabricCatalog::new(
+                        FabricSource::with_client(
+                            FabricEndpoints::with_overrides([(FabricOrigin::Meta, origin)])
+                                .unwrap(),
+                            client,
+                        )
+                        .with_resource_limits(limits),
+                    ),
+                )
+                .await
+            }
+            "quilt" => {
+                versions_from_catalog(
+                    loader,
+                    game,
+                    &QuiltCatalog::new(
+                        QuiltSource::with_client(
+                            QuiltEndpoints::with_overrides([(QuiltOrigin::Meta, origin)]).unwrap(),
+                            client,
+                        )
+                        .with_resource_limits(limits),
+                    ),
+                )
+                .await
+            }
+            "forge" => {
+                versions_from_catalog(
+                    loader,
+                    game,
+                    &ForgeCatalog::new(
+                        ForgeSource::with_client(
+                            ForgeEndpoints::new(
+                                OriginEndpoints::with_overrides([(ForgeOrigin, origin)]).unwrap(),
+                            ),
+                            client,
+                        )
+                        .with_resource_limits(limits),
+                    ),
+                )
+                .await
+            }
+            "neoforge" => {
+                versions_from_catalog(
+                    loader,
+                    game,
+                    &NeoForgeCatalog::new(
+                        NeoForgeSource::with_client(
+                            NeoForgeEndpoints::new(
+                                OriginEndpoints::with_overrides([(NeoForgeOrigin, origin)])
+                                    .unwrap(),
+                            ),
+                            client,
+                        )
+                        .with_resource_limits(limits),
+                    ),
+                )
+                .await
+            }
+            _ => unreachable!(),
+        };
+        tokio::time::timeout(Duration::from_secs(5), server)
+            .await
+            .unwrap()
+            .unwrap();
+        result
+    }
+
     #[tokio::test]
-    async fn installer_download_failure_survives_the_following_archive_error() {
+    async fn installer_download_failure_is_reported_before_reading_the_archive() {
         for family in ["forge", "neoforge"] {
             let temporary = tempfile::tempdir().unwrap();
             let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -444,7 +506,7 @@ mod tests {
                 expected_size: None,
                 sha1: None,
             };
-            let archive_error = tokio::time::timeout(
+            let installer_error = tokio::time::timeout(
                 Duration::from_secs(5),
                 prepare_installer_state(
                     &session,
@@ -459,10 +521,10 @@ mod tests {
             .unwrap()
             .unwrap_err();
             assert!(matches!(
-                &archive_error,
-                elemental::driver::error::Error::ReadInstallerProfile { .. }
+                &installer_error,
+                elemental::driver::error::Error::DownloadInstaller { .. }
             ));
-            let error = cancel_preparation_with_error(session, archive_error.into()).await;
+            let error = cancel_preparation_with_error(session, installer_error.into()).await;
             let Some(DownloaderError::SessionFailed { failures, .. }) =
                 error.downcast_ref::<DownloaderError>()
             else {
@@ -682,15 +744,17 @@ mod tests {
         assert!(!temp.path().join("missing.json").exists());
     }
 
-    #[test]
-    fn neoforge_catalog_matches_year_releases_and_hotfixes_exactly() {
+    #[tokio::test]
+    async fn neoforge_catalog_matches_year_releases_and_hotfixes_exactly() {
         for (game, expected) in [
             ("26.3", vec!["26.3.0.100", "26.3.0.99", "26.3.0.75-beta"]),
             ("26.1", vec!["26.1.0.1-beta"]),
             ("26.1.1", vec!["26.1.1.4-beta"]),
             ("26.1.2", vec!["26.1.2.125", "26.1.2.124"]),
         ] {
-            let releases = parse_versions("neoforge", game, NEOFORGE_METADATA).unwrap();
+            let releases = catalog_fixture("neoforge", game, NEOFORGE_METADATA)
+                .await
+                .unwrap();
             assert_eq!(
                 releases
                     .iter()
@@ -705,8 +769,8 @@ mod tests {
         }
     }
 
-    #[test]
-    fn neoforge_catalog_preserves_legacy_mapping_and_rejects_unknown_game_formats() {
+    #[tokio::test]
+    async fn neoforge_catalog_preserves_legacy_mapping_and_rejects_unknown_game_formats() {
         for (game, expected) in [
             ("1.21", vec!["21.0.167"]),
             ("1.21.1", vec!["21.1.265"]),
@@ -721,7 +785,9 @@ mod tests {
             ("26", vec![]),
             ("26.", vec![]),
         ] {
-            let releases = parse_versions("neoforge", game, NEOFORGE_METADATA).unwrap();
+            let releases = catalog_fixture("neoforge", game, NEOFORGE_METADATA)
+                .await
+                .unwrap();
             assert_eq!(
                 releases
                     .iter()
@@ -751,14 +817,14 @@ mod tests {
         }
     }
 
-    #[test]
-    fn forge_catalog_preserves_full_game_prefix_and_numeric_sorting() {
+    #[tokio::test]
+    async fn forge_catalog_preserves_full_game_prefix_and_numeric_sorting() {
         let metadata = br#"<metadata><versioning><versions>
             <version>1.21.1-52.0.9</version><version>1.21.1-52.0.10</version>
             <version>1.21.1-52.0.10</version><version>1.21.10-60.0.1</version>
             <version>1.21-51.0.33</version><version>1.21.1-../bad</version>
             </versions></versioning></metadata>"#;
-        let releases = parse_versions("forge", "1.21.1", metadata).unwrap();
+        let releases = catalog_fixture("forge", "1.21.1", metadata).await.unwrap();
         assert_eq!(
             releases
                 .iter()
@@ -768,13 +834,28 @@ mod tests {
         );
     }
 
-    #[test]
-    fn fabric_and_quilt_catalogs_preserve_stability_and_reject_unsafe_versions() {
+    #[tokio::test]
+    async fn forge_catalog_preserves_beta_version_and_stability() {
+        let metadata = br#"<metadata><versioning><versions>
+            <version>1.21.1-52.0.10-beta</version><version>1.21.1-52.0.11</version>
+            </versions></versioning></metadata>"#;
+        let releases = catalog_fixture("forge", "1.21.1", metadata).await.unwrap();
+        assert_eq!(
+            releases
+                .iter()
+                .map(|entry| (entry.version.as_str(), entry.stable))
+                .collect::<Vec<_>>(),
+            [("52.0.11", true), ("52.0.10-beta", false)]
+        );
+    }
+
+    #[tokio::test]
+    async fn fabric_and_quilt_catalogs_preserve_stability_and_reject_unsafe_versions() {
         let metadata = br#"[{"loader":{"version":"0.16.9","stable":true}},
             {"loader":{"version":"0.16.10","stable":false}},
             {"loader":{"version":"../bad","stable":true}}]"#;
         for loader in ["fabric", "quilt"] {
-            let releases = parse_versions(loader, "1.21.1", metadata).unwrap();
+            let releases = catalog_fixture(loader, "1.21.1", metadata).await.unwrap();
             assert_eq!(
                 releases
                     .iter()
@@ -785,14 +866,14 @@ mod tests {
         }
     }
 
-    #[test]
-    fn quilt_catalog_recognizes_releases_when_the_api_omits_stable() {
+    #[tokio::test]
+    async fn quilt_catalog_recognizes_releases_when_the_api_omits_stable() {
         let metadata = br#"[{"loader":{"version":"0.30.0"}},
             {"loader":{"version":"0.30.1-beta.2"}},
             {"loader":{"version":"0.29.3","stable":false}},
             {"loader":{"version":"0.28.1","stable":true}},
             {"loader":{"version":"../bad"}}]"#;
-        let releases = parse_versions("quilt", "1.20.1", metadata).unwrap();
+        let releases = catalog_fixture("quilt", "1.20.1", metadata).await.unwrap();
         assert_eq!(
             releases
                 .iter()
@@ -802,12 +883,24 @@ mod tests {
             ["0.30.0", "0.28.1"]
         );
         assert!(
-            parse_versions("fabric", "1.20.1", metadata)
+            catalog_fixture("fabric", "1.20.1", metadata)
+                .await
                 .unwrap()
                 .iter()
                 .filter(|release| release.stable)
                 .all(|release| release.version == "0.28.1")
         );
+    }
+
+    #[tokio::test]
+    async fn catalogs_treat_null_stability_like_a_missing_field() {
+        let metadata = br#"[{"loader":{"version":"0.30.0","stable":null}}]"#;
+        let quilt = catalog_fixture("quilt", "1.20.1", metadata).await.unwrap();
+        assert_eq!(quilt.len(), 1);
+        assert!(quilt[0].stable);
+        let fabric = catalog_fixture("fabric", "1.20.1", metadata).await.unwrap();
+        assert_eq!(fabric.len(), 1);
+        assert!(!fabric[0].stable);
     }
 
     #[test]

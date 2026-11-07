@@ -6,7 +6,11 @@
 
 初始化使用 `git submodule update --init --recursive`。核心开发在子模块的功能分支中进行，先向 fork 推送提交，再在启动器提交新 gitlink。启动器构建读取子模块中的源码，仓库记录的 gitlink 固定实际 SDK 提交。
 
-同步使用的 `upstream` remote 指向 [ElectronicWave/Elemental](https://github.com/ElectronicWave/Elemental)。2026-11-07 合入 `upstream/main` 的 [`77027a8`](https://github.com/ElectronicWave/Elemental/commit/77027a8)，fork 合并提交为 [`29ea041`](https://github.com/3093FengMing/QuintElement/commit/29ea04124d79cb69d34817931207a080e6b8f607)，已同步到 `paradox-launcher-v0.5-dependency` 分支。启动器通过 gitlink 固定该提交；facade package 仍为 `elemental-kit 0.2.0`。
+同步使用的 `upstream` remote 指向 [ElectronicWave/Elemental](https://github.com/ElectronicWave/Elemental)。2026-11-07 在已合入 `77027a8` 的依赖分支上继续合入指定提交 [`9c17be2`](https://github.com/3093FengMing/QuintElement/commit/9c17be2f28b6ef43a75cdfd205db293e12f9fa5c)，采用其 typed driver、installer/profiled family 与 typed origin 设计。实际合并提交为 [`1b41892`](https://github.com/3093FengMing/QuintElement/commit/1b41892c420bc81ae9abb610f234b41537c7ad4c)。SDK 后续开发使用 `dev` 分支，`.gitmodules` 的远程更新分支也设为 `dev`；启动器通过 gitlink 固定该提交，正常递归检出仍使用该固定提交。facade package 仍为 `elemental-kit 0.2.0`。
+
+游戏目录使用 `GameVersionCatalog`，Fabric、Quilt、Forge、NeoForge 目录使用 `LoaderVersionCatalog`。加载器目录保留 8 MiB 响应大小上限、配置中的整体请求超时、稳定性映射、排序去重和安全版本过滤；NeoForge `21.0.x` 归入 Mojang 的 `1.21`。Forge 的 installer 游戏版本冲突检查与 NeoForge 的检测标记 / 版本载体区分迁入新 family 扩展点。
+
+Vanilla 继续由 SDK 规划下载、应用 `DownloadEngine` 执行、SDK 完成准备；公开 `DownloadBatch::into_tasks` 保留应用下载引擎接入。加载器继续使用 SDK download session 和隔离 worker，以便取消 installer 与 Java processor 的整个进程树。
 
 ## 认证依赖与 TLS
 

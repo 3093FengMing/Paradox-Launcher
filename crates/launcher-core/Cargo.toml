@@ -21,7 +21,6 @@ sha1.workspace = true
 sha2.workspace = true
 zip.workspace = true
 uuid.workspace = true
-quick-xml = { version = "0.38", features = ["serialize"] }
 base64 = "0.22"
 unicode-normalization = "=0.1.23"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
