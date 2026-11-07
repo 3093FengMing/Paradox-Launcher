@@ -37,7 +37,7 @@ const raw = import.meta.glob('../ui-suite/builtins/common/**/*', {
 const commonFiles = Object.fromEntries(
   Object.entries(raw).map(([path, text]) => [
     'common/' + path.split('/common/')[1],
-    { encoding: 'utf8' as const, text: text as string },
+    { encoding: 'utf8' as const, text },
   ]),
 );
 const pages = {

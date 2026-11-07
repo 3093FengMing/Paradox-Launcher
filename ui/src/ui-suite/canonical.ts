@@ -1,14 +1,6 @@
 /** Package-private exact JSON/byte primitives shared by format and storage consumers. */
-export function wellFormed(value: string): boolean {
-  for (let i = 0; i < value.length; i++) {
-    const c = value.charCodeAt(i);
-    if (c >= 0xd800 && c <= 0xdbff) {
-      const d = value.charCodeAt(++i);
-      if (!(d >= 0xdc00 && d <= 0xdfff)) return false;
-    } else if (c >= 0xdc00 && c <= 0xdfff) return false;
-  }
-  return true;
-}
+import { wellFormed } from '../host/unicode/scalars';
+export { wellFormed } from '../host/unicode/scalars';
 export function compareCodePoints(a: string, b: string): number {
   const x = a[Symbol.iterator](),
     y = b[Symbol.iterator]();
@@ -104,6 +96,6 @@ export function decodeBase64(value: string): Uint8Array {
   return bytes;
 }
 export async function sha256(bytes: Uint8Array): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  const digest = await crypto.subtle.digest('SHA-256', bytes.slice().buffer);
   return Array.from(new Uint8Array(digest), (n) => n.toString(16).padStart(2, '0')).join('');
 }

@@ -84,12 +84,12 @@ fn reject_tree_links(target: &Path) -> Result<()> {
 fn reject_link(path: &Path) -> Result<Option<fs::Metadata>> {
     match fs::symlink_metadata(path) {
         Ok(metadata) => {
-            let mut linked = metadata.file_type().is_symlink();
+            let linked = metadata.file_type().is_symlink();
             #[cfg(windows)]
-            {
+            let linked = {
                 use std::os::windows::fs::MetadataExt;
-                linked |= metadata.file_attributes() & 0x400 != 0;
-            }
+                linked || metadata.file_attributes() & 0x400 != 0
+            };
             ensure!(!linked, "loaders.errors.path");
             Ok(Some(metadata))
         }

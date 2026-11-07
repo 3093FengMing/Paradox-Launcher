@@ -191,8 +191,10 @@ await test('invalid_complete_registry_preserves_previous_publication', async () 
     [...builtin, { ...customHelp, id: 'custom.Bad' }],
     [...builtin, { ...customHelp, order: NaN }],
     [...builtin, { ...customHelp, title: () => 'bad' }],
-    [...builtin, { ...customHelp, icon: 'made-up-icon' }],
-    [...builtin, { ...customHelp, icon: 'Icon' }],
+    [...builtin, { ...customHelp, icon: '' }],
+    [...builtin, { ...customHelp, icon: 'x'.repeat(129) }],
+    [...builtin, { ...customHelp, icon: 'made-up-icon\u0000' }],
+    [...builtin, { ...customHelp, icon: 1 }],
     [...builtin, { ...customHelp, extra: () => {} }],
     [...builtin, ...Array.from({ length: 33 }, (_, i) => ({ ...customHelp, id: `custom.a${i}` }))],
   ]) {
@@ -232,6 +234,20 @@ await test('invalid_complete_registry_preserves_previous_publication', async () 
   ]);
   assert.equal((await f.current()).snapshot.navigation.routes.length, 39);
   f.host.unmount();
+});
+await test('suite_registry_preserves_removed_and_custom_icon_identifiers', async () => {
+  const f = await fixture();
+  try {
+    for (const icon of ['Github', 'Chrome', 'suite:custom-icon', 'Icon']) {
+      let a = await f.current();
+      a.registry.setActiveRouteRegistry([...builtinRegistry(f), { ...customHelp, icon }]);
+      a.actions.navigation.navigate('custom.help');
+      a = await f.current();
+      assert.equal(a.snapshot.navigation.routeId, 'custom.help');
+      assert.equal(a.snapshot.navigation.routes.at(-1).icon, icon);
+      assert.equal(f.writes.length, 0);
+    }
+  } finally { f.host.unmount(); }
 });
 function publicValue(value) {
   if (value == null || typeof value !== 'object') {

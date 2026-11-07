@@ -1,5 +1,4 @@
-import * as lucide from 'lucide-react';
-import iconCatalogue from './lucide-icon-names.json';
+import { wellFormed } from '../host/unicode/scalars';
 import type { Page } from '../types';
 
 export type UiRouteId = Page | `custom.${string}`;
@@ -51,12 +50,16 @@ const fields = [
   'order',
   'icon',
 ];
-const concreteIcons = new Set<unknown>(Object.values(lucide.icons));
-const iconNames = new Set(iconCatalogue.names);
-export function routeIcon(name: string | null): lucide.LucideIcon | null {
-  if (!name || !iconNames.has(name) || !Object.hasOwn(lucide, name)) return null;
-  const icon = lucide[name as keyof typeof lucide];
-  return concreteIcons.has(icon) ? (icon as unknown as lucide.LucideIcon) : null;
+/** UI sources interpret this identifier; metadata never depends on an icon library. */
+function validIconIdentifier(value: unknown): boolean {
+  if (value === null) return true;
+  if (typeof value !== 'string' || !value || value.length > 256 || !wellFormed(value)) return false;
+  let length = 0;
+  for (const character of value) {
+    const scalar = character.codePointAt(0)!;
+    if (++length > 128 || scalar < 32 || scalar === 127) return false;
+  }
+  return true;
 }
 /** A complete host publication is detached before it can replace active state. */
 export function validateRouteRegistry(
@@ -103,7 +106,7 @@ export function validateRouteRegistry(
       typeof route.startupSelectable !== 'boolean' ||
       typeof route.order !== 'number' ||
       !Number.isFinite(route.order) ||
-      (route.icon !== null && (typeof route.icon !== 'string' || routeIcon(route.icon) === null))
+      !validIconIdentifier(route.icon)
     )
       throw new Error('Invalid route descriptor');
     ids.add(id);

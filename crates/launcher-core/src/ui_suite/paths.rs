@@ -1,4 +1,4 @@
-//! Virtual paths use pinned Unicode15.1 NFC and the shared C/S simple-fold table.
+//! Host virtual paths use pinned Unicode15.1 NFC and the internal shared C/S fold table.
 //! unicode-normalization=0.1.23 uses Unicode15.1, MIT/Apache-2.0, upstream Rust1.36 floor.
 use anyhow::{Result, ensure};
 use serde::Deserialize;
@@ -13,7 +13,7 @@ struct Fold {
 }
 static FOLD: LazyLock<BTreeMap<u32, u32>> = LazyLock::new(|| {
     serde_json::from_str::<Fold>(include_str!(
-        "../../../../ui/src/ui-suite/unicode-simple-fold-15.1.0.json"
+        "../../../../ui/src/host/unicode/unicode-simple-fold-15.1.0.json"
     ))
     .expect("Pinned fold data")
     .mappings

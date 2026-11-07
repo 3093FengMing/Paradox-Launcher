@@ -506,12 +506,8 @@ impl ContentHash {
     fn matches(self, checksum: Option<&Checksum>) -> bool {
         match (self, checksum) {
             (Self::None, None) => true,
-            (Self::Sha1(hash), Some(expected)) => {
-                expected.matches(&format!("{:x}", hash.finalize()))
-            }
-            (Self::Sha256(hash), Some(expected)) => {
-                expected.matches(&format!("{:x}", hash.finalize()))
-            }
+            (Self::Sha1(hash), Some(expected)) => expected.matches(&hex::encode(hash.finalize())),
+            (Self::Sha256(hash), Some(expected)) => expected.matches(&hex::encode(hash.finalize())),
             _ => false,
         }
     }
@@ -684,7 +680,7 @@ mod tests {
     }
 
     fn checksum(bytes: &[u8]) -> Checksum {
-        Checksum::Sha256(format!("{:x}", sha2::Sha256::digest(bytes)))
+        Checksum::Sha256(hex::encode(sha2::Sha256::digest(bytes)))
     }
 
     async fn serve(
@@ -1125,10 +1121,9 @@ mod tests {
                     url,
                     target: target.clone(),
                     expected_size: Some(18),
-                    checksum: Some(Checksum::Sha1(format!(
-                        "{:x}",
-                        sha1::Sha1::digest(b"minecraft artifact")
-                    ))),
+                    checksum: Some(Checksum::Sha1(hex::encode(sha1::Sha1::digest(
+                        b"minecraft artifact",
+                    )))),
                 }],
                 CancellationToken::new(),
                 |_| {},

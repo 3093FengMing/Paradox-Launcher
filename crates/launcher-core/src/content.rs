@@ -236,12 +236,12 @@ pub fn root(settings: &Settings, profile: &GameProfile) -> Result<PathBuf> {
 fn reject_link(path: &Path) -> Result<()> {
     match fs::symlink_metadata(path) {
         Ok(metadata) => {
-            let mut linked = metadata.file_type().is_symlink();
+            let linked = metadata.file_type().is_symlink();
             #[cfg(windows)]
-            {
+            let linked = {
                 use std::os::windows::fs::MetadataExt;
-                linked |= metadata.file_attributes() & 0x400 != 0;
-            }
+                linked || metadata.file_attributes() & 0x400 != 0
+            };
             ensure!(!linked, "content.errors.path");
         }
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
@@ -388,7 +388,7 @@ pub fn hash_file(path: &Path) -> Result<String> {
         }
         digest.update(&bytes[..length]);
     }
-    Ok(format!("{:x}", digest.finalize()))
+    Ok(hex::encode(digest.finalize()))
 }
 
 pub async fn install(
@@ -638,7 +638,7 @@ mod tests {
             version_id: "old-version".into(),
             title: "Old version".into(),
             url: "https://cdn.modrinth.com/old.jar".into(),
-            sha1: format!("{:x}", Sha1::digest(b"old")),
+            sha1: hex::encode(Sha1::digest(b"old")),
             size: 3,
         }
     }

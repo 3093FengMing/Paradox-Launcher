@@ -17,19 +17,13 @@ tokio.workspace = true
 tokio-util.workspace = true
 reqwest.workspace = true
 futures-util.workspace = true
+hex.workspace = true
 sha1.workspace = true
 sha2.workspace = true
 zip.workspace = true
 uuid.workspace = true
-base64 = "0.22"
+base64 = "0.23.1"
+# The persisted UI-suite protocol shares Unicode 15.1 normalization with the frontend.
 unicode-normalization = "=0.1.23"
-image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
-
-[target.'cfg(target_os = "windows")'.dependencies]
-keyring = { version = "3.6.3", features = ["windows-native"] }
-
-[target.'cfg(target_os = "macos")'.dependencies]
-keyring = { version = "3.6.3", features = ["apple-native"] }
-
-[target.'cfg(target_os = "linux")'.dependencies]
-keyring = { version = "3.6.3", features = ["sync-secret-service", "crypto-rust", "vendored"] }
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "webp"] }
+keyring = { version = "4.2.0", default-features = false, features = ["v1"] }

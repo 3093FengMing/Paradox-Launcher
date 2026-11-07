@@ -22,6 +22,8 @@
 - 深色 / 浅色 / 跟随系统、强调色、85–120% 缩放、圆角、紧凑侧栏、背景模糊 / 遮罩 / 侧栏不透明度、减少动效；外观在设置页即时预览，保存后持久生效。
 - 自定义界面预设：保存完整外观、命名、应用、重命名、移除和可移植 JSON 导入 / 导出；预设库独立于未保存的设置草稿。
 - UI 来源套件（`0.4.0-dev`）：默认 modern/immersive 完整来源，支持套件文件与素材、CSS / HTML / TSX、ZIP 导入导出、Original 和公开业务动作；普通编辑器也可替换，固定 Recovery 与 `--ui-safe` 支持可信修复。Ctrl+Shift+F11 打开编辑器；选择目标后为精确位置、同一业务项或所有同类目标创建文件覆盖，Preview 应用草稿，Save 持久保存。HTML / TSX 共用一个入口，切换和重置保留普通文件。Ctrl+Shift+F12 打开固定 Recovery，可导出原始数据并修复同一草稿。
+- 套件自行决定图标如何显示：`route.icon` 可以是自定义名称或 `null`，名称最多 128 个 Unicode 字符，不含 ASCII 控制字符。默认 UI 从 Lucide 依赖解析具体图标及别名，未知名称省略图标；自定义 UI 可用自己的 SVG、组件或素材，不再受固定图标清单限制。
+- 套件文件名由启动器自动检查：Unicode 工具位于 `ui/src/host/` 内部，套件作者无需维护或导入数据表。保留原有 Unicode 15.1 文件名、大小写碰撞和相对路径规则，已有套件无需迁移。
 - i18n：简体中文、English 与跟随系统；页面、弹窗、常用通知与状态即时切换并持久化，翻译资源随 exe 离线提供。使用及扩展说明见 界面预设与多语言。
 - 版本化配置与原子保存、参数校验、损坏配置保护、Git 基线、依赖锁文件和质量检查。
 
@@ -78,6 +80,7 @@ npm run build -- --features tauri/custom-protocol -- --locked
 ```powershell
 npm run lint:ui
 npm run check:i18n
+npm run test:ui
 npm run build:ui
 cargo fmt -p paradox-core -p paradox-launcher -- --check
 cargo check --workspace --all-targets --locked
@@ -108,6 +111,8 @@ vendor/QuintElement/  自有 SDK fork（Git submodule，独立 Cargo workspace�
 ```
 
 启动器 workspace 只包含 `paradox-core` 与 `paradox-launcher`；SDK 保持独立 workspace，并通过子模块 path 依赖参与编译。Rust 格式命令明确指定这两个 package，前端执行 ESLint、类型、翻译和回归检查；SDK 自己的格式、测试和发布在其仓库独立维护。
+
+前端依赖升级的兼容范围、TypeScript 编译 API 约束和图标职责见 [ui/DEPENDENCIES.md](ui/DEPENDENCIES.md)；内部文件名规则见 [Unicode 工具说明](ui/src/host/unicode/README.md)。
 
 桌面默认配置为 `%LOCALAPPDATA%/ParadoxLauncher/config.json`，默认游戏根目录为同目录下的 `minecraft/`。游戏根目录包含 `versions/`、`assets/`、`libraries/`；显示名称与实例存储键分离，重命名不会移动存档。启动器管理的 Java 放在配置目录旁的 `runtimes/`。
 

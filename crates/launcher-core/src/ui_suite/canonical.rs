@@ -7,7 +7,7 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 pub fn hash(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
+    hex::encode(Sha256::digest(bytes))
 }
 pub fn bytes(file: &UiFile) -> Result<Vec<u8>> {
     match file {
@@ -80,5 +80,5 @@ pub fn digest(bundle: &UiSuiteBundle) -> Result<String> {
         append(&mut hash, path.as_bytes());
         append(&mut hash, &bytes(file)?);
     }
-    Ok(format!("{:x}", hash.finalize()))
+    Ok(hex::encode(hash.finalize()))
 }

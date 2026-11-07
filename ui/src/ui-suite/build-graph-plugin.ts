@@ -18,7 +18,8 @@ const publicNames = ['react', 'react/jsx-runtime', 'lucide-react', '@paradox/ui'
 const compilerSources = [
   'ui-suite/module-graph.ts', 'ui-suite/module-graph-runtime.ts', 'ui-suite/graph-plan.ts',
   'ui-suite/build-graph-plugin.ts', 'ui-suite/paths.ts', 'ui-suite/canonical.ts',
-  'ui-suite/unicode-nfc.ts', 'ui-suite/unicode-nfc-15.1.0.json', 'ui-suite/unicode-simple-fold-15.1.0.json',
+  'host/suite-paths.ts', 'host/unicode/scalars.ts', 'host/unicode/unicode-nfc.ts',
+  'host/unicode/unicode-nfc-15.1.0.json', 'host/unicode/unicode-simple-fold-15.1.0.json',
   'customization/site-transform.ts', 'customization/html-sites.ts',
 ];
 async function tree(directory: string, prefix = ''): Promise<string[]> {

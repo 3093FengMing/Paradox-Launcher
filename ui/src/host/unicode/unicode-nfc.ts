@@ -1,5 +1,5 @@
 import data from './unicode-nfc-15.1.0.json';
-import { wellFormed } from './canonical';
+import { wellFormed } from './scalars';
 const decompositions = new Map<number, readonly number[]>(
   data.decompositions as [number, number[]][],
 );

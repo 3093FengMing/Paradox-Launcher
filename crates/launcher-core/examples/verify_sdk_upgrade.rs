@@ -400,7 +400,7 @@ fn snapshot_path(root: &Path, path: &Path, all_files: bool, result: &mut Snapsho
             }
             hash.update(&bytes[..count]);
         }
-        Some(format!("{:x}", hash.finalize()))
+        Some(hex::encode(hash.finalize()))
     } else {
         None
     };
@@ -435,12 +435,12 @@ fn reject_link_ancestors(path: &Path) -> Result<()> {
 }
 
 fn reject_link(metadata: &Metadata, path: &Path) -> Result<()> {
-    let mut linked = metadata.file_type().is_symlink();
+    let linked = metadata.file_type().is_symlink();
     #[cfg(windows)]
-    {
+    let linked = {
         use std::os::windows::fs::MetadataExt;
-        linked |= metadata.file_attributes() & 0x400 != 0;
-    }
+        linked || metadata.file_attributes() & 0x400 != 0
+    };
     ensure!(
         !linked,
         "Cache/report path must not use links: {}",

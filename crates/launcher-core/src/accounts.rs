@@ -170,10 +170,7 @@ pub struct AccountsManager {
 
 impl AccountsManager {
     pub fn new(config_path: &Path) -> Self {
-        let namespace = format!(
-            "{:x}",
-            Sha256::digest(config_path.to_string_lossy().as_bytes())
-        );
+        let namespace = hex::encode(Sha256::digest(config_path.to_string_lossy().as_bytes()));
         let mut manager = Self::with_vault(
             config_path
                 .parent()

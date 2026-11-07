@@ -13,7 +13,7 @@
     "test:ui": "npm --prefix ui run test"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.9.0",
+    "@tauri-apps/cli": "^2.12.4",
     "prettier": "^3.9.10"
   },
   "engines": {

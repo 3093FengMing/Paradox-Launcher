@@ -98,7 +98,7 @@ export function inspectRaster(media: string, b: Uint8Array): { width: number; he
 export async function validateRaster(media: string, bytes: Uint8Array): Promise<void> {
   inspectRaster(media, bytes);
   if (typeof createImageBitmap !== 'function') throw new Error('Raster decoder unavailable');
-  const bitmap = await createImageBitmap(new Blob([bytes], { type: media }));
+  const bitmap = await createImageBitmap(new Blob([bytes.slice().buffer], { type: media }));
   try {
     checkRasterDimensions(bitmap.width, bitmap.height);
     // Header dimensions and displayed/default-frame dimensions have independent

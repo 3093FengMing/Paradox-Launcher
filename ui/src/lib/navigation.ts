@@ -1,6 +1,14 @@
+import * as lucide from 'lucide-react';
 import type { Page } from '../types';
 import { validateRouteRegistry, type UiRouteDescriptor } from '../ui-suite/routes';
-export { routeIcon } from '../ui-suite/routes';
+
+const concreteIcons = new Set<unknown>(Object.values(lucide.icons));
+/** Resolve actual installed components and aliases without treating helpers as components. */
+export function routeIcon(name: string | null): lucide.LucideIcon | null {
+  if (!name || !Object.hasOwn(lucide, name)) return null;
+  const icon = lucide[name as keyof typeof lucide];
+  return concreteIcons.has(icon) ? (icon as unknown as lucide.LucideIcon) : null;
+}
 
 export const pageNames: Record<Page, string> = {
   home: 'pages.home.title',

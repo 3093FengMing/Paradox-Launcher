@@ -2,10 +2,7 @@
 use super::{assets, canonical, model::*, paths};
 use anyhow::{Result, ensure};
 use serde_json::{Map, Value};
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    sync::LazyLock,
-};
+use std::collections::{BTreeMap, BTreeSet};
 const PAGES: [&str; 7] = [
     "home",
     "instances",
@@ -15,17 +12,6 @@ const PAGES: [&str; 7] = [
     "logs",
     "content",
 ];
-static ICONS: LazyLock<BTreeSet<String>> = LazyLock::new(|| {
-    serde_json::from_str::<Value>(include_str!(
-        "../../../../ui/src/ui-suite/lucide-icon-names.json"
-    ))
-    .expect("Pinned icon catalogue")["names"]
-        .as_array()
-        .expect("Icon names")
-        .iter()
-        .map(|v| v.as_str().expect("Icon string").to_owned())
-        .collect()
-});
 fn object(v: &Value) -> Result<&Map<String, Value>> {
     v.as_object()
         .ok_or_else(|| anyhow::anyhow!("Invalid suite object"))
@@ -311,7 +297,9 @@ fn manifest(v: &Value) -> Result<()> {
         }
         if !r["icon"].is_null() {
             ensure!(
-                ICONS.contains(text(&r["icon"], 0, usize::MAX)?),
+                !text(&r["icon"], 1, 128)?
+                    .chars()
+                    .any(|c| c <= '\u{1f}' || c == '\u{7f}'),
                 "Invalid route icon"
             );
         }

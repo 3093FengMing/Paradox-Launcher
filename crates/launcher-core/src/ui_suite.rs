@@ -366,14 +366,6 @@ mod tests {
         let mut v = serde_json::to_value(&good).unwrap();
         v["surprise"] = json!(true);
         assert!(UiSuiteStore::parse(&serde_json::to_vec(&v).unwrap()).is_err());
-        let mut v = serde_json::to_value(&good).unwrap();
-        v["suites"][0]["manifest"]["routes"][0]["icon"] = json!("Icon");
-        assert!(UiSuiteStore::parse(&serde_json::to_vec(&v).unwrap()).is_err());
-        for alias in ["Home", "HomeIcon", "LucideHome"] {
-            let mut l = good.clone();
-            l.suites[0].manifest["routes"][0]["icon"] = json!(alias);
-            validation::library(&l).unwrap();
-        }
         for field in ["bytes", "sha256"] {
             let mut l = good.clone();
             l.suites[0].manifest["files"][0][field] = if field == "bytes" {
@@ -399,6 +391,54 @@ mod tests {
         validation::library(&l).unwrap();
         l.suites[0].parent_snapshot.as_mut().unwrap().digest = "0".repeat(64);
         assert!(validation::library(&l).is_err());
+    }
+    #[test]
+    fn route_icons_are_bounded_opaque_strings() {
+        let good = sample();
+        for icon in [
+            Value::Null,
+            json!("Icon"),
+            json!("Github"),
+            json!("Chrome"),
+            json!("suite:星"),
+            json!(" Home "),
+            json!(" "),
+            json!("\u{85}"),
+            json!("__proto__"),
+            json!("<svg onload=alert(1)>"),
+            json!("\u{1f680}".repeat(128)),
+        ] {
+            let mut l = good.clone();
+            l.suites[0].manifest["routes"][0]["icon"] = icon.clone();
+            let parsed = UiSuiteStore::parse(&serde_json::to_vec(&l).unwrap()).unwrap();
+            assert_eq!(parsed.suites[0].manifest["routes"][0]["icon"], icon);
+        }
+        for icon in [
+            json!(""),
+            json!("a".repeat(129)),
+            json!("\u{1f680}".repeat(129)),
+            json!(true),
+            json!(1),
+            json!([]),
+            json!({"name": "Home"}),
+        ] {
+            let mut l = good.clone();
+            l.suites[0].manifest["routes"][0]["icon"] = icon;
+            assert!(UiSuiteStore::parse(&serde_json::to_vec(&l).unwrap()).is_err());
+        }
+        for control in (0..=0x1f).chain(std::iter::once(0x7f)) {
+            let mut l = good.clone();
+            l.suites[0].manifest["routes"][0]["icon"] =
+                json!(format!("suite:{}", char::from_u32(control).unwrap()));
+            assert!(UiSuiteStore::parse(&serde_json::to_vec(&l).unwrap()).is_err());
+        }
+        for invalid_unicode in [r#""\ud800""#, r#""\udfff""#, r#""\ud800a""#] {
+            let mut l = good.clone();
+            l.suites[0].manifest["routes"][0]["icon"] = json!("SURROGATE_TEST_ICON");
+            let serialized = serde_json::to_string(&l).unwrap();
+            let raw = serialized.replace(r#""SURROGATE_TEST_ICON""#, invalid_unicode);
+            assert!(UiSuiteStore::parse(raw.as_bytes()).is_err());
+        }
     }
     #[test]
     fn fixed_parent_case_only_rename_validates_final_table() {

@@ -86,7 +86,7 @@ export function installSuiteAssetsFixture(): void {
             const data = decodeBase64(fixture!.data),
               header = inspectRaster('image/jpeg', data);
             assert(header.width === 3 && header.height === 2);
-            const bitmap = await createImageBitmap(new Blob([data], { type: 'image/jpeg' }));
+            const bitmap = await createImageBitmap(new Blob([data.slice().buffer], { type: 'image/jpeg' }));
             try {
               assert(bitmap.width === 2 && bitmap.height === 3);
             } finally {

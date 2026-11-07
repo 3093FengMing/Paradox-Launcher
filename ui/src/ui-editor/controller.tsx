@@ -84,6 +84,7 @@ export function draftToSuiteRecord(bundle: UiSuiteBundle, instanceId: string, pa
 }
 // eslint-disable-next-line react-refresh/only-export-components
 export function createUiEditorController(deps: UiEditorDependencies) { return new UiEditorController(deps); }
+// eslint-disable-next-line react-refresh/only-export-components -- Shared editor model is exported beside its provider.
 export class UiEditorController {
   private state: UiEditorSnapshot;
   private library: UiSuiteLibrary | null = null;

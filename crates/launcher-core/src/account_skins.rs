@@ -61,7 +61,10 @@ impl AccountSkinCache {
                 "auth.errors.skin"
             );
         }
-        let path = directory.join(format!("{:x}.png", Sha256::digest(url.as_bytes())));
+        let path = directory.join(format!(
+            "{}.png",
+            hex::encode(Sha256::digest(url.as_bytes()))
+        ));
         if let Ok(bytes) = read_png(&path).await {
             return Ok(Some(data_url(&bytes)));
         }

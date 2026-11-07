@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { loadApp } from './lib/hook-test-host.mjs';
 assert.ok(
-  existsSync(new URL('../src/ui-suite/unicode-nfc.ts', import.meta.url)),
+  existsSync(new URL('../src/host/unicode/unicode-nfc.ts', import.meta.url)),
   'Pinned Unicode NFC implementation must exist',
 );
 const { normalizeSuiteNfc } = loadApp(new Map(), { isolateCustomization: false })(
-  'ui-suite/unicode-nfc.ts',
+  'host/unicode/unicode-nfc.ts',
 );
 let count = 0;
 for (const line of readFileSync(

@@ -905,7 +905,7 @@ export function installSuiteCompilerFixture() {
               getComputedStyle(editor).getPropertyValue('--suite-root') === 'present',
             'editor receives globals/target styles and :host variables',
           );
-          const text = shadow.querySelector('style')!.textContent!;
+          const text = shadow.querySelector('style')!.textContent;
           assert(
             text.includes(':host') &&
               !/@keyframes pulse/.test(text) &&

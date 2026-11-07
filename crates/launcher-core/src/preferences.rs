@@ -184,7 +184,7 @@ pub fn import_background(config: &Path, source: &Path) -> Result<String> {
     image.write_to(&mut output, image::ImageFormat::Png)?;
     let bytes = output.into_inner();
     ensure!(bytes.len() <= 16 * 1024 * 1024, "content.errors.background");
-    let id = format!("{:x}.png", Sha256::digest(&bytes));
+    let id = format!("{}.png", hex::encode(Sha256::digest(&bytes)));
     let directory = background_directory(config)?;
     fs::create_dir_all(&directory)?;
     let mut temp = tempfile::NamedTempFile::new_in(&directory)?;

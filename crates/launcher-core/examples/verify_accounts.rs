@@ -139,7 +139,7 @@ async fn run() -> Result<()> {
                 manager.refresh_account(&active, network).await?
             } else {
                 let updated = manager.logout(&active).await?;
-                let namespace = format!("{:x}", Sha256::digest(path.to_string_lossy().as_bytes()));
+                let namespace = hex::encode(Sha256::digest(path.to_string_lossy().as_bytes()));
                 let removal = keyring::Entry::new(&format!("ParadoxLauncher-{namespace}"), &active)
                     .and_then(|entry| entry.get_password());
                 ensure!(
