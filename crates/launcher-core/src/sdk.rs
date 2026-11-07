@@ -27,7 +27,6 @@ use elemental::{
             storage::VersionJsonGameStorageExt,
         },
     },
-    infra::downloader::plan::DownloadPlanner,
     launcher::{LaunchOptions, Launcher},
 };
 use tokio_util::sync::CancellationToken;
@@ -64,7 +63,7 @@ struct LaunchIdentity {
     username: String,
 }
 impl Authorizer for LaunchIdentity {
-    async fn authorize(&self) -> Result<UserCredential> {
+    async fn authorize(&self) -> elemental::core::auth::error::Result<UserCredential> {
         match &self.credential {
             Some(credential) => Ok(credential.clone()),
             None => {
@@ -164,7 +163,8 @@ impl ElementalService {
         let storage = Storage::new(&self.settings.game_directory, BaseRootLayout);
         let instance = storage
             .ensure_instance(profile.instance_key.clone(), BaseInstanceLayout)
-            .await?;
+            .await
+            .context("无法创建实例目录")?;
         let resolved = match ResolvedVanillaVersion::load(endpoints, instance.clone()) {
             Ok(local) => local,
             Err(_) => {
@@ -174,7 +174,9 @@ impl ElementalService {
                     result = tokio::time::timeout(
                         std::time::Duration::from_secs(self.settings.network.timeout_seconds.into()),
                         resolve_vanilla_metadata(&source, &profile.game_version),
-                    ) => result.map_err(|_| anyhow::anyhow!("获取游戏元数据超时"))??,
+                    ) => result
+                        .map_err(|_| anyhow::anyhow!("获取游戏元数据超时"))?
+                        .context("无法获取游戏元数据")?,
                 };
                 persist_vanilla_metadata(metadata, profile, &installation_paths, &instance).await?
             }
@@ -189,14 +191,17 @@ impl ElementalService {
         }
         let artifacts: Vec<Artifact> = resolved
             .planner()
-            .plan()?
+            .download_batches()
+            .context("无法生成游戏下载计划")?
             .into_iter()
-            .flat_map(|plan| plan.tasks)
+            .flat_map(|batch| batch.into_tasks())
             .map(|task| Artifact {
-                url: task.url,
-                target: task.path,
-                expected_size: task.expected_size,
-                checksum: task.sha1.map(Checksum::Sha1),
+                url: task.url().to_owned(),
+                target: task.path().to_owned(),
+                expected_size: task.expected_size(),
+                checksum: task
+                    .sha1_checksum()
+                    .map(|sha1| Checksum::Sha1(sha1.to_owned())),
             })
             .collect();
         let canonical_root = self
@@ -220,7 +225,10 @@ impl ElementalService {
         // Artifacts have all passed size/hash validation. Elemental now only
         // extracts native libraries and validates the prepared instance.
         installation_paths.validate()?;
-        resolved.prepare(self.launcher.downloader()).await?;
+        resolved
+            .finish_preparation()
+            .await
+            .context("无法完成实例准备")?;
         if cancellation.is_cancelled() {
             return Err(DownloadError::Cancelled);
         }
@@ -498,7 +506,7 @@ async fn persist_vanilla_metadata(
     );
     paths.validate()?;
     paths.validate_asset_index(&metadata.metadata.asset_index.id)?;
-    metadata.persist(instance).await
+    Ok(metadata.persist(instance).await?)
 }
 
 fn validate_relative_artifact(raw: &str) -> Result<()> {

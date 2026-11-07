@@ -2,7 +2,7 @@
 members = ["crates/launcher-core", "apps/desktop"]
 default-members = ["apps/desktop"]
 resolver = "3"
-exclude = ["vendor/minecraft-msa-auth", "vendor/QuintElement"]
+exclude = ["vendor/QuintElement"]
 
 [workspace.package]
 version = "0.4.0-dev"
@@ -36,8 +36,3 @@ uuid = { version = "1.18", features = ["v4"] }
 [profile.release]
 lto = "thin"
 strip = "debuginfo"
-
-# QuintElement currently passes oauth2's reqwest 0.12 Client to minecraft-msa-auth.
-# Keep the helper on the same Client type until upstream fixes this boundary.
-[patch.crates-io]
-minecraft-msa-auth = { path = "vendor/minecraft-msa-auth" }

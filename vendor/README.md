@@ -2,23 +2,28 @@
 
 ## QuintElement 子模块
 
-`QuintElement/` 是 [3093FengMing/QuintElement](https://github.com/3093FengMing/QuintElement) 的 Git submodule，保留独立 Cargo workspace 和 AGPL-3.0-only 许可。启动器通过 `vendor/QuintElement/crates/elemental` path 依赖直接编译，根 workspace 显式排除该目录。
+`QuintElement/` 是 [3093FengMing/QuintElement](https://github.com/3093FengMing/QuintElement) 的 Git submodule，保留独立 Cargo workspace 和 AGPL-3.0-only 许可。启动器通过 `vendor/QuintElement/crates/elemental` path 依赖直接编译，只编译应用需要的 SDK crate。
 
 初始化使用 `git submodule update --init --recursive`。核心开发在子模块的功能分支中进行，先向 fork 推送提交，再在启动器提交新 gitlink。启动器构建读取子模块中的源码，仓库记录的 gitlink 固定实际 SDK 提交。
 
-## minecraft-msa-auth 兼容补丁
+同步使用的 `upstream` remote 指向 [ElectronicWave/Elemental](https://github.com/ElectronicWave/Elemental)。2026-11-07 合入 `upstream/main` 的 [`77027a8`](https://github.com/ElectronicWave/Elemental/commit/77027a8)，fork 合并提交为 [`29ea041`](https://github.com/3093FengMing/QuintElement/commit/29ea04124d79cb69d34817931207a080e6b8f607)，已同步到 `paradox-launcher-v0.5-dependency` 分支。启动器通过 gitlink 固定该提交；facade package 仍为 `elemental-kit 0.2.0`。
 
-`minecraft-msa-auth/` 来自 crates.io 的 `minecraft-msa-auth 0.5.0`，保留 MIT / Apache-2.0 原始许可与作者信息。
+## 认证依赖与 TLS
 
-QuintElement fork 的
-`core/src/auth/authorizers/microsoft.rs` 使用 `oauth2::reqwest::Client`（reqwest 0.12），
-但 `minecraft-msa-auth 0.5.0` 为 reqwest 0.13 的 Client 实现 `HttpClient`。
-这会产生 E0599 / E0282，阻止认证适配器编译。
+SDK 的 Microsoft authorizer 通过 `oauth2-reqwest` 将 reqwest 0.13 client 接入 oauth2 5，与 `minecraft-msa-auth 0.5.0` 的 `HttpClient` 使用同一 reqwest 版本。启动器恢复使用 crates.io 的原始 helper，已移除 `vendor/minecraft-msa-auth/` 与根 `Cargo.toml` 的 `[patch.crates-io]` 覆盖。
 
-当前补丁仅将 helper 的 reqwest 依赖与示例依赖改为 0.12.28，并将示例 TLS feature
-改为 `rustls-tls`。`src/lib.rs` 保持原样。原始 manifest 保存在 `Cargo.toml.orig`。
-QuintElement 自己的 reqwest 0.13 依赖保持原样。2026-10-31 接入时已检查 fork，认证模块仍传入 oauth2 的 reqwest 0.12 client，因此此补丁继续生效。
+启动器和 SDK 保留 `native-tls`，Windows 使用 schannel。上游同步保留了这一 TLS 选择。
 
-在 fork 中修复认证客户端类型或升级 SDK 后，先移除根 Cargo.toml 中 `[patch.crates-io]` 的覆盖并重新执行
-`cargo check --workspace --all-targets`。上游修复认证客户端类型后应删除此补丁目录。
-启动器已实现设备代码登录、账户刷新与凭据清理。成功编译本身不证明真实账户、正版游戏身份或完整原生交互已经验收，这些项目需要独立验证。
+启动器已实现设备代码登录、账户刷新与凭据清理。认证与游戏的实际验收结果见 [验证记录](../docs/VERIFICATION.md)。
+
+## 升级回归
+
+SDK 工作区执行 `cargo test --workspace --all-targets --locked`。启动器执行全目标编译、Clippy、测试与前端检查，并保留加载器身份、路径和下载取消回归。
+
+已有隔离 loader 缓存可通过以下工具检查扫描与加载兼容性；工具读取之前的验收版本，不查询或下载新版本，并核对 JSON / natives 状态保持一致：
+
+```powershell
+cargo run -p paradox-core --example verify_sdk_upgrade --locked -- '<绝对 .test-data 缓存目录>'
+```
+
+追加 `--launch-neoforge` 可使用缓存 Java 21 和离线身份启动已有 NeoForge 实例，等待纹理 / 声音就绪后受控停止。报告写入 `.test-data/2026-11-07-quintelement-upstream/`，不覆盖原缓存报告；受控停止和缓存复用不代表自然退出、全新安装或正版在线身份验收。

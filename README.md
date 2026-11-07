@@ -104,11 +104,10 @@ crates/launcher-core/  配置、实例、网络、下载、Java、目录缓存�
 ui/                   React 页面、共享组件、状态 Hook、主题与 API adapter
 assets/               原始矢量图标
 vendor/QuintElement/  自有 SDK fork（Git submodule，独立 Cargo workspace）
-vendor/minecraft-msa-auth/  认证依赖兼容补丁及原始许可
 .github/workflows/    质量检查与跨平台 CI 配置
 ```
 
-启动器 workspace 只包含 `paradox-core` 与 `paradox-launcher`；SDK 子模块和兼容补丁通过 path 依赖参与编译。Rust 格式命令明确指定这两个 package，前端执行 ESLint、类型、翻译和回归检查；SDK 自己的格式、测试和发布在其仓库独立维护。
+启动器 workspace 只包含 `paradox-core` 与 `paradox-launcher`；SDK 保持独立 workspace，并通过子模块 path 依赖参与编译。Rust 格式命令明确指定这两个 package，前端执行 ESLint、类型、翻译和回归检查；SDK 自己的格式、测试和发布在其仓库独立维护。
 
 桌面默认配置为 `%LOCALAPPDATA%/ParadoxLauncher/config.json`，默认游戏根目录为同目录下的 `minecraft/`。游戏根目录包含 `versions/`、`assets/`、`libraries/`；显示名称与实例存储键分离，重命名不会移动存档。启动器管理的 Java 放在配置目录旁的 `runtimes/`。
 
@@ -118,8 +117,6 @@ vendor/minecraft-msa-auth/  认证依赖兼容补丁及原始许可
 
 ## SDK、设计与许可
 
-SDK 使用 [QuintElement fork](https://github.com/3093FengMing/QuintElement) 子模块的 `crates/elemental/`；启动器仓库记录的 gitlink 固定实际 SDK 提交。facade crate 仍为 `elemental-kit 0.2.0`，Rust 依赖别名 `elemental` 和应用适配器名称 `ElementalService` 保留，源码实际来自子模块。认证客户端类型兼容补丁仍有必要，见 [vendor/README.md](vendor/README.md)。SDK 部分 future 不满足 `Send`，宿主在后台线程创建和驱动这些操作，界面保持响应。
+SDK 使用 [QuintElement fork](https://github.com/3093FengMing/QuintElement) 子模块的 `crates/elemental/`；启动器仓库记录的 gitlink 固定实际 SDK 提交。facade crate 仍为 `elemental-kit 0.2.0`，Rust 依赖别名 `elemental` 和应用适配器名称 `ElementalService` 保留，源码实际来自子模块。2026-11-07 已在 SDK 工作区合入 [Elemental 上游](https://github.com/ElectronicWave/Elemental) 的 `upstream/main` 提交 [`77027a8`](https://github.com/ElectronicWave/Elemental/commit/77027a8)。认证通过 `oauth2-reqwest` 统一为 reqwest 0.13，保留 native-tls / Windows schannel，已移除 helper 的 vendor 补丁；详见 [vendor/README.md](vendor/README.md)。SDK 部分 future 不满足 `Send`，宿主在后台线程创建和驱动这些操作，界面保持响应。
 
-项目采用 **AGPL-3.0-only**，与 QuintElement / Elemental 保持一致；补丁库保留 MIT / Apache-2.0 许可。源码参考：[QuintElement](https://github.com/3093FengMing/QuintElement)、[Elemental 上游](https://github.com/ElectronicWave/Elemental)、[DeepWiki](https://deepwiki.com/ElectronicWave/Elemental)。此前 DeepWiki 请求返回 429，当前接口以本地 fork 源码为准。
-
-
+项目采用 **AGPL-3.0-only**，与 QuintElement / Elemental 保持一致。源码参考：[QuintElement](https://github.com/3093FengMing/QuintElement)、[Elemental 上游](https://github.com/ElectronicWave/Elemental)、[DeepWiki](https://deepwiki.com/ElectronicWave/Elemental)。此前 DeepWiki 请求返回 429，当前接口以本地 fork 源码为准。

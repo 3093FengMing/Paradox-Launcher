@@ -25,7 +25,9 @@ use elemental::{
         },
         families::version_json::{BaseInstanceLayout, BaseRootLayout},
     },
-    infra::downloader::core::{ElementalDownloader, ElementalDownloaderConfig},
+    infra::downloader::{
+        DownloadSession, ElementalDownloader, ElementalDownloaderConfig, FailurePolicy, RetryPolicy,
+    },
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -264,79 +266,107 @@ pub async fn prepare(
     let downloader = ElementalDownloader::builder()
         .client(client.clone())
         .config(ElementalDownloaderConfig {
-            max_connections: settings.network.max_concurrent_downloads as usize,
-            session_parallelism: settings.network.max_concurrent_downloads as usize,
-            retry_times: settings.network.max_retries,
+            max_concurrent_downloads: settings.network.max_concurrent_downloads as usize,
+            default_session_parallelism: settings.network.max_concurrent_downloads as usize,
             connect_timeout: Duration::from_secs(settings.network.timeout_seconds.into()),
+            read_timeout: Duration::from_secs(settings.network.timeout_seconds.into()),
             ..Default::default()
         })
         .build()?;
+    let session = downloader
+        .session(format!("{}:{}", profile.loader, profile.instance_key))
+        .retry(RetryPolicy {
+            max_attempts: settings.network.max_retries as usize + 1,
+            ..Default::default()
+        })
+        .failure_policy(FailurePolicy::CancelAll)
+        .open()
+        .await?;
     let vanilla = VanillaSource::with_client(settings.network.endpoints()?, client.clone());
     let game = profile.game_version.clone().into();
     let loader = profile.loader_version.clone().into();
-    match profile.loader.as_str() {
-        "fabric" => {
-            FabricDriver::new(
-                FabricDriverFamily::new(FabricFlavor::Fabric),
-                FabricSource::with_client(FabricEndpoints::official(), client),
-                vanilla,
-                downloader,
-            )
-            .prepare(&instance, game, loader)
-            .await?;
-        }
-        "quilt" => {
-            QuiltDriver::new(
-                QuiltDriverFamily,
-                QuiltSource::with_client(QuiltEndpoints::official(), client),
-                vanilla,
-                downloader,
-            )
-            .prepare(&instance, game, loader)
-            .await?;
-        }
-        "forge" | "neoforge" => {
-            let base = elemental::driver::drivers::vanilla::source::resolve_vanilla_metadata(
-                &vanilla,
-                &profile.game_version,
-            )
-            .await?;
-            let metadata = serde_json::to_value(base.metadata)?;
-            let required = metadata
-                .pointer("/javaVersion/majorVersion")
-                .and_then(serde_json::Value::as_u64)
-                .unwrap_or(8) as u32;
-            let runtime = crate::java::select_runtime(
-                required,
-                (!settings.java_executable.is_empty())
-                    .then(|| Path::new(&settings.java_executable)),
-                &managed_root,
-            )
-            .await?;
-            let config = elemental::launcher::LaunchOptions::default()
-                .set_runtime_executable_path(runtime.executable);
-            if profile.loader == "forge" {
-                ForgeDriver::new(
-                    ForgeSource::with_client(ForgeEndpoints::official(), client),
+    let preparation = async {
+        match profile.loader.as_str() {
+            "fabric" => {
+                FabricDriver::new(
+                    FabricDriverFamily::new(FabricFlavor::Fabric),
+                    FabricSource::with_client(FabricEndpoints::official(), client),
                     vanilla,
-                    downloader,
                 )
-                .prepare_with_config(&instance, game, loader, &config)
-                .await?;
-            } else {
-                NeoForgeDriver::new(
-                    NeoForgeSource::with_client(NeoForgeEndpoints::official(), client),
-                    vanilla,
-                    downloader,
-                )
-                .prepare_with_config(&instance, game, loader, &config)
+                .prepare(&session, &instance, game, loader)
                 .await?;
             }
+            "quilt" => {
+                QuiltDriver::new(
+                    QuiltDriverFamily,
+                    QuiltSource::with_client(QuiltEndpoints::official(), client),
+                    vanilla,
+                )
+                .prepare(&session, &instance, game, loader)
+                .await?;
+            }
+            "forge" | "neoforge" => {
+                let base = elemental::driver::drivers::vanilla::source::resolve_vanilla_metadata(
+                    &vanilla,
+                    &profile.game_version,
+                )
+                .await?;
+                let metadata = serde_json::to_value(base.metadata)?;
+                let required = metadata
+                    .pointer("/javaVersion/majorVersion")
+                    .and_then(serde_json::Value::as_u64)
+                    .unwrap_or(8) as u32;
+                let runtime = crate::java::select_runtime(
+                    required,
+                    (!settings.java_executable.is_empty())
+                        .then(|| Path::new(&settings.java_executable)),
+                    &managed_root,
+                )
+                .await?;
+                let config = elemental::launcher::LaunchOptions::default()
+                    .set_runtime_executable_path(runtime.executable);
+                if profile.loader == "forge" {
+                    ForgeDriver::new(
+                        ForgeSource::with_client(ForgeEndpoints::official(), client),
+                        vanilla,
+                    )
+                    .prepare_with_config(&session, &instance, game, loader, &config)
+                    .await?;
+                } else {
+                    NeoForgeDriver::new(
+                        NeoForgeSource::with_client(NeoForgeEndpoints::official(), client),
+                        vanilla,
+                    )
+                    .prepare_with_config(&session, &instance, game, loader, &config)
+                    .await?;
+                }
+            }
+            _ => bail!("loaders.errors.unsupported"),
         }
-        _ => bail!("loaders.errors.unsupported"),
+        Ok::<_, anyhow::Error>(())
     }
+    .await;
+    if let Err(error) = preparation {
+        return Err(cancel_preparation_with_error(session, error).await);
+    }
+    session.finish().await?.success()?;
     ensure!(instance.path == instance_path, "loaders.errors.path");
     Ok(instance.path)
+}
+
+async fn cancel_preparation_with_error(
+    session: DownloadSession,
+    error: anyhow::Error,
+) -> anyhow::Error {
+    // A failed transfer can surface later as a rejected submission or missing
+    // installer archive. Keep its recorded cause after all workers have stopped.
+    if let Ok(report) = session.cancel().await
+        && report.failures().next().is_some()
+        && let Err(download_error) = report.success()
+    {
+        return download_error.into();
+    }
+    error
 }
 
 mod installation_paths;
@@ -349,6 +379,148 @@ fn validate_installation_paths(profile: &GameProfile, settings: &Settings) -> Re
 #[cfg(test)]
 mod tests {
     use super::*;
+    use elemental::{
+        driver::families::installer::{InstallerArtifact, prepare_installer_state},
+        infra::{
+            downloader::{DownloadPhase, DownloadTask},
+            error::Error as DownloaderError,
+        },
+    };
+    use tokio::{
+        io::{AsyncReadExt, AsyncWriteExt},
+        net::{TcpListener, TcpStream},
+    };
+
+    async fn installation_test_session() -> DownloadSession {
+        ElementalDownloader::builder()
+            .client(reqwest::Client::builder().no_proxy().build().unwrap())
+            .config(ElementalDownloaderConfig {
+                max_concurrent_downloads: 1,
+                default_session_parallelism: 1,
+                connect_timeout: Duration::from_secs(3),
+                read_timeout: Duration::from_secs(3),
+                ..Default::default()
+            })
+            .build()
+            .unwrap()
+            .session("installation-test")
+            .retry(RetryPolicy::none())
+            .failure_policy(FailurePolicy::CancelAll)
+            .open()
+            .await
+            .unwrap()
+    }
+
+    async fn read_http_request(connection: &mut TcpStream) {
+        let mut request = Vec::new();
+        let mut buffer = [0u8; 4096];
+        while !request.windows(4).any(|bytes| bytes == b"\r\n\r\n") {
+            let count = connection.read(&mut buffer).await.unwrap();
+            assert!(count > 0);
+            request.extend_from_slice(&buffer[..count]);
+            assert!(request.len() <= 16 * 1024);
+        }
+    }
+
+    #[tokio::test]
+    async fn installer_download_failure_survives_the_following_archive_error() {
+        for family in ["forge", "neoforge"] {
+            let temporary = tempfile::tempdir().unwrap();
+            let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let url = format!("http://{}/installer.jar", listener.local_addr().unwrap());
+            let server = tokio::spawn(async move {
+                let (mut connection, _) = listener.accept().await.unwrap();
+                read_http_request(&mut connection).await;
+                connection
+                    .write_all(b"HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
+                    .await
+                    .unwrap();
+            });
+            let session = installation_test_session().await;
+            let installer = InstallerArtifact {
+                coordinate: "example:installer:1.0".into(),
+                url,
+                path: temporary.path().join("installer.jar"),
+                expected_size: None,
+                sha1: None,
+            };
+            let archive_error = tokio::time::timeout(
+                Duration::from_secs(5),
+                prepare_installer_state(
+                    &session,
+                    &installer,
+                    &temporary.path().join("instance"),
+                    &temporary.path().join("libraries"),
+                    family,
+                    |_| Ok(()),
+                ),
+            )
+            .await
+            .unwrap()
+            .unwrap_err();
+            assert!(matches!(
+                &archive_error,
+                elemental::driver::error::Error::ReadInstallerProfile { .. }
+            ));
+            let error = cancel_preparation_with_error(session, archive_error.into()).await;
+            let Some(DownloaderError::SessionFailed { failures, .. }) =
+                error.downcast_ref::<DownloaderError>()
+            else {
+                panic!("the download failure was hidden: {error:#}");
+            };
+            assert_eq!(failures.len(), 1);
+            assert_eq!(failures[0].phase, DownloadPhase::HttpStatus);
+            assert_eq!(failures[0].http_status, Some(500));
+            assert_eq!(failures[0].group.as_deref(), Some("installer"));
+            assert!(error.to_string().contains("HTTP 500"));
+            tokio::time::timeout(Duration::from_secs(5), server)
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(std::fs::read_dir(temporary.path()).unwrap().count(), 0);
+        }
+    }
+
+    #[tokio::test]
+    async fn cancelling_an_active_download_preserves_the_java_error() {
+        let temporary = tempfile::tempdir().unwrap();
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("http://{}/library.jar", listener.local_addr().unwrap());
+        let (started, request_received) = tokio::sync::oneshot::channel();
+        let server = tokio::spawn(async move {
+            let (mut connection, _) = listener.accept().await.unwrap();
+            read_http_request(&mut connection).await;
+            started.send(()).unwrap();
+            let mut buffer = [0u8; 1];
+            let _ = connection.read(&mut buffer).await;
+        });
+        let session = installation_test_session().await;
+        session
+            .submit(DownloadTask::new(url, temporary.path().join("library.jar")))
+            .await
+            .unwrap();
+        tokio::time::timeout(Duration::from_secs(5), request_received)
+            .await
+            .unwrap()
+            .unwrap();
+        let error =
+            cancel_preparation_with_error(session, anyhow::anyhow!("Java runtime unavailable"))
+                .await;
+        assert_eq!(error.to_string(), "Java runtime unavailable");
+        tokio::time::timeout(Duration::from_secs(5), server)
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(std::fs::read_dir(temporary.path()).unwrap().count(), 0);
+    }
+
+    #[tokio::test]
+    async fn cancelling_an_empty_session_preserves_the_metadata_error() {
+        let session = installation_test_session().await;
+        let error =
+            cancel_preparation_with_error(session, anyhow::anyhow!("Invalid metadata")).await;
+        assert_eq!(error.to_string(), "Invalid metadata");
+    }
 
     const NEOFORGE_METADATA: &[u8] = br#"<metadata><versioning><versions>
         <version>21.0.167</version><version>21.1.265</version><version>21.10.2</version>
