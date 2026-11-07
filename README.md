@@ -75,6 +75,20 @@ npm run build -- --features tauri/custom-protocol -- --locked
 
 输出为 `target/release/paradox-launcher.exe`。发布构建必须启用 `tauri/custom-protocol`，使前端资源内嵌；当前未启用系统安装包打包。
 
+### Actions 编译成果
+
+新增的 [Build 工作流](https://github.com/3093FengMing/Paradox-Launcher/actions/workflows/build.yml) 在 push、pull request 和手动运行时编译三平台 release 成果。打开对应运行记录，在页面下方 **Artifacts** 下载：
+
+| Artifact | 编译成果 |
+| --- | --- |
+| `Paradox-Launcher-windows-x64` | Windows x64 `.exe`，需要 WebView2 Runtime |
+| `Paradox-Launcher-macos-arm64` | Apple Silicon `.app.tar.gz`，解压后使用 `.app` |
+| `Paradox-Launcher-linux-x64` | Linux x64 `.tar.gz`，解压后运行 `paradox-launcher`；需要与 Ubuntu 24.04 兼容的 WebKitGTK 4.1、GTK 3 等系统库 |
+
+每份 artifact 附带 `BUILD-INFO.json`、`SHA256SUMS`、许可证与运行说明，文件名包含版本和平台；Actions 保留 14 天。前端已内嵌，运行不需要 Rust、Node.js 或 Vite。macOS 成果为未签名、未公证的 CI 测试构建；原有 CI 工作流继续负责质量检查。
+
+`dev` 推送后自动构建；GitHub 网页的 **Run workflow** 手动入口在该工作流合入默认分支 `main` 后显示，也可以在已有运行记录中重新运行。
+
 ## 校验
 
 ```powershell
