@@ -6,7 +6,7 @@
 
 初始化使用 `git submodule update --init --recursive`。核心开发在子模块的功能分支中进行，先向 fork 推送提交，再在启动器提交新 gitlink。启动器构建读取子模块中的源码，仓库记录的 gitlink 固定实际 SDK 提交。
 
-同步使用的 `upstream` remote 指向 [ElectronicWave/Elemental](https://github.com/ElectronicWave/Elemental)。2026-11-07 在已合入 `77027a8` 的依赖分支上继续合入指定提交 [`9c17be2`](https://github.com/3093FengMing/QuintElement/commit/9c17be2f28b6ef43a75cdfd205db293e12f9fa5c)，采用其 typed driver、installer/profiled family 与 typed origin 设计。实际合并提交为 [`1b41892`](https://github.com/3093FengMing/QuintElement/commit/1b41892c420bc81ae9abb610f234b41537c7ad4c)。SDK 后续开发使用 `dev` 分支，`.gitmodules` 的远程更新分支也设为 `dev`；启动器通过 gitlink 固定该提交，正常递归检出仍使用该固定提交。facade package 仍为 `elemental-kit 0.2.0`。
+同步使用的 `upstream` remote 指向 [ElectronicWave/Elemental](https://github.com/ElectronicWave/Elemental)。2026-11-08 在 fork 的 `969227c` 基础上合入上游主线 [`540c3b3`](https://github.com/ElectronicWave/Elemental/commit/540c3b361e7d9796b1c04f5ec4992e19418a3bff)，实际合并提交为 [`92a4d18`](https://github.com/3093FengMing/QuintElement/commit/92a4d1848ab8840e29abd5d0c700b0089a58fb06)。本次同步 Minecraft 版本名称解析、凭据与启动命令 API、驱动目录、下载进度及 launchpad CLI；launchpad 替代旧 demo，新增 CLI 依赖固定在 SDK 自己的 Cargo.lock 中。SDK 继续使用 `dev` 分支，`.gitmodules` 的远程更新分支也是 `dev`；启动器通过 gitlink 固定实际提交，正常递归检出仍使用该固定版本。facade package 保持 `elemental-kit 0.2.0`。
 
 游戏目录使用 `GameVersionCatalog`，Fabric、Quilt、Forge、NeoForge 目录使用 `LoaderVersionCatalog`。加载器目录保留 8 MiB 响应大小上限、配置中的整体请求超时、稳定性映射、排序去重和安全版本过滤；NeoForge `21.0.x` 归入 Mojang 的 `1.21`。Forge 的 installer 游戏版本冲突检查与 NeoForge 的检测标记 / 版本载体区分迁入新 family 扩展点。
 
@@ -22,7 +22,7 @@ SDK 的 Microsoft authorizer 通过 `oauth2-reqwest` 将 reqwest 0.13 client 接
 
 ## 升级回归
 
-SDK 工作区执行 `cargo test --workspace --all-targets --locked`。启动器执行全目标编译、Clippy、测试与前端检查，并保留加载器身份、路径和下载取消回归。
+SDK 工作区执行 `cargo test --workspace --all-targets --locked`。启动器执行全目标编译、Clippy、测试与前端检查，并保留加载器身份、路径和下载取消回归。 2026-11-08 同步验收为 SDK 38 项测试、启动器 257 项测试通过（2 项既有忽略），严格 Clippy、格式、四项前端检查与 launchpad `--help` 通过。Fabric、Quilt、Forge、NeoForge 的已有隔离缓存均完成扫描与加载，JSON / natives 加载状态未变；NeoForge 离线启动达到纹理与声音就绪后受控停止，仅允许该实例的 JNA 临时文件轮换。
 
 已有隔离 loader 缓存可通过以下工具检查扫描与加载兼容性；工具读取之前的验收版本，不查询或下载新版本，并核对 JSON / natives 状态保持一致：
 

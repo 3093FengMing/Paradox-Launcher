@@ -15,6 +15,7 @@ use elemental::{
         storage::Storage,
     },
     driver::{
+        catalog::GameVersionCatalog,
         driver::InstalledDriver,
         drivers::vanilla::{
             catalog::VanillaCatalog,
@@ -95,9 +96,8 @@ impl ElementalService {
             self.settings.network.endpoints()?,
             self.settings.network.build_client()?,
         );
-        let releases = self
-            .launcher
-            .game_versions(VanillaCatalog::new(source))
+        let releases = VanillaCatalog::new(source)
+            .game_versions()
             .await
             .context("无法获取 Mojang 版本目录，请检查网络后重试")?;
         let mut versions: Vec<_> = releases
@@ -342,30 +342,28 @@ impl ElementalService {
             parse_argument_string(&settings.extra_game_arguments).context("游戏参数引号不匹配")?,
         );
         options.runtime_executable_path = Some(runtime.executable);
+        let credential = LaunchIdentity {
+            credential,
+            username: settings.offline_username.clone(),
+        }
+        .authorize()
+        .await
+        .context("无法获取启动身份凭据")?;
         let mut command = self
             .launcher
-            .build_launch_command(
-                &prepared,
-                LaunchIdentity {
-                    credential,
-                    username: settings.offline_username.clone(),
-                },
-                &options,
-            )
+            .build_launch_command(&prepared, &credential, &options)
             .await
             .context("无法构建启动命令，请检查 Java 版本和实例文件")?;
         include_extracted_natives(
-            &mut command.command,
+            &mut command,
             &settings
                 .game_directory
                 .join("versions")
                 .join(&profile.instance_key)
                 .join("natives"),
         )?;
-        include_profile_environment(&mut command.command, settings, profile);
-        Ok(PreparedGameLaunch {
-            command: command.command,
-        })
+        include_profile_environment(&mut command, settings, profile);
+        Ok(PreparedGameLaunch { command })
     }
 }
 
@@ -424,7 +422,7 @@ fn include_extracted_natives(command: &mut LaunchCommand, natives: &Path) -> Res
     // extracts the JNI libraries at natives/. Preserve the metadata search path
     // and add the actual extraction directory instead of changing saved metadata.
     if let Some(argument) = command
-        .args
+        .jvm_arguments
         .iter_mut()
         .find(|argument| argument.starts_with("-Djava.library.path="))
     {
@@ -548,6 +546,111 @@ fn validate_artifact_target(root: &Path, canonical_root: &Path, target: &Path) -
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn launch_identity_preserves_supplied_online_credentials() {
+        let credential = UserCredential {
+            username: "OnlinePlayer".into(),
+            uuid: "12345678-1234-1234-1234-123456789abc".into(),
+            access_token: "fixture-access-token".into(),
+        };
+        let authorized = LaunchIdentity {
+            credential: Some(credential.clone()),
+            username: "OfflinePlayer".into(),
+        }
+        .authorize()
+        .await
+        .unwrap();
+        assert_eq!(authorized.username, credential.username);
+        assert_eq!(authorized.uuid, credential.uuid);
+        assert_eq!(authorized.access_token, credential.access_token);
+    }
+
+    #[tokio::test]
+    async fn launch_identity_uses_the_minecraft_offline_uuid_and_empty_token() {
+        let authorized = LaunchIdentity {
+            credential: None,
+            username: "Player".into(),
+        }
+        .authorize()
+        .await
+        .unwrap();
+        assert_eq!(authorized.username, "Player");
+        assert_eq!(authorized.uuid, "a01e3843-e521-3998-958a-f459800e4d11");
+        assert!(authorized.access_token.is_empty());
+    }
+
+    fn launch_command(jvm_arguments: Vec<String>, game_arguments: Vec<String>) -> LaunchCommand {
+        LaunchCommand::new(
+            elemental::core::runtime::distribution::Distribution {
+                release: None,
+                path: PathBuf::from("fixture-java"),
+                executable_override: None,
+                provider: "sdk test",
+            },
+            jvm_arguments,
+            "example.Main".into(),
+            game_arguments,
+        )
+    }
+
+    #[test]
+    fn extracted_natives_preserve_jvm_argument_order_and_game_arguments() {
+        let metadata_natives = PathBuf::from("metadata-natives");
+        let extracted_natives = PathBuf::from("extracted-natives");
+        let metadata_path = std::env::join_paths([&metadata_natives]).unwrap();
+        let mut command = launch_command(
+            vec![
+                format!("-Djava.library.path={}", metadata_path.to_str().unwrap()),
+                "-Xmx1024M".into(),
+            ],
+            vec![
+                "-Djava.library.path=game-option".into(),
+                "--username".into(),
+                "Player".into(),
+            ],
+        )
+        .with_cwd(PathBuf::from("fixture-instance"))
+        .with_env("SDK_ENV".into(), "retained".into());
+        let program = command.program();
+        include_extracted_natives(&mut command, &extracted_natives).unwrap();
+        include_extracted_natives(&mut command, &extracted_natives).unwrap();
+        let expected_path = std::env::join_paths([&metadata_natives, &extracted_natives]).unwrap();
+        assert_eq!(
+            command.arguments(),
+            vec![
+                format!("-Djava.library.path={}", expected_path.to_str().unwrap()),
+                "-Xmx1024M".into(),
+                "example.Main".into(),
+                "-Djava.library.path=game-option".into(),
+                "--username".into(),
+                "Player".into(),
+            ]
+        );
+        assert_eq!(command.program(), program);
+        assert_eq!(command.cwd, Some(PathBuf::from("fixture-instance")));
+        assert_eq!(
+            command.env.get("SDK_ENV").map(String::as_str),
+            Some("retained")
+        );
+    }
+
+    #[test]
+    fn extracted_natives_do_not_reinterpret_game_arguments_as_jvm_arguments() {
+        let mut command = launch_command(
+            vec!["-Xmx1024M".into()],
+            vec!["-Djava.library.path=game-option".into()],
+        );
+        include_extracted_natives(&mut command, Path::new("extracted-natives")).unwrap();
+        assert_eq!(
+            command.arguments(),
+            vec![
+                "-Xmx1024M".to_owned(),
+                "example.Main".to_owned(),
+                "-Djava.library.path=game-option".to_owned(),
+            ]
+        );
+    }
 
     #[tokio::test]
     async fn vanilla_catalog_only_reads_the_manifest_and_preserves_release_kinds() {
