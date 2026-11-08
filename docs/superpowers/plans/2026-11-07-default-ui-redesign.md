@@ -238,11 +238,13 @@
 - [x] Step 7: 构建对应当前源码的原生debug应用，记录构建来源/hash，已完成构建退出0与389输入无漂移核验。按既有本人原生验收约定，将当前exe及Windows WebView2标题栏/焦点、100/125/150/200%DPI、中文/英文、小窗、Microsoft授权及游戏安装/启动/停止/关闭步骤交给用户记录。真人项目在验收表继续标为待验，不把浏览器mock宣称为原生通过。
 - [x] Step 8: 完整套件旅程：复制两套、CSS-only保留输入、HTML/TSX与Original、修改新页/导航/控件/弹窗/onboarding/普通editor、预览/保存/重启/导出重导入、切套件保留业务草稿、隐藏CSS/抛错→F12→可信editor修复、--ui-safe。记录所有检查的真实结果与尚待真人项目。
 - [x] Step 9: 文档更新当前入口/页面数、首次选择、默认无背景、自定义边界与验收命令；执行最终需求覆盖和差异检查。自动验收已完整通过，真人原生项目按已接受移交边界继续在验收表单独保留。
-- [ ] Step 10: 所有任务与验收完成后，确认仍在dev、git diff无 unrelated修改、检查remote目标；只暂存本次源码/资产/测试/文档（docs默认ignore需对审核通过的两份设计/计划等明确路径使用git add -f），形成可审查提交，再`git push <已配置dev上游>`。如果dev没有上游，检查现有remote/分支后用对应remote设置上游，不猜仓库。记录实际commit和推送结果。
+- [x] Step 10: 所有任务与验收完成后，确认仍在dev、git diff无 unrelated修改、检查remote目标；只暂存本次源码/资产/测试/文档（docs默认ignore需对审核通过的两份设计/计划等明确路径使用git add -f），形成可审查提交，再`git push <已配置dev上游>`。如果dev没有上游，检查现有remote/分支后用对应remote设置上游，不猜仓库。记录实际commit和推送结果。
 
 ## Plan Review and Execution Handoff
 
-2026-11-08 自动验收完成记录：最终空白清理后两套仍各85 files/43 views/9 routes/0 assets，170描述符和9个普通editor来源一致；UI六命令、新compiled两构建、新native构建全部0。Foundation每lane三脚本7/4/15重新运行0，其余九份按源码输出等价性和精确执行依赖复用；新compiled套件8上下文0，普通production3上下文0；最终DEV `dev/browser-batch/redesign-2026-11-08T04-51-28-954Z/batch.json` 与COMPILED `compiled/browser-batch/redesign-2026-11-08T04-56-42-584Z/batch.json` 各7focused/128groups/36matrix/872checks/1636PNG/2016可达性全通过，425运行输入无漂移且全部contexts关闭。三个自动位置每lane共8次真实拾取、DOM/CSS和真实TSX Original保存重载/取消/重试两lane均通过。原生debug43,617,280 bytes/SHA 46ECC856E8696C1A63626DF20A12D33EC8A70342E12E30E0E5EF1EE2A79CCBD3，389产品输入无漂移；Rust复用253pass/2既有ignored及Clippy/fmt0，已核对46Rust+6输入。旧完整通过、失败、停止与通知补充3PASS/1late-ID FAILED保留；补充probe原单来源、临时挂载编号、详情展开态及V4 JSON属性插入顺序假设失败全部保留；V5使用生产canonical selector比较，保留全部值和数组顺序；DEV首次PID复用关闭审计失败与身份修正也保留，不降低业务断言。本人原生表仍待验；Step10等待实际dev提交和推送后填写。
+2026-11-08 自动验收完成记录：最终空白清理后两套仍各85 files/43 views/9 routes/0 assets，170描述符和9个普通editor来源一致；UI六命令、新compiled两构建、新native构建全部0。Foundation每lane三脚本7/4/15重新运行0，其余九份按源码输出等价性和精确执行依赖复用；新compiled套件8上下文0，普通production3上下文0；最终DEV `dev/browser-batch/redesign-2026-11-08T04-51-28-954Z/batch.json` 与COMPILED `compiled/browser-batch/redesign-2026-11-08T04-56-42-584Z/batch.json` 各7focused/128groups/36matrix/872checks/1636PNG/2016可达性全通过，425运行输入无漂移且全部contexts关闭。三个自动位置每lane共8次真实拾取、DOM/CSS和真实TSX Original保存重载/取消/重试两lane均通过。原生debug43,617,280 bytes/SHA 46ECC856E8696C1A63626DF20A12D33EC8A70342E12E30E0E5EF1EE2A79CCBD3，389产品输入无漂移；Rust复用253pass/2既有ignored及Clippy/fmt0，已核对46Rust+6输入。旧完整通过、失败、停止与通知补充3PASS/1late-ID FAILED保留；补充probe原单来源、临时挂载编号、详情展开态及V4 JSON属性插入顺序假设失败全部保留；V5使用生产canonical selector比较，保留全部值和数组顺序；DEV首次PID复用关闭审计失败与身份修正也保留，不降低业务断言。本人原生表仍待验；Step10已完成，实际提交与推送记录见下方。
+
+2026-11-08 实际 Git 交付记录：主提交 `7a4b9715211d3a1073f3b0d64a46a982c7bdde06`（`feat(ui): redesign default launcher suites`）已成功推送至 `origin/dev`；推送后远端 `refs/heads/dev` 与主提交一致，工作区及暂存区干净。暂存校验确认237个路径、170个套件描述符、9个普通编辑器文件和3个最终浏览器脚本；`verify-final-index.mjs` 与实际 `git diff --cached --check` 均退出0。
 
 设计各节的覆盖：默认无图/显示修复→Task1/4；公开协议/身份→Task2；首次选择/恢复时序→Task3；两套首页/导航→Task4；实例/详情/本地内容→Task5；版本与任务→Task6；账户/发现→Task7；设置/Java/editor→Task8；九类弹窗→Task9；日志/主题/键盘/小窗→Task10；全部定制旅程/生产CSP/原生/提交→Task11。
 
