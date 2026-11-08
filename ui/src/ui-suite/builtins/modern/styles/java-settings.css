@@ -1,0 +1,27 @@
+.settings-java, .java-discovery, .java-downloads { display: grid; gap: 17px; min-width: 0; }
+.settings-java h2, .settings-java h3, .settings-java h4 { margin: 0; }
+.settings-java h2 { font-size: 1.06rem; }
+.settings-java h3, .settings-java h4 { font-size: .9rem; }
+.settings-java p { margin: 0; color: var(--muted); line-height: 1.65; font-size: .82rem; overflow-wrap: anywhere; }
+.settings-java button { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.java-heading, .java-downloads header { display: grid; gap: 6px; }
+.java-tools, .java-download-versions { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.java-count { color: var(--accent); font-variant-numeric: tabular-nums; margin-left: 8px; }
+.java-installations { display: grid; gap: 10px; min-width: 0; }
+.java-runtime { display: grid; gap: 10px; min-width: 0; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 16px; }
+.java-runtime.selected { border-color: var(--accent); }
+.java-runtime-summary { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; min-width: 0; }
+.java-runtime-summary > div { min-width: 0; display: grid; gap: 4px; flex: 1; }
+.java-runtime > button { justify-self: start; }
+.java-path { font-size: .73rem; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+.java-empty { display: flex; gap: 13px; padding: 18px; border: 1px dashed var(--border); border-radius: 8px; color: var(--muted); }
+.java-empty > svg, .java-warnings > svg { flex-shrink: 0; }
+.java-empty > div { display: grid; gap: 6px; min-width: 0; }
+.java-warnings { display: flex; align-items: flex-start; gap: 12px; padding: 15px; background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; }
+.java-warnings > div { display: grid; gap: 9px; min-width: 0; }
+.java-entered-download { display: flex; align-items: flex-end; gap: 10px; min-width: 0; }
+.java-entered-download .field { display: grid; gap: 7px; min-width: 0; flex: 1; }
+.java-entered-download input { width: 100%; min-width: 0; box-sizing: border-box; }
+.java-downloads { padding-top: 18px; border-top: 1px solid var(--border); }
+@media(max-width:600px){ .java-entered-download { flex-direction: column; align-items: stretch; } .java-tools > button, .java-download-versions > button { flex: 1 1 auto; } .java-runtime { padding: 12px; } }
+.modern-java .java-installations { grid-template-columns: repeat(auto-fit,minmax(min(280px,100%),1fr)); }

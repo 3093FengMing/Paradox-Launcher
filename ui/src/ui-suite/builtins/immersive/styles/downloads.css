@@ -1,0 +1,54 @@
+.immersive-downloads { display: grid; gap: 18px; min-width: 0; }
+.immersive-downloads .downloads-overview { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.immersive-downloads .downloads-intro { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.immersive-downloads .downloads-intro > svg { color: var(--accent-ink); flex-shrink: 0; }
+.immersive-downloads .downloads-intro h2 { font-size: 1.2em; }
+.immersive-downloads .downloads-intro p { font-size: .82em; margin-top: 5px; }
+.immersive-downloads .downloads-counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.immersive-downloads .downloads-counts > div { display: flex; gap: 14px; align-items: center; background: var(--surface); padding: 18px 20px; border: 1px solid var(--border); border-radius: 11px; }
+.immersive-downloads .downloads-counts strong { font-size: 1.6em; font-variant-numeric: tabular-nums; }
+.immersive-downloads .downloads-counts span { color: var(--muted); font-size: .78em; }
+.immersive-queue { display: grid; gap: 16px; min-width: 0; }
+.immersive-queue .queue-filters { display: flex; gap: 15px; flex-wrap: wrap; align-items: end; }
+.immersive-queue .queue-filters label { display: grid; gap: 7px; color: var(--muted); font-size: .78em; min-width: 145px; }
+.immersive-queue .queue-filters select { padding: 10px 12px; }
+.immersive-queue .queue-result-count { margin: 0 0 12px auto; font-size: .8em; color: var(--muted); }
+.immersive-queue .queue-task { min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 11px; padding: 19px; }
+.immersive-queue .queue-task-heading { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.immersive-queue .queue-kind { font-size: .72em; color: var(--muted); }
+.immersive-queue .queue-status { display: inline-flex; align-items: center; gap: 6px; font-size: .72em; color: var(--muted); white-space: nowrap; }
+.immersive-queue .queue-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.immersive-queue [data-status="running"] > .queue-task-heading > .queue-status { color: var(--accent-ink); }
+.immersive-queue [data-status="failed"] > .queue-task-heading > .queue-status { color: #de725f; }
+.immersive-queue .queue-progress { margin-top: 17px; }
+.immersive-queue .queue-progress progress { display: block; width: 100%; height: 7px; border: none; accent-color: var(--accent-ink); }
+.immersive-queue .queue-progress-copy { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 10px; color: var(--muted); font-size: .73em; font-variant-numeric: tabular-nums; }
+.immersive-queue .queue-progress-copy strong { color: var(--text); font-weight: 500; }
+.immersive-queue .queue-progress-copy > span:last-child { margin-left: auto; }
+.immersive-queue .queue-no-progress { margin-top: 14px; font-size: .8em; }
+.immersive-queue .queue-task-actions { display: flex; gap: 8px; }
+.immersive-queue .queue-details-body { display: grid; gap: 18px; }
+.immersive-queue .queue-message { font-size: .84em; overflow-wrap: anywhere; }
+.immersive-queue .queue-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0; }
+.immersive-queue .queue-facts dt, .immersive-queue .queue-identities dt, .immersive-queue .queue-current > span { font-size: .72em; color: var(--muted); }
+.immersive-queue .queue-facts dd { margin: 6px 0 0; font-size: .95em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.immersive-queue .queue-current { display: grid; gap: 7px; min-width: 0; padding: 12px; background: var(--bg); border-radius: 7px; }
+.immersive-queue .queue-current code { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; font-size: .72em; }
+.immersive-queue .queue-identities { margin: 0; padding-top: 15px; border-top: 1px solid var(--border); display: grid; gap: 10px; }
+.immersive-queue .queue-identities dd { margin: 4px 0 0; min-width: 0; overflow-wrap: anywhere; }
+.immersive-queue .queue-empty { display: grid; justify-items: center; text-align: center; gap: 12px; padding: 48px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 11px; }
+@media (max-width: 700px) { .immersive-downloads .downloads-overview { align-items: start; flex-direction: column; } .immersive-downloads .downloads-counts > div { flex-direction: column; align-items: start; gap: 3px; padding: 12px; } .immersive-queue .queue-task-heading { flex-wrap: wrap; } .immersive-queue .queue-filters label { flex: 1; } .immersive-queue .queue-result-count { width: 100%; margin: 0; } }
+.immersive-downloads .downloads-overview { background: var(--surface); border: 1px solid var(--border); padding: 23px; border-radius: 14px; }
+.immersive-downloads .downloads-counts > div { padding: 14px 22px; background: transparent; border-radius: 8px; }
+.immersive-queue .queue-list { display: grid; gap: 16px; }
+.immersive-queue .queue-task { border-radius: 14px; padding: 23px; }
+.immersive-queue .queue-task-icon { display: grid; place-items: center; width: 43px; height: 43px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--muted); flex-shrink: 0; }
+.immersive-queue .queue-task-title { flex: 1; min-width: 0; display: grid; gap: 5px; }
+.immersive-queue .queue-task-title h3 { font-size: 1.07em; overflow-wrap: anywhere; }
+.immersive-queue .queue-details { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; }
+.immersive-queue .queue-details summary { cursor: pointer; font-size: .8em; color: var(--muted); width: fit-content; }
+.immersive-queue .queue-details summary:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 4px; }
+.immersive-queue .queue-details[open] summary { margin-bottom: 20px; color: var(--text); }
+.immersive-queue .queue-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.immersive-queue .queue-identities { display: flex; flex-wrap: wrap; gap: 25px; }
+@media (max-width: 700px) { .immersive-queue .queue-task { padding: 17px; } .immersive-queue .queue-task-actions { margin-left: auto; } .immersive-queue .queue-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

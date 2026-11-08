@@ -578,7 +578,7 @@ try {
       ),
     visibleTargets: window.launcherFixture
       .targets()
-      .filter((x) => /test\.launcher\.view|control.button|layout.app|node.main.app/.test(x)),
+      .filter((x) => /test\.launcher\.view|control.button|test\.launcher\.app|layout\.shell/.test(x)),
   }));
   assert.equal(after.memory, 6144);
   assert.equal(after.search, 'unfinished shared search');
@@ -775,7 +775,7 @@ try {
   await page.waitForFunction(() => window.launcherFixture.views.a?.snapshot.avatars['account-a']);
   assert.equal(await page.locator('[data-shared-avatar]').count(), 2);
   await page.evaluate(() => window.launcherFixture.views.a.actions.navigation.navigate('accounts'));
-  await page.locator('.account-grid').waitFor();
+  await page.locator('.accounts-page').waitFor();
   assert.equal(
     await page.evaluate(
       () => window.foundationDesktop.calls.filter((x) => x.command === 'account_skin').length,
@@ -903,7 +903,7 @@ try {
   });
   const beforeFault = fixture.observedPageErrors.length;
   await page.evaluate(() => window.launcherFixture.replaceDomains(true));
-  await page.locator('.content-layout').first().waitFor();
+  await page.locator('.discover-page').first().waitFor();
   await page.evaluate(() => window.task3Actions.content.refresh());
   await page.waitForFunction(
     () =>
@@ -915,7 +915,7 @@ try {
     report.expectedViewFaults.every((message) => message.includes('Task3 controlled view fault')),
   );
   await page.evaluate(() => window.launcherFixture.restore());
-  await page.locator('.content-layout').first().waitFor();
+  await page.locator('.discover-page').first().waitFor();
   assert.equal(
     await page.evaluate(() => window.launcherFixture.views.a.snapshot.accounts.clientIdDraft),
     'client-draft-survives',
@@ -954,9 +954,26 @@ try {
     );
     assert.doesNotMatch(modules['launcher/LauncherProvider.tsx'], /data-ui-node|data-ui-view/);
     assert.match(modules['main.tsx'], /data-ui-node[^\n]*app/i);
-    assert.match(modules['App.tsx'], /data-ui-node/);
+    assert.doesNotMatch(modules['App.tsx'], /data-ui-node|data-ui-view/);
+    assert.match(modules['App.tsx'], /UiView,\s*\{\s*id:\s*["']layout\.shell["']/);
+    report.visibleShellOwnership = await page.evaluate(async () => {
+      const { listOwners, getDomOwnership } = await import('/src/customization/ownership.ts');
+      const shell = document.querySelector('.app-shell');
+      const owners = listOwners().filter((owner) => owner.target === 'layout.shell');
+      return {
+        registered: window.launcherFixture.targets().includes('layout.shell'),
+        visible: !!shell && shell.getBoundingClientRect().width > 0,
+        instrumented: !!shell && !!getDomOwnership(shell),
+        publicShellRoot: !!shell && owners.some((owner) => owner.roots.has(shell)),
+        owners: owners.map((owner) => ({ target: owner.target, viewId: owner.viewId, rootCount: owner.roots.size })),
+      };
+    });
+    assert.equal(report.visibleShellOwnership.registered, true);
+    assert.equal(report.visibleShellOwnership.visible, true);
+    assert.equal(report.visibleShellOwnership.instrumented, true);
+    assert.equal(report.visibleShellOwnership.publicShellRoot, true);
     assert.match(modules['ui-tests/launcher-view-fixture.tsx'], /data-ui-node[^\n]*localbutton/i);
-    pass('actual_Vite_private_and_aliased_callsite_exclusion_visible_App_remains_instrumented');
+    pass('actual_Vite_private_bridge_and_aliased_callsite_exclusion_visible_shell_remains_instrumented');
   } else {
     assert.ok(report.csp);
     assert.deepEqual(fixture.observedSourceModuleRequests, []);
@@ -965,6 +982,11 @@ try {
   assert.deepEqual(fixture.observedPageErrors, []);
 } catch (error) {
   report.failure = error.stack;
+  report.failureDom = await page.evaluate(() => ({
+    pages: [...document.querySelectorAll('[class*="accounts"], [class*="discover"], [class*="content"]')]
+      .filter((element) => element.getBoundingClientRect().width > 0)
+      .map((element) => ({ tag: element.tagName, className: element.className, attributes: [...element.attributes].map(({ name, value }) => [name, value]), text: element.textContent?.trim().slice(0, 300) })),
+  })).catch((snapshotError) => ({ error: String(snapshotError) }));
   await page.screenshot({ path: resolve(artifacts, 'failure.png') });
   throw error;
 } finally {

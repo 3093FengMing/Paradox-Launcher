@@ -1,0 +1,43 @@
+.accounts-page { min-width: 0; display: grid; gap: 22px; }
+.accounts-page h2 { margin: 0; font-size: 1.08rem; }
+.accounts-page p { margin: 0; line-height: 1.65; }
+.accounts-page button { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.accounts-page .field, .accounts-page input { min-width: 0; width: 100%; }
+.accounts-page .accounts-section-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.accounts-page .accounts-identity { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.accounts-page .accounts-identity > div { min-width: 0; display: grid; gap: 5px; }
+.accounts-page .accounts-identity strong { font-size: 1.12rem; overflow-wrap: anywhere; }
+.accounts-page .accounts-identity p, .accounts-page .accounts-identity small { color: var(--muted); overflow-wrap: anywhere; }
+.accounts-page .accounts-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.accounts-page .accounts-help { color: var(--muted); font-size: .86rem; }
+.accounts-page .accounts-eyebrow { color: var(--accent); font-size: .72rem; letter-spacing: .09em; margin-bottom: 8px; }
+.accounts-page .accounts-offline, .accounts-page .accounts-configuration { display: grid; align-content: start; gap: 17px; min-width: 0; }
+.accounts-page .accounts-microsoft { min-width: 0; display: grid; gap: 20px; align-content: start; }
+.accounts-page .accounts-microsoft-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+.accounts-page .accounts-microsoft-heading > div { min-width: 0; }
+.accounts-page .accounts-microsoft-heading > button { flex-shrink: 0; }
+.accounts-page .accounts-microsoft-heading h2 { font-size: 1.45rem; margin-bottom: 9px; }
+.accounts-page .accounts-list { display: grid; gap: 12px; min-width: 0; }
+.accounts-page .accounts-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; }
+.accounts-page .accounts-confirm { flex-basis: 100%; display: grid; gap: 12px; padding: 15px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+.accounts-page .accounts-confirm p { overflow-wrap: anywhere; }
+.accounts-page .accounts-notice { display: grid; justify-items: start; gap: 12px; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; padding: 18px; background: var(--surface); overflow-wrap: anywhere; }
+.accounts-page .accounts-recovery-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
+.accounts-page .accounts-empty { display: grid; justify-items: center; gap: 12px; color: var(--muted); padding: 34px 16px; border: 1px dashed var(--border); border-radius: 10px; text-align: center; }
+@media (max-width: 600px) {
+  .accounts-page { gap: 14px; }
+  .accounts-page .accounts-microsoft-heading { flex-direction: column; gap: 14px; }
+  .accounts-page .accounts-row { align-items: flex-start; }
+  .accounts-page .accounts-identity { flex-wrap: wrap; }
+  .accounts-page .accounts-actions { align-items: stretch; }
+  .accounts-page .accounts-actions > button { flex: 1 1 auto; }
+}
+.modern-accounts .accounts-overview { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 22px; }
+.modern-accounts .accounts-offline, .modern-accounts .accounts-configuration, .modern-accounts .accounts-microsoft { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 25px; }
+.modern-accounts .accounts-offline { border-top: 3px solid var(--accent); }
+.modern-accounts .accounts-list { grid-template-columns: repeat(auto-fit, minmax(min(310px, 100%), 1fr)); }
+.modern-accounts .accounts-row { padding: 19px; border: 1px solid var(--border); border-radius: 10px; align-content: start; background: var(--bg); }
+.modern-accounts .accounts-row > .accounts-identity { flex-basis: 100%; }
+.modern-accounts .accounts-row > .accounts-actions { width: 100%; }
+@media (max-width: 850px) { .modern-accounts .accounts-overview { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .modern-accounts .accounts-offline, .modern-accounts .accounts-configuration, .modern-accounts .accounts-microsoft { padding: 16px; } .modern-accounts .accounts-row { padding: 13px; } }

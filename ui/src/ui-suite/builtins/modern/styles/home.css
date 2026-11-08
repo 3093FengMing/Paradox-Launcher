@@ -1,0 +1,55 @@
+.home-instance-state { display: flex; flex-wrap: wrap; gap: .45em .8em; align-items: center; color: var(--muted); font-size: .8125em; }
+.home-instance-state > span { color: var(--accent-ink); }
+.home-instance-state small { font-size: .92em; }
+.home-action-reason { color: var(--muted); font-size: .75em; line-height: 1.55; margin: .75em 0; overflow-wrap: anywhere; }
+.home-empty-actions { display: flex; gap: 1em; justify-content: flex-end; font-size: .8em; }
+
+.modern-home { display: grid; gap: 1.25em; max-width: 88em; }
+.home-workspace-grid { display: grid; grid-template-columns: minmax(0,1.65fr) minmax(15em,1fr); gap: 1.25em; }
+.current-instance-card, .home-task-card, .home-overview { background: var(--surface); border: 1px solid var(--border); border-radius: min(9px,var(--radius)); min-width: 0; padding: 1.4em; }
+.home-section-label { display: flex; align-items: center; gap: .6em; font-size: .8125em; color: var(--muted); }
+.home-section-label h2 { font-size: 1em; font-weight: 500; margin: 0; }
+.home-section-label svg { color: var(--accent-ink); }
+.current-instance-card > h2 { font-size: 1.7em; font-weight: 600; margin: .8em 0 .3em; overflow-wrap: anywhere; }
+.current-instance-card > p { font-size: .8125em; color: var(--muted); line-height: 1.6; }
+.home-account { display: flex; gap: .6em; align-items: center; padding: .6em 0; margin: .9em 0; background: transparent; color: var(--text); max-width: 100%; font-size: .875em; }
+.home-account > span:not(.avatar) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-account > small { font-size: .8em; color: var(--muted); }
+.home-primary-actions { display: flex; gap: .7em; flex-wrap: wrap; }
+.home-primary-actions > button { min-height: 2.6em; font-size: .875em; padding: .65em 1.2em; border-radius: min(7px,var(--radius)); }
+.home-task-summary { display: flex; gap: 2em; margin: 1.4em 0; }
+.home-task-summary > span { display: grid; gap: .55em; color: var(--muted); font-size: .75em; }
+.home-task-summary b { color: var(--text); font-size: 2em; font-weight: 600; }
+.home-task-card > p { font-size: .8125em; color: var(--muted); line-height: 1.7; }
+.home-task-row { display: flex; justify-content: space-between; gap: .75em; border-top: 1px solid var(--border); padding: .8em 0; font-size: .75em; }
+.home-task-row strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 500; }
+.home-task-row span { color: var(--muted); flex-shrink: 0; }
+.home-task-card > .text-button { font-size: .8125em; margin-top: 1em; }
+.home-overview { padding: 0; overflow: hidden; }
+.home-overview > header { display: flex; justify-content: space-between; gap: 1em; align-items: center; flex-wrap: wrap; padding: 1.1em 1.4em; border-bottom: 1px solid var(--border); }
+.home-overview h2 { font-size: .9375em; font-weight: 600; margin: 0; display: flex; gap: .6em; align-items: center; }
+.home-overview h2 > span { font-size: .8em; color: var(--muted); font-weight: 400; }
+.home-shortcuts { display: flex; flex-wrap: wrap; align-items: center; gap: 1em; font-size: .8125em; }
+.home-profile-choice { width: 100%; display: flex; align-items: center; gap: 1em; min-height: 4em; padding: .85em 1.4em; background: transparent; color: var(--text); text-align: left; border-bottom: 1px solid var(--border); }
+.home-profile-choice:last-child { border-bottom: 0; }
+.home-profile-choice > svg { flex-shrink: 0; color: var(--accent-ink); }
+.home-profile-choice > span:first-of-type { min-width: 0; flex: 1; display: grid; gap: .3em; }
+.home-profile-choice strong { font-size: .875em; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-profile-choice small, .home-profile-choice > span:nth-of-type(2) { font-size: .75em; color: var(--muted); }
+.home-profile-choice.selected { background: color-mix(in srgb, var(--accent) 8%,var(--surface)); }
+.home-profile-choice:focus-visible { outline-offset: -3px; }
+.home-empty-list { padding: 1.5em; color: var(--muted); font-size: .8125em; }
+.home-effective-settings { display: flex; gap: 2em; flex-wrap: wrap; color: var(--muted); font-size: .75em; }
+.home-effective-settings b { color: var(--text); font-weight: 500; margin-left: .6em; }
+.home-personalize { justify-self: start; font-size: .8125em; }
+@media (hover:hover) { .home-profile-choice:hover { background: var(--hover); } }
+@media (max-width:1000px) { .home-workspace-grid { grid-template-columns: minmax(0,1fr); } }
+@media (max-width:640px) {
+  .modern-home { gap: .85em; }
+  .current-instance-card, .home-task-card { padding: 1em; }
+  .current-instance-card > h2 { font-size: 1.3em; }
+  .home-account { flex-wrap: wrap; }
+  .home-overview > header { padding: 1em; }
+  .home-profile-choice { padding: .8em; gap: .6em; flex-wrap: wrap; }
+  .home-primary-actions > button { width: 100%; }
+}

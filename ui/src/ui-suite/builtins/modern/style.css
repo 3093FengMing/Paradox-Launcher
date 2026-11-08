@@ -1,12 +1,1 @@
-.modern-shell {
-  --builtin-banner: url('../common/assets/world.svg');
-}
-.modern-shell .banner-illustration {
-  background-image: var(--banner-image, var(--builtin-banner));
-}
-.modern-shell .workspace {
-  min-width: 0;
-}
-.modern-shell main {
-  min-height: 0;
-}
+/* modern: source entry. Player layers are imported by Shell/Home; host notices own their isolated stylesheet. */

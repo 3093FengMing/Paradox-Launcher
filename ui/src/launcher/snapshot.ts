@@ -164,6 +164,7 @@ export function createLauncherSnapshot(
   },
 ): DeepReadonly<LauncherSnapshot> {
   const { launcher, accounts, java, downloads } = services;
+  const guard = launcher.getGuardState();
   const config = project(launcher.bootstrap?.config ?? null, configSchema);
   const tasks = project(downloads.tasks, taskSchema);
   const installed = project(launcher.installed, installedSchema);
@@ -223,9 +224,20 @@ export function createLauncherSnapshot(
       environment: project(shell.drafts.environment, ['key', 'value']),
       argumentTemplateError: shell.drafts.argumentTemplateError,
     },
-    profiles: { items, installed, activeKey: config?.active_profile ?? null },
+    profiles: {
+      items,
+      installed,
+      activeKey: config?.active_profile ?? null,
+      scanning: guard.scanning,
+      scanError: guard.scanError,
+    },
     activity: project(launcher.busy, ['action', 'status', 'message']),
-    launch: shell.launch,
+    launch: project(shell.launch, {
+      phase: null,
+      profileKey: null,
+      canStop: null,
+      selection: ['profileKey', 'accountId', 'submitting', 'canSubmit'],
+    }),
     profileDraft: {
       ...shell.profileDraft,
       editor: project(shell.profileDraft.editor, {
@@ -256,10 +268,18 @@ export function createLauncherSnapshot(
         'kind',
         'pending',
         'searching',
+        'searchError',
         'removing',
         'includeSaves',
       ]),
       request: project(shell.content.request, ['query', 'kind', 'offset']),
+      listRequest: project(shell.content.listRequest, [
+        'profileKey',
+        'directory',
+        'category',
+        'loading',
+        'error',
+      ]),
       results: project(shell.content.results, {
         hits: ['project_id', 'title', 'description', 'project_type', 'downloads'],
         total_hits: null,

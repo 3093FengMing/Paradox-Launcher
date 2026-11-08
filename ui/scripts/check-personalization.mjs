@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
-import { loadApp, hookHost, deferred, uiRoot } from './lib/hook-test-host.mjs';
+import { loadApp, hookHost, deferred, uiRoot, initialConfig } from './lib/hook-test-host.mjs';
 const require = createRequire(new URL('../package.json', import.meta.url));
 const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
@@ -11,6 +11,40 @@ const app = loadApp();
 const { appearanceVariables } = app('lib/appearance.ts');
 const { defaultPersonalization } = app('lib/preferences.ts');
 const { normalizePersonalization } = app('lib/preferences.ts');
+const previousStorage = globalThis.localStorage;
+const previewStorage = new Map();
+const savedImageId = 'a'.repeat(64) + '.png';
+globalThis.localStorage = {
+  getItem: (key) => previewStorage.get(key) ?? null,
+  setItem: (key, value) => previewStorage.set(key, value),
+};
+try {
+  const previewApi = loadApp(new Map([['@tauri-apps/api/core', { isTauri: () => false }]]))('api.ts');
+  const fresh = (await previewApi.getConfig()).config;
+  assert.equal(fresh.settings.appearance.background_art, false, 'new browser preview configurations start without artwork');
+  fresh.settings.appearance.background_art = true;
+  fresh.settings.personalization.background_file = savedImageId;
+  await previewApi.saveConfig(fresh);
+  const serialized = previewStorage.get('paradox-launcher-preview-v1');
+  const restored = (await previewApi.getConfig()).config;
+  assert.equal(restored.settings.appearance.background_art, true, 'saved artwork preference is preserved');
+  assert.equal(restored.settings.personalization.background_file, savedImageId, 'saved artwork file is preserved');
+  assert.equal(previewStorage.get('paradox-launcher-preview-v1'), serialized, 'config reads do not migrate saved background data');
+} finally {
+  if (previousStorage === undefined) delete globalThis.localStorage;
+  else globalThis.localStorage = previousStorage;
+}
+assert.equal(initialConfig.settings.appearance.background_art, false, 'new fixture configurations start without artwork');
+for (const id of ['modern', 'immersive']) {
+  const base = resolve(uiRoot, 'src/ui-suite/builtins', id);
+  const manifest = JSON.parse(readFileSync(resolve(base, 'suite.json'), 'utf8'));
+  assert.deepEqual(manifest.files.filter((file) => file.kind === 'asset'), [], 'defaults need no packaged artwork');
+  for (const file of manifest.files.filter((file) => file.kind === 'css')) {
+    const css = readFileSync(resolve(uiRoot, 'src/ui-suite/builtins', file.path), 'utf8');
+    assert.doesNotMatch(css, /world\.svg|landscape\.svg|var\(--(?:background|banner)-image/, `${file.path}: defaults ignore saved background variables`);
+  }
+  assert.doesNotMatch(readFileSync(resolve(base, 'Shell.tsx'), 'utf8'), /has-background/, 'default structure ignores artwork preferences');
+}
 const routeIds = JSON.parse(
   readFileSync(new URL('./fixtures/route-ids.json', import.meta.url), 'utf8'),
 );
@@ -227,7 +261,11 @@ const { fixture: providerFixture } = await import('./lib/launcher-provider-fixtu
 const f = await providerFixture();
 const current = await f.current();
 const actions = current.actions;
-const appearanceView = await f.renderView('ui-suite/builtins/common/components/AppearanceSettings.tsx');
+const selectedBuiltin = current.snapshot.settings.draft.appearance.interface_style;
+const builtinManifest = JSON.parse(readFileSync(resolve(uiRoot, `src/ui-suite/builtins/${selectedBuiltin}/suite.json`), 'utf8'));
+const appearanceSource = builtinManifest.views['component.appearance-settings'];
+assert.ok(appearanceSource, 'selected builtin has an appearance-settings binding');
+const appearanceView = await f.renderView(`ui-suite/builtins/${appearanceSource}`);
 const children = (node) =>
   !node || typeof node !== 'object'
     ? []
@@ -310,5 +348,9 @@ const replacement = await f.renderView('components/PersonalizationSettings.tsx',
   onChooseBackground: actions.settings.chooseBackground,
 });
 assert.equal(children(replacement).filter((x) => x.props.options)[1].props.value, 'serif');
+actions.settings.clearBackground();
+const cleared = (await f.current()).snapshot.settings.draft.personalization;
+assert.equal(cleared.background_file, '', 'public clearBackground remains available');
+assert.equal(cleared.font, 'serif', 'clearing the image keeps other saved customization');
 f.host.unmount();
 console.log('Latest-field appearance/personalization callbacks and held chooser checks passed.');

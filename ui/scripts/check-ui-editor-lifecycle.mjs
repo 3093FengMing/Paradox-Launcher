@@ -68,6 +68,8 @@ async function editor(options = {}) {
   };
   const controller = createUiEditorController({ storage,
     getBuiltinBundle: async () => structuredClone(b),
+    waitForConfiguration: options.waitForConfiguration,
+    getDefaultBuiltin: () => options.defaultBuiltin ?? 'immersive',
     createScope: () => ({}),
     compile: async (value, scope, ownership) => {
       compiles.push({ value, scope, ownership });
@@ -88,6 +90,94 @@ async function editor(options = {}) {
 }
 const cases = [];
 const test = (name, fn) => cases.push([name, fn]);
+const pristine = () => ({ ...library([]), revision: 0, active_suite_id: null });
+const onboarding = (options = {}) => editor({ library: pristine(), waitForConfiguration: async () => {}, ...options });
+for (const first of ['library', 'source']) test(`pristine_${first}_first`, async () => {
+  const data = deferred(), config = deferred();
+  const f = await onboarding({ deferInitialization: true, storage: { loadSuiteLibrary: () => data.promise }, waitForConfiguration: () => config.promise });
+  assert.equal(f.snapshot().initialSelectionRequired, false);
+  if (first === 'library') data.resolve(pristine()); else config.resolve();
+  await tick(); assert.equal(f.writes.length, 0); assert.equal(f.snapshot().initialSelectionRequired, false);
+  if (first === 'library') config.resolve(); else data.resolve(pristine());
+  await boundary(f.controller.whenInitialized(), f.controller, 'Onboarding readiness');
+  assert.equal(f.snapshot().initialSelectionRequired, true); assert.equal(f.writes.length, 0);
+  assert.equal(await f.actions.selectSuite('builtin.immersive'), true);
+  assert.equal(f.controller.getLibrary().revision, 1); assert.equal(f.snapshot().initialSelectionRequired, false);
+  const saved = f.controller.getLibrary(); f.disconnect();
+  const restart = await onboarding({ library: saved });
+  assert.equal(restart.snapshot().initialSelectionRequired, false); assert.equal(restart.writes.length, 0);
+  assert.equal(restart.snapshot().selectedSuiteId, 'builtin.immersive'); restart.disconnect();
+});
+test('pristine_safe_reset_and_corrupt_are_not_first_choice', async () => {
+  for (const options of [{ safe: true }, { library: { ...pristine(), revision: 1 } }, { storage: { loadSuiteLibrary: async () => { throw Error('corrupt DATA'); } } }]) {
+    const f = await onboarding(options);
+    assert.equal(f.snapshot().initialSelectionRequired, false);
+    assert.equal(f.writes.length, options.library ? 1 : 0); f.disconnect();
+  }
+});
+test('F12_before_queued_write', async () => {
+  const f = await onboarding(), queue = deferred(), queued = deferred(), candidates = [];
+  const serialize = f.controller.serialize.bind(f.controller);
+  f.controller.persistence = queue.promise;
+  f.controller.serialize = (run) => { queued.resolve(); return serialize(run); };
+  const prepare = f.controller.prepareActivation.bind(f.controller);
+  f.controller.prepareActivation = async (...args) => { const c = await prepare(...args); candidates.push(c); return c; };
+  const work = f.actions.selectSuite('builtin.immersive');
+  await boundary(queued.promise, f.controller, 'Prepared queued selection'); f.recovery.disable(); queue.resolve();
+  assert.equal(await work, false); assert.equal(f.writes.length, 0);
+  assert.equal(f.snapshot().initialSelectionRequired, true); assert.equal(f.snapshot().suspended, true);
+  assert.equal(candidates.length, 1); assert.equal(candidates[0].retired, true); f.disconnect();
+});
+test('F12_after_saved_ack', async () => {
+  const f = await onboarding(), held = holdSaveAcknowledgement(f), originalDraft = f.snapshot().draft;
+  const work = f.actions.selectSuite('builtin.immersive'); await held.whenSubmitted(work);
+  assert.equal(f.snapshot().initialSelectionRequired, true); f.recovery.disable(); held.release();
+  assert.equal(await work, true); assert.equal(f.controller.getLibrary().revision, 1);
+  assert.equal(f.snapshot().draft, originalDraft); assert.equal(f.snapshot().initialSelectionRequired, true);
+  assert.equal(f.snapshot().suspended, true); assert.equal(f.controller.getActivation().primary.layerId, 'trusted.modern');
+  const saved = f.controller.getLibrary(); f.disconnect();
+  const restart = await onboarding({ library: saved }); assert.equal(restart.snapshot().initialSelectionRequired, false);
+  assert.equal(restart.snapshot().selectedSuiteId, 'builtin.immersive'); restart.disconnect();
+});
+test('ack_then_install_failure_keeps_choice', async () => {
+  let fail = false, candidate;
+  const f = await onboarding({ compile: async () => {
+    const result = prepared();
+    if (fail) { fail = false; candidate = result; Object.defineProperty(result, 'sourceDefinitions', { get() { throw Error('install definitions failed'); } }); }
+    return result;
+  } });
+  const before = f.controller.getActivation(); fail = true;
+  assert.equal(await f.actions.selectSuite('builtin.immersive'), false);
+  assert.equal(f.controller.getLibrary().revision, 1); assert.equal(f.snapshot().initialSelectionRequired, true);
+  assert.equal(f.controller.getActivation(), before); assert.equal(before.retired, false); assert.equal(candidate.disposed, true);
+  assert.equal(f.snapshot().pending, null); assert.match(f.snapshot().diagnostics.at(-1), /install definitions failed/);
+  assert.equal(await f.actions.selectSuite('builtin.immersive'), true); assert.equal(f.controller.getLibrary().revision, 2);
+  assert.equal(f.snapshot().initialSelectionRequired, false); f.disconnect();
+});
+test('cas_conflict_reload_authority', async () => {
+  for (const active of [null, 'builtin.modern']) {
+    const f = await onboarding(), fresh = { ...pristine(), revision: 3, active_suite_id: active }, seen = [];
+    f.storage.loadSuiteLibrary = async () => structuredClone(fresh);
+    f.storage.saveSuiteLibrary = async (candidate, revision) => {
+      seen.push(revision); if (seen.length === 1) throw Error('Suite revision conflict');
+      assert.equal(revision, 3); return { ...candidate, revision: 4 };
+    };
+    assert.equal(await f.actions.selectSuite('builtin.immersive'), active !== null);
+    assert.equal(f.controller.getLibrary().revision, 3); assert.equal(f.snapshot().initialSelectionRequired, active === null);
+    assert.match(f.snapshot().diagnostics.at(-1), /revision conflict/);
+    if (active) assert.equal(f.snapshot().selectedSuiteId, active);
+    else { assert.equal(await f.actions.selectSuite('builtin.immersive'), true); assert.deepEqual(seen, [0, 3]); }
+    f.disconnect();
+  }
+});
+test('initial_choice_strict_reconnect_and_disconnected_completion', async () => {
+  const f = await onboarding(); f.disconnect(); const cleanup = f.controller.connect();
+  await boundary(f.controller.whenInitialized(), f.controller, 'Choice reconnect');
+  assert.equal(f.snapshot().initialSelectionRequired, true); assert.equal(f.writes.length, 0);
+  const held = holdSaveAcknowledgement(f), work = f.actions.selectSuite('builtin.immersive'); await held.whenSubmitted(work);
+  cleanup(); let updates = 0; f.controller.subscribe(() => updates++); held.release();
+  assert.equal(await work, false); assert.equal(updates, 0);
+});
 test('editor_self_replace_keeps_draft_and_operation', async () => {
   const f = await editor();
   f.actions.open(); f.actions.patchFile('Editor.tsx', 'export default () => null; // replaced');
@@ -352,5 +442,5 @@ test('duplicate_asset_reports_false_retains_original_bytes_and_diagnostic', asyn
     assert.ok(f.snapshot().diagnostics.includes('File already exists'));
   } finally { f.disconnect(); }
 });
-for (const [name, fn] of cases) { await fn(); console.log(`PASS ${name}`); }
+for (const [name, fn] of cases.filter(([name]) => !process.env.UI_LIFECYCLE_CASE || new RegExp(process.env.UI_LIFECYCLE_CASE).test(name))) { await fn(); console.log(`PASS ${name}`); }
 console.log(`PASS ${cases.length} permanent editor lifecycle cases`);

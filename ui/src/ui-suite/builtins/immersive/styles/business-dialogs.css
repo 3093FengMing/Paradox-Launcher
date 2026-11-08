@@ -1,0 +1,75 @@
+.immersive-business-dialog {
+  width: min(760px, calc(100vw - 40px));
+  max-height: calc(100dvh - 36px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+}
+.immersive-business-dialog .business-dialog-heading { display: flex; align-items: start; justify-content: space-between; gap: 18px; flex: 0 0 auto; padding: 20px 24px 17px; border-bottom: 1px solid var(--border); }
+.immersive-business-dialog .business-dialog-heading-copy { min-width: 0; flex: 1; }
+.immersive-business-dialog .business-dialog-heading .icon-button { flex: 0 0 auto; }
+.immersive-business-dialog .modal-title { overflow-wrap: anywhere; }
+.immersive-business-dialog .modal-description { margin: 7px 0 0; max-height: 22vh; overflow: auto; overflow-wrap: anywhere; line-height: 1.5; }
+.immersive-business-dialog .business-dialog-content { min-height: 0; padding: 18px 24px 20px; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.immersive-business-dialog .business-dialog-form { display: grid; gap: 16px; min-width: 0; }
+.immersive-business-dialog .instance-dialog-grid { grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); align-items: start; }
+.immersive-business-dialog .instance-arguments, .immersive-business-dialog .instance-environment, .immersive-business-dialog .dialog-actions, .immersive-business-dialog .template-name-section, .immersive-business-dialog .template-argument-section, .immersive-business-dialog .template-environment-section { grid-column: 1 / -1; }
+.immersive-business-dialog .dialog-section { display: grid; min-width: 0; gap: 12px; padding: 15px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; align-content: start; }
+.immersive-business-dialog .dialog-section > h3 { margin: 0 0 2px; font-size: .82em; }
+.immersive-business-dialog .dialog-section > .field { margin: 0; }
+.immersive-business-dialog .dialog-paired-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.immersive-business-dialog .instance-runtime .dialog-paired-fields { grid-template-columns: minmax(0, 1fr); }
+.immersive-business-dialog .dialog-override { display: grid; gap: 7px; min-width: 0; }
+.immersive-business-dialog .dialog-override small, .immersive-business-dialog .dialog-help { font-size: .72em; line-height: 1.45; color: var(--muted); overflow-wrap: anywhere; margin: 0; }
+.immersive-business-dialog .inline-check { font-size: .78em; line-height: 1.45; align-items: start; min-width: 0; overflow-wrap: anywhere; }
+.immersive-business-dialog .inline-check input { flex: 0 0 auto; margin-top: .1em; }
+.immersive-business-dialog .dialog-inline-tools { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.immersive-business-dialog .dialog-inherited { padding: 11px; border: 1px dashed var(--border); border-radius: 7px; min-width: 0; }
+.immersive-business-dialog .dialog-inherited summary { cursor: pointer; font-size: .78em; overflow-wrap: anywhere; }
+.immersive-business-dialog .dialog-inherited[open] .field { margin-top: 11px; }
+.immersive-business-dialog .dialog-actions { position: sticky; bottom: -20px; z-index: 1; display: flex; justify-content: end; flex-wrap: wrap; gap: 10px; padding: 13px 0 3px; margin: 0; border-top: 1px solid var(--border); background: var(--surface); }
+.immersive-business-dialog .dialog-actions button, .immersive-business-dialog .dialog-close-choices button { white-space: normal; line-height: 1.35; min-height: 36px; }
+.immersive-business-dialog .dialog-error, .immersive-business-dialog .dialog-danger-note { margin: 0; background: color-mix(in srgb, var(--danger, #cf4250) 8%, var(--surface)); border: 1px solid color-mix(in srgb, var(--danger, #cf4250) 30%, var(--border)); border-radius: 9px; padding: 13px; font-size: .79em; line-height: 1.5; overflow-wrap: anywhere; }
+.immersive-business-dialog .dialog-error p, .immersive-business-dialog .dialog-danger-note p { margin: 0 0 10px; }
+.immersive-business-dialog .dialog-error code { display: block; overflow-wrap: anywhere; white-space: pre-wrap; word-break: break-word; margin-bottom: 10px; }
+.immersive-business-dialog .dialog-danger-action { background: var(--danger, #b63542); color: white; }
+.immersive-business-dialog .dialog-close-choices { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.immersive-business-dialog .dialog-close-choices .primary { grid-column: 1 / -1; }
+.immersive-business-dialog .dialog-close-state p { margin: 0; font-size: .79em; line-height: 1.5; overflow-wrap: anywhere; }
+.immersive-business-dialog .dialog-import-list { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.immersive-business-dialog .dialog-import-row { display: flex; align-items: center; gap: 13px; padding: 13px 15px; min-width: 0; border-bottom: 1px solid var(--border); }
+.immersive-business-dialog .dialog-import-row:last-child { border-bottom: 0; }
+.immersive-business-dialog .dialog-import-row > input { flex: 0 0 auto; }
+.immersive-business-dialog .dialog-import-copy { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.immersive-business-dialog .dialog-import-copy strong { font-size: .82em; }
+.immersive-business-dialog .dialog-import-copy p { margin: 5px 0 0; font-size: .72em; color: var(--muted); }
+.immersive-environment-editor { display: grid; gap: 10px; min-width: 0; }
+.immersive-environment-editor .environment-row { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 12px; padding: 13px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.immersive-environment-editor .environment-row-key { display: grid; gap: 9px; align-content: start; min-width: 0; }
+.immersive-environment-editor .environment-row-key > button { justify-self: start; }
+.immersive-environment-editor .field { margin: 0; min-width: 0; }
+.immersive-environment-editor > button { justify-self: start; }
+.immersive-business-dialog.profile-dialog { overflow: hidden; }
+.immersive-business-dialog .profile-dialog-actions { position: sticky; bottom: -20px; z-index: 1; background: var(--surface); padding: 12px 0 3px; }
+.immersive-business-dialog .profile-dialog-actions button { white-space: normal; }
+.immersive-business-dialog .account-login-footer { padding-bottom: 3px; }
+@media (max-width: 620px) {
+  .immersive-business-dialog { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); border-radius: 12px; }
+  .immersive-business-dialog .business-dialog-heading { padding: 17px; }
+  .immersive-business-dialog .business-dialog-content { padding: 15px 17px 17px; }
+  .immersive-business-dialog .instance-dialog-grid, .immersive-business-dialog .dialog-paired-fields, .immersive-environment-editor .environment-row { grid-template-columns: minmax(0, 1fr); }
+  .immersive-business-dialog .dialog-import-row { flex-wrap: wrap; }
+  .immersive-business-dialog .dialog-actions { bottom: -17px; }
+  .immersive-business-dialog .profile-dialog-actions { bottom: -17px; }
+}
+@media (max-height: 340px) {
+  .immersive-business-dialog { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); overflow: auto; }
+  .immersive-business-dialog .business-dialog-heading { padding: 11px 12px; gap: 9px; }
+  .immersive-business-dialog .modal-description { max-height: 18vh; margin-top: 4px; }
+  .immersive-business-dialog .business-dialog-content { padding: 11px 12px 12px; overflow: visible; flex: 0 0 auto; }
+  .immersive-business-dialog .dialog-actions, .immersive-business-dialog .profile-dialog-actions { position: static; }
+  .immersive-business-dialog .dialog-close-choices { grid-template-columns: minmax(0, 1fr); }
+}

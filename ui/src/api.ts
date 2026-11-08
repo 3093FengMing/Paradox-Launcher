@@ -76,7 +76,7 @@ const previewDefaults: AppConfig = {
       border_radius: 14,
       compact_sidebar: false,
       reduce_motion: false,
-      background_art: true,
+      background_art: false,
       background_blur: 0,
       background_dim: 8,
       sidebar_opacity: 62,

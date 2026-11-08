@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useLauncherSnapshot } from './launcher/public/context';
 import { UiFoundationProvider } from './ui-foundation/environment';
+import { useUiEditorController } from './ui-editor/controller';
 import { NormalEditorHost, RecoveryHost } from './ui-editor/host';
 import { SuiteProvider } from './ui-suite/SuiteProvider';
 import { UiView } from './ui-suite/View';
@@ -11,7 +12,7 @@ import type { PreparedUiSuite } from './ui-suite/prepared';
 export default function App() {
   const snapshot = useLauncherSnapshot();
   const [fallback, setFallback] = useState<PreparedUiSuite | null>(null);
-  const [failure, setFailure] = useState('');
+  const controller = useUiEditorController();
   useEffect(() => {
     let mounted = true;
     let owned: PreparedUiSuite | null = null;
@@ -19,13 +20,13 @@ export default function App() {
       if (!mounted) { prepared.dispose(); return; }
       owned = prepared;
       setFallback(prepared);
-    }).catch((error: unknown) => { if (mounted) setFailure(String(error)); });
+    }).catch((error: unknown) => { if (mounted) controller.reportPreparationFailure(error); });
     return () => {
       mounted = false;
       // Descendant style/registry effects detach synchronously before this owner releases.
       queueMicrotask(() => owned?.dispose());
     };
-  }, []);
+  }, [controller]);
   return <UiFoundationProvider value={{
     theme: snapshot.appearance.theme,
     variables: snapshot.appearance.variables,
@@ -35,7 +36,7 @@ export default function App() {
     {fallback ? <SuiteProvider fallback={fallback}>
       <UiView id="layout.shell" />
       <NormalEditorHost />
-    </SuiteProvider> : <div className="suite-loading" role="status">{failure || 'Loading UI suite…'}</div>}
+    </SuiteProvider> : null}
     <RecoveryHost />
   </UiFoundationProvider>;
 }

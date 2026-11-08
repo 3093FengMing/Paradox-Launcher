@@ -1,4 +1,3 @@
-import '../styles/common.css';
 import { createElement } from 'react';
 import type { ComponentType } from 'react';
 import { UiIdentity, UiView } from '@paradox/ui';

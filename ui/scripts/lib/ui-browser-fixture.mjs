@@ -12,12 +12,25 @@ export async function applyFixtureConfig(page, config = initialConfig) {
 }
 
 export async function openEditor(page) {
-  await page.waitForFunction(() => window.suiteFinalFixture?.controller.getActivation());
+  await page.waitForFunction(() => (window.suiteFinalFixture ?? window.suiteBuiltinsFixture)?.controller.getActivation());
+  if (await page.evaluate(() => (window.suiteFinalFixture ?? window.suiteBuiltinsFixture).controller.getSnapshot().initialSelectionRequired)) {
+    const choice = page.locator('[data-style-choice]');
+    await choice.locator('input[type="radio"]:checked').check();
+    await choice.getByRole('button', { name: /^(?:Use this interface|使用此界面)$/ }).click();
+    await page.waitForFunction(() => !(window.suiteFinalFixture ?? window.suiteBuiltinsFixture).controller.getSnapshot().initialSelectionRequired);
+  }
   await page.evaluate(async () => {
-    const c = window.suiteFinalFixture.controller;
+    const c = (window.suiteFinalFixture ?? window.suiteBuiltinsFixture).controller;
     if (c.getSnapshot().selectedSuiteId?.startsWith('builtin.')) {
-      await c.actions.copyBuiltin('modern', 'Browser editor draft');
-      c.actions.selectFile('common/editor/style.css');
+      const id = c.getSnapshot().selectedSuiteId.slice('builtin.'.length);
+      await c.actions.copyBuiltin(id, 'Browser editor draft');
+      const draft = c.getSnapshot().draft, source = draft.manifest.views['tool.editor'];
+      if (!source || draft.files[source]?.encoding !== 'utf8') throw Error('Editable tool.editor binding missing');
+      const imported = draft.files[source].text.match(/import\s+['"]([^'"]+\.css)['"]/);
+      if (!imported) throw Error('tool.editor stylesheet import missing');
+      const path = new URL(imported[1], 'https://fixture.invalid/' + source).pathname.slice(1);
+      if (draft.files[path]?.encoding !== 'utf8') throw Error('Editable tool.editor stylesheet missing: ' + path);
+      c.actions.selectFile(path);
     }
   });
   const editor = page.getByRole('dialog', { name: /^(?:UI Suite Editor|UI 套件编辑器)$/ });
@@ -32,6 +45,7 @@ export async function createBrowserFixture({
   nativeCsp,
   desktopBoundary = false,
   oldNamespaceBytes,
+  sourceFailure = null,
 } = {}) {
   const require = createRequire(import.meta.url);
   const { chromium } = require(process.env.PARADOX_PLAYWRIGHT_MODULE || 'playwright');
@@ -70,7 +84,8 @@ export async function createBrowserFixture({
     if (desktopBoundary) {
       await page.addInitScript((initial) => {
         const state = {
-          config: structuredClone(initial),
+          config: structuredClone(initial.config),
+          sourceFailure: initial.sourceFailure,
           accounts: {
             client_id: '',
             active: 'account-a',
@@ -87,6 +102,7 @@ export async function createBrowserFixture({
             suites: [],
           },
           suiteRaw: null,
+          suiteBackups: [],
           calls: [],
           loaderVersions: [
             { version: 'test-loader-1', stable: true },
@@ -234,6 +250,7 @@ export async function createBrowserFixture({
             if (command === 'reset_ui_suite_library') {
               if (!state.suiteLibrary || state.suiteLibrary.revision !== args.expectedRevision)
                 throw new Error('Suite revision conflict');
+              if (state.suiteRaw) state.suiteBackups.push(Array.from(state.suiteRaw));
               state.suiteLibrary = suiteDefaults(args.expectedRevision + 1);
               suiteBytes();
               return structuredClone(state.suiteLibrary);
@@ -256,6 +273,7 @@ export async function createBrowserFixture({
                   : expected.kind !== 'raw' || expected.sha256 !== (await rawHash())
               )
                 throw new Error('Recovery conflict');
+              if (state.suiteRaw) state.suiteBackups.push(Array.from(state.suiteRaw));
               state.suiteLibrary = suiteDefaults(1);
               suiteBytes();
               return structuredClone(state.suiteLibrary);
@@ -263,7 +281,7 @@ export async function createBrowserFixture({
             throw new Error(`Unimplemented foundation fixture boundary: ${command}`);
           },
         };
-      }, config || initialConfig);
+      }, { config: config || initialConfig, sourceFailure });
     }
     if (nativeCsp ?? process.env.PARADOX_TEST_NATIVE_CSP === '1') {
       const csp = JSON.parse(
@@ -303,7 +321,8 @@ export async function createBrowserFixture({
     const navigation = await page.goto(
       url || process.env.PARADOX_UI_URL || 'http://127.0.0.1:1420',
     );
-    await page.locator('.app-shell').waitFor();
+    if (sourceFailure) await page.locator('#paradox-suite-recovery').getByRole('dialog').waitFor();
+    else await page.locator('.app-shell').waitFor();
     if (!desktopBoundary) await applyFixtureConfig(page, config || initialConfig);
     return {
       browser,

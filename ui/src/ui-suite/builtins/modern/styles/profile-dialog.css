@@ -1,0 +1,14 @@
+.modern-profile-dialog { max-height: calc(100dvh - 40px); overflow-y: auto; }
+.modern-profile-dialog .profile-dialog-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 19px; }
+.modern-profile-dialog .profile-dialog-heading-icon { display: grid; place-items: center; width: 45px; height: 45px; color: var(--accent-ink); background: var(--bg); border: 1px solid var(--border); border-radius: 12px; }
+.modern-profile-dialog .profile-dialog-form { display: grid; gap: 18px; margin-top: 22px; }
+.modern-profile-dialog .profile-dialog-loader-fields { display: grid; gap: 17px; }
+.modern-profile-dialog .profile-dialog-install-note { display: flex; align-items: start; gap: 10px; padding: 13px; border-radius: 8px; font-size: .78em; background: var(--bg); }
+.modern-profile-dialog .profile-dialog-install-note svg { flex-shrink: 0; margin-top: 3px; }
+.modern-profile-dialog .profile-dialog-actions { display: flex; justify-content: end; flex-wrap: wrap; gap: 10px; padding-top: 4px; }
+.modern-profile-dialog .profile-dialog-summary { display: flex; align-items: center; gap: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-top: 20px; }
+.modern-profile-dialog .profile-dialog-summary > svg { color: var(--accent-ink); flex-shrink: 0; }
+.modern-profile-dialog .profile-dialog-summary-copy { display: grid; gap: 5px; min-width: 0; overflow-wrap: anywhere; }
+.modern-profile-dialog .profile-dialog-summary-copy span { font-size: .8em; color: var(--muted); }
+@media (max-width: 650px) { .modern-profile-dialog { width: calc(100vw - 28px); max-height: calc(100dvh - 28px); padding: 22px; } }
+.modern-profile-dialog { width: min(480px, calc(100vw - 40px)); border-radius: 15px; }

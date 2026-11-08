@@ -1,0 +1,52 @@
+/* Player-only finishing rules; the ordinary editor has a separate root. */
+.modern-shell .mobile-navigation { display: none; }
+.modern-shell .workspace { container-type: inline-size; }
+.modern-shell :is(button, input, textarea, select, a, [tabindex]):focus-visible,
+.modern-dialog-theme :is(button, input, textarea, select, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-ink); outline-offset: 2px;
+}
+.modern-shell [data-theme=dark], .modern-dialog-theme[data-theme=dark] { --control-border: #687f9d; }
+.modern-shell[data-theme=dark] { --control-border: #687f9d; }
+.modern-shell [data-theme=light], .modern-dialog-theme[data-theme=light] { --control-border: #77859a; }
+.modern-shell[data-theme=light] { --control-border: #77859a; }
+.modern-shell :is(input:not([type=range]):not([type=color]), textarea, select, .ui-select-trigger, button.secondary),
+.modern-dialog-theme :is(input:not([type=range]):not([type=color]), textarea, select, .ui-select-trigger, button.secondary) { border-color: var(--control-border); }
+/* Status and selection labels are ordinary text on their existing fills. */
+.modern-shell :is(.instance-tag:not(.needs-repair), .badge:not(.muted), .instance-detail-tabs button.active),
+.modern-shell :is(.accounts-page .accounts-eyebrow, .discover-page .discover-eyebrow, .settings-options > button.selected, .settings-style-option.selected) { color: var(--text); }
+.modern-shell :is(.settings-options > button.selected, .settings-style-option.selected) > svg { color: var(--accent-ink); }
+.modern-navigation-positioner { z-index: 45; max-width: calc(100vw - 16px); }
+.modern-navigation-menu { display: grid; min-width: min(20em, calc(100vw - 16px)); max-width: calc(100vw - 16px); max-height: calc(100dvh - 5em); overflow: auto; padding: 8px; background: var(--surface); color: var(--text); border: 1px solid var(--control-border, #77859a); border-radius: min(8px, var(--radius)); }
+.modern-navigation-menu [role^=menuitem] { display: flex; align-items: center; gap: 8px; padding: 10px; overflow-wrap: anywhere; border-radius: min(6px, var(--radius)); }
+.modern-navigation-menu [role^=menuitem][data-highlighted] { background: var(--hover); outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+@container (max-width: 48em) {
+  .modern-instances .instances-layout { grid-template-columns: minmax(0, 1fr); }
+  .modern-instances .instances-inspector { display: none; }
+}
+@media (max-width: 719px) {
+  .modern-shell { flex-direction: column; }
+  .modern-shell > .sidebar { display: none; }
+  .modern-shell > .mobile-navigation { display: flex; gap: 10px; align-items: center; flex: 0 0 auto; padding: .45em .75em; border-bottom: 1px solid var(--border); background: var(--sidebar); }
+  .modern-shell .mobile-navigation > button { flex: 0 0 auto; }
+  .modern-shell .mobile-navigation-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .82em; }
+  .modern-shell .workspace { width: 100%; min-height: 0; }
+  .modern-shell .workspace > main { padding: .85em; }
+  .modern-shell .settings-save-actions { flex-direction: column; align-items: stretch; }
+  .modern-shell .settings-save-actions > button { flex: 0 0 auto; white-space: nowrap; overflow-wrap: normal; }
+  .modern-shell .settings-row { flex-direction: column; align-items: stretch; }
+  .modern-shell .settings-row > .toggle { align-self: start; }
+  .modern-shell .settings-range-control, .modern-shell .settings-swatches { flex-basis: auto; }
+}
+@media (max-width: 420px) {
+  .modern-shell .settings-save-bar { padding: 10px; }
+  .modern-shell .settings-section { padding: 12px; }
+  .modern-dialog-theme :is(.dialog-actions, .profile-dialog-actions, .account-login-footer) { display: flex; flex-direction: column; align-items: stretch; }
+  .modern-dialog-theme :is(.dialog-actions, .profile-dialog-actions, .account-login-footer) > button { width: 100%; min-width: 0; white-space: normal; overflow-wrap: normal; word-break: normal; }
+}
+.modern-shell.reduce-motion *, .modern-shell.reduce-motion *::before, .modern-shell.reduce-motion *::after,
+.modern-dialog-theme.reduce-motion *, .modern-dialog-theme.reduce-motion *::before, .modern-dialog-theme.reduce-motion *::after,
+.modern-shell.reduce-motion .toggle span, .modern-dialog-theme.reduce-motion .toggle span { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+@media (prefers-reduced-motion: reduce) {
+  .modern-shell *, .modern-shell *::before, .modern-shell *::after,
+  .modern-dialog-theme *, .modern-dialog-theme *::before, .modern-dialog-theme *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

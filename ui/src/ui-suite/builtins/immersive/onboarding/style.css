@@ -1,0 +1,57 @@
+.style-choice { flex: 1; min-width: 0; min-height: 0; overflow: auto; display: grid; place-items: center; padding: 24px; }
+.style-choice-form { width: min(100%, 760px); display: grid; gap: 24px; }
+.style-choice header { text-align: center; }
+.style-choice h1 { font-size: clamp(20px, 3vw, 32px); margin: 0 0 8px; }
+.style-choice header p { margin: 0; color: var(--muted); }
+.style-choice-options { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.style-choice-card { position: relative; display: flex; flex-wrap: wrap; align-content: start; align-items: center; gap: 8px; border: 2px solid var(--border); background: var(--panel); padding: 16px; border-radius: 12px; cursor: pointer; min-width: 0; }
+.style-choice-card[data-selected="true"] { border-color: var(--accent); }
+.style-choice-card:focus-within { outline: 2px solid var(--text); outline-offset: 3px; }
+.style-choice-card input { width: 16px; height: 16px; accent-color: var(--accent); margin: 0; }
+.style-choice-recommended { font-size: 11px; color: var(--accent); }
+.style-choice-purpose { font-size: 13px; color: var(--muted); line-height: 1.4; width: 100%; }
+.style-choice-footer { text-align: center; }
+.style-choice-footer button { min-height: 40px; padding: 8px 28px; }
+.style-choice-error { margin: 0 0 8px; max-height: 54px; overflow: auto; overflow-wrap: anywhere; color: var(--danger); font-size: 12px; }
+
+.onboarding-style-preview { width: 100%; height: 145px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border); background: var(--bg); border-radius: 5px; }
+.style-preview-chrome { height: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 3px 6px; background: var(--surface); }
+.style-preview-chrome > i { width: 35%; height: 3px; }
+.style-preview-chrome > span { font-size: 6px; color: var(--muted); }
+.style-preview-body { flex: 1; min-height: 0; display: flex; }
+.style-preview-rail { width: 23%; display: flex; flex-direction: column; gap: 7px; background: var(--sidebar); padding: 8px 5px; border-right: 1px solid var(--border); }
+.onboarding-style-preview i { display: block; height: 5px; background: var(--border); border-radius: 1px; }
+.style-preview-rail b { width: 12px; height: 12px; background: var(--accent); margin-bottom: 3px; border-radius: 2px; }
+.style-preview-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; padding: 10px; }
+.style-preview-heading { width: 55%; height: 5px; border-radius: 1px; background: var(--muted); }
+.style-preview-tiles { display: grid; grid-template-columns: 1.6fr 1fr; gap: 6px; flex: 1; }
+.style-preview-tiles i { height: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 3px; }
+.style-preview-play { width: 45%; height: 17px; border-radius: 3px; background: var(--accent); align-self: start; }
+.style-preview-immersive .style-preview-chrome { background: #606dcc; }
+.style-preview-immersive .style-preview-chrome > span { color: white; }
+.style-preview-immersive .style-preview-rail { width: 26%; }
+.style-preview-immersive .style-preview-play { margin-top: auto; align-self: end; display: flex; justify-content: flex-end; }
+.style-preview-play > span { width: 20%; border-left: 1px solid #ffffff60; }
+@media (max-width: 500px), (max-height: 400px) {
+  .style-choice { padding: 6px; }
+  .style-choice-form { gap: 6px; }
+  .style-choice h1 { font-size: 18px; margin: 0; }
+  .style-choice header p { display: none; }
+  .style-choice-options { gap: 8px; }
+  .style-choice-card { padding: 6px; gap: 3px; border-radius: 8px; }
+  .style-choice-card strong { font-size: 13px; }
+  .style-choice-recommended { font-size: 9px; }
+  .style-choice-purpose { font-size: 10px; line-height: 1.25; }
+  .onboarding-style-preview { height: 32px; }
+  .style-preview-chrome { height: 4px; padding: 1px 3px; }
+  .style-preview-chrome > span { display: none; }
+  .style-preview-content { padding: 3px; }
+  .style-preview-rail { padding: 3px; }
+  .style-preview-rail b { width: 4px; height: 4px; margin: 0; }
+  .style-preview-content, .style-preview-rail { gap: 4px; }
+  .style-preview-play { height: 6px; flex-shrink: 0; }
+  .style-preview-heading { height: 4px; flex-shrink: 0; }
+  .onboarding-style-preview i { height: 4px; }
+
+  .style-choice-footer button { min-height: 26px; padding: 3px 20px; font-size: 12px; }
+}

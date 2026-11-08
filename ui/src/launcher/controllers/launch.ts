@@ -134,9 +134,11 @@ export function useLaunchController(services: LauncherServices): {
   );
   return {
     get snapshot() {
-      const activity = owner.services.launcher.getGuardState().busy;
+      const current = owner.services.launcher.getGuardState(),
+        activity = current.busy;
       return {
         phase: isLaunchActive(activity) ? (activity!.status as LaunchSnapshot['phase']) : 'idle',
+        profileKey: isLaunchActive(activity) ? current.launchProfileKey : null,
         canStop: canStopLaunch(activity),
         selection: owner.state.selection
           ? {

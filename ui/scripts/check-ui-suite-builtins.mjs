@@ -69,11 +69,14 @@ async function owner({ stored = { ...library([]), revision: 0 }, configFirst = f
   source.resolve();
   if (saveGate) await waitFor(() => writes.length > 0, controller, 'default save');
   else await initialize(controller);
-  return { controller, writes, sources, stored, disconnect };
+  return { controller, writes, sources, get stored() { return stored; }, disconnect };
 }
-for (const configFirst of [false, true]) test(`durable_default_${configFirst ? 'config_first' : 'library_first'}_actual_commit_reload`, async () => {
+for (const configFirst of [false, true]) test(`explicit_first_choice_${configFirst ? 'config_first' : 'library_first'}_actual_commit_reload`, async () => {
   const f = await owner({ configFirst });
-  assert.equal(f.writes.length, 1, 'first builtin default must commit through existing CAS owner');
+  assert.equal(f.writes.length, 0, 'pristine source readiness never commits a recommendation');
+  assert.equal(f.controller.getSnapshot().initialSelectionRequired, true);
+  assert.equal(await f.controller.actions.selectSuite('builtin.immersive'), true);
+  assert.equal(f.writes.length, 1, 'explicit choice commits through existing CAS owner');
   assert.equal(f.writes[0].candidate.active_suite_id, 'builtin.immersive');
   assert.equal(f.controller.getLibrary().revision, 1);
   assert.equal(f.controller.getSnapshot().selectedSuiteId, 'builtin.immersive');
@@ -82,22 +85,24 @@ for (const configFirst of [false, true]) test(`durable_default_${configFirst ? '
   assert.equal(reload.writes.length, 0, 'persisted choice survives process reload');
   assert.equal(reload.controller.getSnapshot().selectedSuiteId, 'builtin.immersive'); reload.disconnect();
 });
-test('default_failed_ack_preserves_library_authority', async () => {
+test('first_choice_failed_ack_preserves_library_authority', async () => {
   const f = await owner({ failure: true });
+  assert.equal(await f.controller.actions.selectSuite('builtin.immersive'), false);
   assert.equal(f.writes.length, 1);
   assert.equal(f.controller.getLibrary().revision, 0);
   assert.equal(f.controller.getLibrary().active_suite_id, null);
-  assert.equal(f.controller.getSnapshot().suspended, true);
+  assert.equal(f.controller.getSnapshot().initialSelectionRequired, true);
+  assert.equal(f.controller.getSnapshot().suspended, false);
   assert.match(f.controller.getSnapshot().diagnostics.join(), /CAS conflict/); f.disconnect();
 });
 test('default_consumes_actual_ack_choice_and_revision', async () => {
   const actualAck = { ...library([]), revision: 7, active_suite_id: 'builtin.modern' };
-  const f = await owner({ actualAck });
+  const f = await owner({ actualAck, stored: { ...library([]), revision: 2 } });
   assert.equal(f.controller.getLibrary().revision, 7);
   assert.equal(f.controller.getSnapshot().selectedSuiteId, 'builtin.modern'); f.disconnect();
 });
 test('default_ack_keeps_newer_source_draft', async () => {
-  const saveGate=deferred();const f=await owner({saveGate});
+  const saveGate=deferred();const f=await owner({saveGate,stored:{...library([]),revision:2}});
   assert.equal(f.writes.length,1);
   await f.controller.actions.copyBuiltin('modern','Newer unsaved copy');
   f.controller.actions.patchFile('Home.tsx','export default()=>null; // newer edit');
@@ -112,7 +117,7 @@ test('F12_before_sources_cannot_reactivate_late_initialization', async()=>{
   const f=await owner({disableBeforeSource:true});
   assert.equal(f.controller.getSnapshot().suspended,true);
   assert.equal(f.controller.getActivation().primary,f.controller.getActivation().trusted);
-  assert.equal(f.writes.length,1);f.disconnect();
+  assert.equal(f.writes.length,0); assert.equal(f.controller.getSnapshot().initialSelectionRequired,false);f.disconnect();
 });
 test('catalog_is_checked_detached_and_failed_save_not_optimistic',async()=>{
   const stored=library([record()]);const f=await owner({stored,failure:true});
@@ -171,7 +176,7 @@ test('lazy_builtin_sources_load_only_the_requested_tree_and_preserve_export_byte
     await assert.rejects(readBuiltinBundle('modern', loaders), /artwork encoding unavailable/);
   } finally { globalThis.createImageBitmap = decoder; }
 });
-test('immersive_copy_keeps_appearance_controls_from_its_layout_source', async () => {
+test('immersive_copy_keeps_default_controls_and_legacy_layout_capabilities', async () => {
   const immersive = bundle({ 'immersive/Shell.tsx': { encoding: 'utf8', text: 'export default()=>null;' } });
   immersive.manifest.views['layout.shell'] = 'immersive/Shell.tsx';
   const f = await owner({ builtinBundles: { immersive } });
@@ -191,21 +196,28 @@ test('immersive_copy_keeps_appearance_controls_from_its_layout_source', async ()
       }],
       ['react-i18next', { useTranslation: () => ({ t: key => key }) }],
     ]));
-    const view = viewApp('ui-suite/builtins/common/components/AppearanceSettings.tsx').default;
+    const builtinManifest = JSON.parse(readFileSync(resolve(uiRoot, 'src/ui-suite/builtins/immersive/suite.json'), 'utf8'));
+    const appearanceSource = builtinManifest.views['component.appearance-settings'];
+    assert.ok(appearanceSource, 'selected builtin has an appearance-settings binding');
+    const view = viewApp(`ui-suite/builtins/${appearanceSource}`).default;
     const render = () => renderToStaticMarkup(React.createElement(view));
-    for (const key of ['blur', 'dim', 'sidebarOpacity', 'backgroundImmersive'])
+    for (const key of ['theme', 'accent', 'scale', 'sidebarOpacity'])
       assert.ok(render().includes(`appearance.${key}`), key);
+    for (const key of ['blur', 'dim', 'backgroundImmersive'])
+      assert.ok(!render().includes(`appearance.${key}`), 'current default omits artwork control ' + key);
     snapshot = { ...copy, selectedSuiteId: 'builtin.immersive', draft: bundle() };
-    assert.ok(!render().includes('appearance.blur'), 'reserved ID does not grant absent layout capabilities');
+    assert.ok(!render().includes('appearance.blur'), 'current default artwork controls stay absent for a reserved ID');
     const legacyView = viewApp('components/AppearanceSettings.tsx').default;
     const { UiEditorSnapshotContext } = viewApp('ui-editor/public.ts');
     const legacy = () => renderToStaticMarkup(React.createElement(UiEditorSnapshotContext.Provider,
       { value: snapshot }, React.createElement(legacyView, {
         appearance: initialConfig.settings.appearance, onPatch() {},
       })));
-    assert.ok(!legacy().includes('appearance.blur'), 'compatibility view uses the same active layout source');
+    for (const key of ['blur', 'dim', 'sidebarOpacity', 'backgroundImmersive'])
+      assert.ok(!legacy().includes(`appearance.${key}`), 'reserved ID does not grant absent legacy layout capability ' + key);
     snapshot = copy;
-    assert.ok(legacy().includes('appearance.blur'), 'compatibility view keeps copied layout controls');
+    for (const key of ['blur', 'dim', 'sidebarOpacity', 'backgroundImmersive'])
+      assert.ok(legacy().includes(`appearance.${key}`), 'compatibility view keeps copied layout control ' + key);
   } finally { f.disconnect(); }
 });
 let failures = 0;

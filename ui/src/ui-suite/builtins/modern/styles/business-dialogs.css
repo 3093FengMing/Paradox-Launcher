@@ -1,0 +1,64 @@
+.modern-business-dialog {
+  width: min(580px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.modern-business-dialog .business-dialog-heading { display: flex; align-items: start; gap: 16px; flex: 0 0 auto; }
+.modern-business-dialog .business-dialog-heading .modal-title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.modern-business-dialog .business-dialog-heading .icon-button { flex: 0 0 auto; }
+.modern-business-dialog > .modal-description { flex: 0 0 auto; margin: 9px 0 18px; overflow-wrap: anywhere; max-height: 22vh; overflow: auto; }
+.modern-business-dialog .business-dialog-content { min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.modern-business-dialog .business-dialog-form { display: grid; gap: 18px; min-width: 0; }
+.modern-business-dialog .dialog-section { display: grid; gap: 13px; min-width: 0; padding-bottom: 17px; border-bottom: 1px solid var(--border); }
+.modern-business-dialog .dialog-section > h3 { margin: 0; font-size: .89em; color: var(--text); }
+.modern-business-dialog .dialog-section > .field { margin: 0; }
+.modern-business-dialog .dialog-paired-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.modern-business-dialog .dialog-override { display: grid; align-content: start; gap: 8px; min-width: 0; }
+.modern-business-dialog .dialog-override small, .modern-business-dialog .dialog-help { font-size: .74em; line-height: 1.5; color: var(--muted); overflow-wrap: anywhere; margin: 0; }
+.modern-business-dialog .inline-check { align-items: start; font-size: .8em; line-height: 1.5; min-width: 0; overflow-wrap: anywhere; }
+.modern-business-dialog .inline-check input { flex: 0 0 auto; margin-top: .12em; }
+.modern-business-dialog .dialog-inline-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.modern-business-dialog .dialog-inherited { display: grid; padding: 12px; border: 1px solid var(--border); border-radius: 8px; min-width: 0; }
+.modern-business-dialog .dialog-inherited summary { cursor: pointer; font-size: .8em; overflow-wrap: anywhere; }
+.modern-business-dialog .dialog-inherited[open] .field { margin-top: 12px; }
+.modern-business-dialog .dialog-actions { position: sticky; bottom: 0; z-index: 1; background: var(--surface); display: flex; justify-content: end; flex-wrap: wrap; gap: 10px; padding: 12px 0 2px; border-top: 1px solid var(--border); margin: 0; }
+.modern-business-dialog .dialog-actions button, .modern-business-dialog .dialog-close-choices button { white-space: normal; min-height: 36px; line-height: 1.35; }
+.modern-business-dialog .dialog-error, .modern-business-dialog .dialog-danger-note { margin: 0; padding: 13px; border-radius: 8px; background: color-mix(in srgb, var(--danger, #cf4250) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--danger, #cf4250) 28%, var(--border)); overflow-wrap: anywhere; font-size: .8em; line-height: 1.5; }
+.modern-business-dialog .dialog-error p, .modern-business-dialog .dialog-danger-note p { margin: 0 0 10px; }
+.modern-business-dialog .dialog-error code { display: block; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; margin-bottom: 10px; }
+.modern-business-dialog .dialog-danger-action { background: var(--danger, #b63542); color: white; }
+.modern-business-dialog .dialog-close-choices { display: grid; gap: 11px; padding-bottom: 3px; }
+.modern-business-dialog .dialog-close-state p { margin: 0; overflow-wrap: anywhere; font-size: .8em; line-height: 1.5; }
+.modern-business-dialog .dialog-import-list { display: grid; gap: 10px; }
+.modern-business-dialog .dialog-import-row { display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); border-radius: 9px; padding: 12px; min-width: 0; }
+.modern-business-dialog .dialog-import-row > input { flex: 0 0 auto; }
+.modern-business-dialog .dialog-import-copy { display: grid; gap: 5px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.modern-business-dialog .dialog-import-copy strong { font-size: .82em; }
+.modern-business-dialog .dialog-import-copy span { font-size: .72em; color: var(--muted); }
+.modern-environment-editor { display: grid; gap: 12px; min-width: 0; }
+.modern-environment-editor .environment-row { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 10px; border: 1px solid var(--border); padding: 12px; border-radius: 8px; }
+.modern-environment-editor .environment-row .field { margin: 0; min-width: 0; }
+.modern-environment-editor .environment-remove { grid-column: 1 / -1; justify-self: end; }
+.modern-environment-editor > button { justify-self: start; }
+.modern-business-dialog.profile-dialog { overflow: hidden; }
+.modern-business-dialog .profile-dialog-actions { position: sticky; bottom: 0; z-index: 1; background: var(--surface); padding: 12px 0 2px; }
+.modern-business-dialog .profile-dialog-actions button { white-space: normal; }
+.modern-business-dialog .account-login-footer { padding-bottom: 2px; }
+@media (max-width: 520px) {
+  .modern-business-dialog { padding: 18px; width: calc(100vw - 24px); max-height: calc(100dvh - 24px); }
+  .modern-business-dialog .dialog-paired-fields, .modern-environment-editor .environment-row { grid-template-columns: minmax(0, 1fr); }
+  .modern-business-dialog .dialog-import-row { flex-wrap: wrap; }
+  .modern-business-dialog .dialog-import-row .badge { margin-left: 28px; }
+}
+@media (max-height: 340px) {
+  .modern-business-dialog { padding: 12px; max-height: calc(100dvh - 16px); width: calc(100vw - 16px); overflow: auto; }
+  .modern-business-dialog > .modal-description { margin: 5px 0 10px; max-height: 18vh; }
+  .modern-business-dialog .business-dialog-heading { gap: 8px; }
+  .modern-business-dialog .business-dialog-content { overflow: visible; flex: 0 0 auto; }
+  .modern-business-dialog .dialog-actions, .modern-business-dialog .profile-dialog-actions { position: static; }
+}

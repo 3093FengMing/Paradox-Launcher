@@ -20,7 +20,8 @@
     "test:suite-browser": "node scripts/check-ui-suite-browser.mjs",
     "test:final-browser": "node scripts/check-ui-final-browser.mjs",
     "test:suite-storage-browser": "node scripts/check-ui-suite-storage-browser.mjs",
-    "test:inspector-browser": "node scripts/check-ui-inspector-browser.mjs && node scripts/check-ui-inspector-overrides-browser.mjs"
+    "test:inspector-browser": "node scripts/check-ui-inspector-browser.mjs && node scripts/check-ui-inspector-overrides-browser.mjs",
+    "test:redesign-browser": "node scripts/check-ui-redesign-browser.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

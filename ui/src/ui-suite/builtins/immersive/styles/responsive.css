@@ -1,0 +1,50 @@
+/* Player-only finishing rules; the ordinary editor has a separate root. */
+.immersive-shell .mobile-navigation { display: none; }
+.immersive-shell :is(button, input, textarea, select, a, [tabindex]):focus-visible,
+.immersive-dialog-theme :is(button, input, textarea, select, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-ink); outline-offset: 2px;
+}
+.immersive-shell .window-controls button:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
+.immersive-shell .immersive-launch-split :is(.immersive-launch-primary, .immersive-launch-select):focus-visible { outline: 2px solid var(--accent-fg); outline-offset: -3px; }
+.immersive-shell[data-theme=dark], .immersive-dialog-theme[data-theme=dark] { --control-border: #7588a2; }
+.immersive-shell[data-theme=light], .immersive-dialog-theme[data-theme=light] { --control-border: #77859a; }
+.immersive-shell :is(input:not([type=range]):not([type=color]), textarea, select, .ui-select-trigger, button.secondary),
+.immersive-dialog-theme :is(input:not([type=range]):not([type=color]), textarea, select, .ui-select-trigger, button.secondary) { border-color: var(--control-border); }
+/* Status and selection labels are ordinary text on their existing fills. */
+.immersive-shell :is(.instance-tag:not(.needs-repair), .badge:not(.muted)),
+.immersive-shell :is(.accounts-page .accounts-eyebrow, .discover-page .discover-eyebrow, .settings-options > button.selected, .settings-style-option.selected),
+.immersive-shell :is(.immersive-hint-copy button, .home-instance-state > span) { color: var(--text); }
+.immersive-shell :is(.settings-options > button.selected, .settings-style-option.selected) > svg { color: var(--accent-ink); }
+.immersive-shell[data-theme=light] .settings-page .field small { color: var(--muted); }
+.immersive-navigation-positioner { z-index: 45; max-width: calc(100vw - 16px); }
+.immersive-navigation-menu { display: flex; flex-direction: column; min-width: min(19em, calc(100vw - 16px)); max-width: calc(100vw - 16px); max-height: calc(100dvh - 5em); overflow: auto; padding: 6px; background: var(--surface); color: var(--text); border: 1px solid var(--control-border, #77859a); border-radius: min(5px, var(--radius)); }
+.immersive-navigation-menu [role^=menuitem] { display: flex; align-items: center; gap: 8px; padding: 11px; overflow-wrap: anywhere; border-radius: min(4px, var(--radius)); }
+.immersive-navigation-menu [role^=menuitem][data-highlighted] { background: var(--hover); outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.immersive-navigation-menu .mobile-navigation-separator { height: 1px; margin: 6px 0; background: var(--border); }
+@media (max-width: 719px) {
+  .immersive-shell { flex-direction: column; }
+  .immersive-shell > .sidebar { display: none; }
+  .immersive-shell > .mobile-navigation, .immersive-detail-page > .mobile-navigation { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; padding: .4em .75em; border-bottom: 1px solid var(--border); background: var(--sidebar); }
+  .immersive-detail-page { flex-direction: column; }
+  .immersive-shell .mobile-navigation > button { flex: 0 0 auto; }
+  .immersive-shell .mobile-navigation-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8em; }
+  .immersive-shell .workspace { width: 100%; min-height: 0; }
+  .immersive-shell .workspace > main { padding: .8em; }
+  .immersive-shell.is-home .workspace > main { padding: 0; }
+  .immersive-shell .settings-save-actions { flex-direction: column; align-items: stretch; }
+  .immersive-shell .settings-save-actions > button { flex: 0 0 auto; white-space: nowrap; overflow-wrap: normal; }
+  .immersive-shell .settings-row { flex-direction: column; align-items: stretch; }
+  .immersive-shell .settings-row > .toggle { align-self: start; }
+  .immersive-shell .settings-range-control, .immersive-shell .settings-swatches { flex-basis: auto; }
+}
+@media (max-width: 420px) {
+  .immersive-dialog-theme :is(.dialog-actions, .profile-dialog-actions, .account-login-footer) { display: flex; flex-direction: column; align-items: stretch; }
+  .immersive-dialog-theme :is(.dialog-actions, .profile-dialog-actions, .account-login-footer) > button { width: 100%; min-width: 0; white-space: normal; overflow-wrap: normal; word-break: normal; }
+}
+.immersive-shell.reduce-motion *, .immersive-shell.reduce-motion *::before, .immersive-shell.reduce-motion *::after,
+.immersive-dialog-theme.reduce-motion *, .immersive-dialog-theme.reduce-motion *::before, .immersive-dialog-theme.reduce-motion *::after,
+.immersive-shell.reduce-motion .toggle span, .immersive-dialog-theme.reduce-motion .toggle span { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+@media (prefers-reduced-motion: reduce) {
+  .immersive-shell *, .immersive-shell *::before, .immersive-shell *::after,
+  .immersive-dialog-theme *, .immersive-dialog-theme *::before, .immersive-dialog-theme *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

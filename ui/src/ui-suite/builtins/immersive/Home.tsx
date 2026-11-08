@@ -1,306 +1,107 @@
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
-import { Menu } from '@paradox/ui';
-import {
-  Box,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  Gamepad2,
-  Layers,
-  LoaderCircle,
-  Palette,
-  Play,
-  Plus,
-  Settings2,
-  Square,
-  UserRound,
-  X,
-} from 'lucide-react';
 import { useLauncherSnapshot, useLauncherActions } from '@paradox/launcher';
-import { translateRuntimeMessage } from '../common/lib/runtime-message';
+import { UiView, UiIdentity, Button } from '@paradox/ui';
+import { resolveActiveAccount, resolveProfileEntry } from '../common/lib/launcher-display';
+import './styles/tokens.css';
+import './styles/layout.css';
+import './styles/components.css';
+import './styles/pages.css';
+import './styles/home.css';
+import './styles/host-components.css';
 import './style.css';
+
+import { useEffect, useRef, useState } from 'react';
+import { Menu } from '@paradox/ui';
+import { Box, Check, ChevronUp, Palette, Play, Plus, Settings2, X } from 'lucide-react';
 export default function Home() {
-  const snapshot = useLauncherSnapshot(),
-    actions = useLauncherActions(),
-    { t } = useTranslation();
-  const [showHint, setShowHint] = useState(true),
-    [keyboardNavigation, setKeyboardNavigation] = useState(false);
-  const config = snapshot.config.value;
-  if (!config) return null;
-  const activeEntry = snapshot.profiles.items.find(
-      (x) => x.profile.instance_key === snapshot.profiles.activeKey,
-    ),
-    active = activeEntry?.profile,
-    busy = snapshot.activity,
-    queueActive = snapshot.downloads.active,
-    desktop = snapshot.window.desktop,
-    installed = !!activeEntry?.installed;
-  const onCreate = () => actions.profileDraft.openCreate(),
-    onPage = actions.navigation.navigate,
-    onSelect = actions.profiles.select,
-    onLaunch = (profile: (typeof config.profiles)[number]) =>
-      void (installed
-        ? actions.launch.request(profile.instance_key)
-        : actions.downloads.install(profile.instance_key)),
-    onStop = () => void actions.launch.stop(),
-    onCustomize = () => {
-      actions.settings.setTab('appearance');
-      actions.navigation.navigate('settings');
-    };
-  const launchActive = snapshot.launch.phase !== 'idle';
-  const cancelling = snapshot.launch.phase === 'cancelling';
-  const working =
-    launchActive ||
-    (busy?.action === 'install' &&
-      (busy.status === 'started' || busy.status === 'running' || cancelling));
-  const blockedByQueue = queueActive && (installed || !active);
-  const running = busy?.action === 'launch' && busy.status === 'running';
-  const hasProfiles = config.profiles.length > 0;
-  const title = working
-    ? cancelling
-      ? t('common.stopping')
-      : running
-        ? t('immersive.running')
-        : busy?.action === 'install'
-          ? t('immersive.preparing')
-          : t('immersive.launching')
-    : blockedByQueue
-      ? t('immersive.waitingDownload')
-      : active
-        ? installed
-          ? t('common.launchGame')
-          : t('common.installGame')
-        : hasProfiles
-          ? t('immersive.selectInstance')
-          : t('immersive.createInstance');
-  const detail = active
-    ? `${active.name} · ${active.game_version}`
-    : hasProfiles
-      ? t('immersive.chooseWorld')
-      : t('immersive.firstWorld');
+  const [hint, setHint] = useState(true), [menuOpen, setMenuOpen] = useState(false);
 
-  const primaryAction = () => {
-    if (active) onLaunch(active);
-    else if (hasProfiles) onPage('instances');
-    else onCreate();
-  };
+  const launchButton = useRef<HTMLButtonElement>(null), returnLaunchFocus = useRef(false), hadSelection = useRef(false);
+  const s = useLauncherSnapshot(), a = useLauncherActions(), { t } = useTranslation();
+  const entry = resolveProfileEntry(s, s.profiles.activeKey), account = resolveActiveAccount(s);
+  const profile = entry?.profile;
+  const visible = (id: string) => s.navigation.routes.some(r => r.id === id && r.navigation);
+  const registered = (id: string) => s.navigation.routes.some(r => r.id === id);
+  const ownLaunch = !!profile && s.launch.profileKey === profile.instance_key && s.launch.phase !== 'idle';
+  const ownSelection = !!profile && s.launch.selection?.profileKey === profile.instance_key;
+  const phase = s.launch.phase;
+  const state = ownLaunch ? (phase === 'running' ? 'shellHome.running' : phase === 'cancelling' ? 'common.stopping' : 'shellHome.launching')
+    : ownSelection ? 'shellHome.selectAccount' : entry?.installing ? 'shellHome.installing' : entry?.installed ? 'common.installed' : entry?.actualInstance ? 'loaders.repairRequired' : 'common.notInstalled';
+  const capability = entry && (entry.installed ? entry.capabilities.launch : entry.capabilities.install);
+  const actionTitle = ownLaunch || ownSelection || entry?.installing ? t(state) : profile ? t(entry?.installed ? 'common.launchGame' : entry?.actualInstance ? 'shellHome.repair' : 'common.installGame') : t(s.profiles.items.length ? 'immersive.selectInstance' : 'immersive.createInstance');
+  const reason = capability && !capability.allowed && capability.reason ? t(`shellHome.reasons.${capability.reason}`, { defaultValue: t('shellHome.restricted') }) : null;
+  const loader = entry?.actualInstance ? `${entry.actualInstance.loader} ${entry.actualInstance.loader_version ?? ''}` : profile ? `${profile.loader} ${profile.loader_version}` : '';
+  const perform = () => { returnLaunchFocus.current = !!profile && !!entry?.installed; if (profile) void (entry?.installed ? a.launch.request(profile.instance_key) : a.downloads.install(profile.instance_key)); else if (!s.profiles.items.length) a.profileDraft.openCreate(); else setMenuOpen(true); };
+  useEffect(() => {
+    if (s.launch.selection) {
+      if (document.activeElement === launchButton.current) returnLaunchFocus.current = true;
+      hadSelection.current = true;
+    } else if (s.launch.phase !== 'idle') {
+      returnLaunchFocus.current = false;
+      hadSelection.current = false;
+    } else if (hadSelection.current && returnLaunchFocus.current && capability?.allowed) {
+      const frame = requestAnimationFrame(() => {
+        launchButton.current?.focus();
+        returnLaunchFocus.current = false;
+        hadSelection.current = false;
+      });
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [s.launch.selection, s.launch.phase, capability?.allowed]);
+  const personalize = () => { a.settings.setTab('appearance'); a.navigation.navigate('settings'); };
+  const avatar = <UiView data-ui-site="Home-avatar" id="component.account-avatar" props={{ account: account.account, name: account.name }} />;
+  const accountContent = <>{account.account ? <UiIdentity namespace="account" value={account.account.id}>{avatar}</UiIdentity> : avatar}<span data-ui-site="Home-account-name">{account.name}</span><small data-ui-site="Home-account-kind">{t(account.kind === 'microsoft' ? 'auth.microsoftIdentity' : 'common.offlineAccount')}</small></>;
 
-  return (
-    <section
-      data-ui-site="Home-1"
-      className="immersive-home"
-      aria-label={t('nav.home')}
-      onKeyDownCapture={() => setKeyboardNavigation(true)}
-      onPointerDownCapture={() => setKeyboardNavigation(false)}
-    >
-      {showHint && (
-        <aside
-          data-ui-site="Home-2"
-          className="immersive-customize-hint"
-          aria-label={t('immersive.customization')}
-        >
-          <div data-ui-site="Home-3" className="immersive-hint-icon">
-            <Palette data-ui-site="Home-4" size={19} strokeWidth={1.7} />
-          </div>
-          <div data-ui-site="Home-5" className="immersive-hint-copy">
-            <h2 data-ui-site="Home-6">{t('immersive.hintTitle')}</h2>
-            <p data-ui-site="Home-7">{t('immersive.hintDescription')}</p>
-            <button data-ui-site="Home-8" type="button" onClick={onCustomize}>
-              {t('immersive.customize')}
-              <ChevronRight data-ui-site="Home-9" size={13} />
-            </button>
-          </div>
-          <button
-            data-ui-site="Home-10"
-            type="button"
-            className="immersive-hint-close"
-            aria-label={t('immersive.closeHint')}
-            onClick={() => setShowHint(false)}
-          >
-            <X data-ui-site="Home-11" size={16} />
-          </button>
-        </aside>
-      )}
-
-      <div data-ui-site="Home-12" className="immersive-launch-area">
-        {(working || blockedByQueue) && (
-          <div data-ui-site="Home-13" className="immersive-activity" role="status">
-            {running ? (
-              <Gamepad2 data-ui-site="Home-14" size={16} />
-            ) : (
-              <LoaderCircle data-ui-site="Home-15" size={16} className="spin" />
-            )}
-            <span data-ui-site="Home-16">
-              {working && busy
-                ? translateRuntimeMessage(busy.message, t)
-                : t('immersive.queueBlocked')}
-            </span>
-            {launchActive && (
-              <button
-                data-ui-site="Home-17"
-                type="button"
-                disabled={!snapshot.launch.canStop}
-                onClick={onStop}
-              >
-                <Square data-ui-site="Home-18" size={12} fill="currentColor" />
-                {t(
-                  cancelling
-                    ? 'common.stopping'
-                    : running
-                      ? 'common.stopGame'
-                      : 'common.cancelLaunch',
-                )}
-              </button>
-            )}
-          </div>
-        )}
-        {!desktop && active && (
-          <p data-ui-site="Home-19" className="immersive-preview-note">
-            {t('immersive.preview')}
-          </p>
-        )}
-        <div data-ui-site="Home-20" className="immersive-launch-split">
-          <button
-            data-ui-site="Home-21"
-            type="button"
-            className="immersive-launch-primary"
-            disabled={working || blockedByQueue || (!!active && !desktop)}
-            onClick={primaryAction}
-            aria-label={
-              active ? t('immersive.primaryLabel', { action: title, name: active.name }) : title
-            }
-          >
-            {running ? (
-              <Gamepad2 data-ui-site="Home-22" size={24} />
-            ) : working || blockedByQueue ? (
-              <LoaderCircle data-ui-site="Home-23" size={23} className="spin" />
-            ) : active ? (
-              <Play data-ui-site="Home-24" size={24} fill="currentColor" strokeWidth={1.4} />
-            ) : (
-              <Plus data-ui-site="Home-25" size={25} strokeWidth={1.8} />
-            )}
-            <span data-ui-site="Home-26" className="immersive-launch-copy">
-              <strong data-ui-site="Home-27">{title}</strong>
-              <small data-ui-site="Home-28" title={detail}>
-                {detail}
-              </small>
-            </span>
-          </button>
-          <Menu.Root data-ui-site="Home-29">
-            <Menu.Trigger
-              data-ui-site="Home-30"
-              className="immersive-launch-select"
-              disabled={working || queueActive}
-              aria-label={t('immersive.selectInstance')}
-              title={t('immersive.selectInstance')}
-            >
-              <ChevronDown data-ui-site="Home-31" size={20} />
-            </Menu.Trigger>
-            <Menu.Portal data-ui-site="Home-32">
-              <Menu.Positioner
-                data-ui-site="Home-33"
-                side="top"
-                align="end"
-                sideOffset={10}
-                className={`immersive-menu-positioner ${keyboardNavigation ? 'keyboard-navigation' : ''} ${config.settings.appearance.reduce_motion ? 'reduce-motion' : ''}`}
-                data-ui-root
-              >
-                <Menu.Popup data-ui-site="Home-34" className="immersive-instance-menu">
-                  <div data-ui-site="Home-35" className="immersive-menu-heading">
-                    {t('immersive.instances')}
-                    <span data-ui-site="Home-36">{config.profiles.length}</span>
-                  </div>
-                  <div data-ui-site="Home-37" className="immersive-menu-instances">
-                    {hasProfiles ? (
-                      config.profiles.map((profile) => (
-                        <Menu.Item
-                          data-ui-site="Home-38"
-                          key={profile.instance_key}
-                          className="immersive-instance-entry"
-                          label={profile.name}
-                          onClick={() => void onSelect(profile.instance_key)}
-                          aria-label={t(
-                            profile.instance_key === active?.instance_key
-                              ? 'immersive.currentInstanceLabel'
-                              : 'immersive.instanceLabel',
-                            { name: profile.name, version: profile.game_version },
-                          )}
-                        >
-                          <span data-ui-site="Home-39" className="immersive-menu-instance-icon">
-                            <Box data-ui-site="Home-40" size={19} strokeWidth={1.6} />
-                          </span>
-                          <span data-ui-site="Home-41" className="immersive-menu-instance-copy">
-                            <strong data-ui-site="Home-42">{profile.name}</strong>
-                            <small data-ui-site="Home-43">
-                              {t('immersive.version', { version: profile.game_version })}
-                            </small>
-                          </span>
-                          {profile.instance_key === active?.instance_key && (
-                            <Check
-                              data-ui-site="Home-44"
-                              size={17}
-                              className="immersive-menu-check"
-                            />
-                          )}
-                        </Menu.Item>
-                      ))
-                    ) : (
-                      <div data-ui-site="Home-45" className="immersive-menu-empty">
-                        {t('immersive.empty')}
-                        <br data-ui-site="Home-46" />
-                        <span data-ui-site="Home-47">{t('immersive.emptyDescription')}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div data-ui-site="Home-48" className="immersive-menu-divider" />
-                  <Menu.Item
-                    data-ui-site="Home-49"
-                    className="immersive-menu-action"
-                    label={t('immersive.createNew')}
-                    onClick={onCreate}
-                  >
-                    <Plus data-ui-site="Home-50" size={16} />
-                    {t('immersive.createNew')}
+  if (!s.config.value) return null;
+  return <section data-ui-site="Home-1" className="immersive-home" aria-label={t('nav.home')}>
+    {hint && visible('settings') && <aside data-ui-site="Home-2" className="immersive-customize-hint" aria-label={t('immersive.customization')}>
+      <Palette data-ui-site="Home-4" size={19} /><div data-ui-site="Home-5" className="immersive-hint-copy"><h2 data-ui-site="Home-6">{t('immersive.hintTitle')}</h2>
+        <p data-ui-site="Home-7">{t('shellHome.hint')}</p><button data-ui-site="Home-8" onClick={personalize}>{t('immersive.customize')}</button></div>
+      <button data-ui-site="Home-10" className="immersive-hint-close" aria-label={t('immersive.closeHint')} onClick={() => setHint(false)}><X data-ui-site="Home-11" size={16} /></button>
+    </aside>}
+    <div data-ui-site="Home-12" className="immersive-launch-area">
+      <UiView data-ui-site="Home-global-activity" id="component.activity-bar" />
+      {profile && <div data-ui-site="Home-instance-state" className="home-instance-state" data-profile-key={profile.instance_key}>
+        <span data-ui-site="Home-status">{t(state)}</span><small data-ui-site="Home-loader">Minecraft {entry?.actualInstance?.game_version ?? profile.game_version} · {loader}</small>
+      </div>}
+      {reason && <p data-ui-site="Home-reason" className="home-action-reason">{reason}</p>}
+      <div data-ui-site="Home-20" className="immersive-launch-split">
+        <Button ref={launchButton} onKeyDown={event => { if (event.ctrlKey && event.key === 'Enter') returnLaunchFocus.current = true; }} data-ui-site="Home-21" className="immersive-launch-primary" disabled={!!capability && !capability.allowed} onClick={perform}
+          aria-label={profile ? t('immersive.primaryLabel', { action: actionTitle, name: profile.name }) : actionTitle}>
+          {profile ? <Play data-ui-site="Home-24" size={23} fill="currentColor" /> : <Plus data-ui-site="Home-25" size={24} />}
+          <span data-ui-site="Home-26" className="immersive-launch-copy"><strong data-ui-site="Home-27">{actionTitle}</strong><small data-ui-site="Home-28">{profile?.name ?? t(s.profiles.items.length ? 'immersive.chooseWorld' : 'immersive.firstWorld')}</small></span>
+        </Button>
+        <Menu.Root data-ui-site="Home-29" open={menuOpen} onOpenChange={setMenuOpen}>
+          <Menu.Trigger data-ui-site="Home-30" className="immersive-launch-select" aria-label={t('immersive.selectInstance')} title={t('immersive.selectInstance')}><ChevronUp data-ui-site="Home-31" size={20} /></Menu.Trigger>
+          <Menu.Portal data-ui-site="Home-32"><Menu.Positioner data-ui-site="Home-33" side="top" align="end" sideOffset={8} className="immersive-menu-positioner">
+            <Menu.Popup data-ui-site="Home-34" className="immersive-instance-menu">
+              <div data-ui-site="Home-35" className="immersive-menu-heading">{t('immersive.instances')}<span data-ui-site="Home-36">{s.profiles.items.length}</span></div>
+              <div data-ui-site="Home-37" className="immersive-menu-instances">
+                {s.profiles.items.map(item => <UiIdentity key={item.profile.instance_key} namespace="profile" value={item.profile.instance_key}>
+                  <Menu.Item data-ui-site="Home-38" className="immersive-instance-entry" label={item.profile.name}
+                    aria-label={t(item.profile.instance_key === profile?.instance_key ? 'immersive.currentInstanceLabel' : 'immersive.instanceLabel', { name: item.profile.name, version: item.profile.game_version })}
+                    onClick={() => void a.profiles.select(item.profile.instance_key)}>
+                    <Box data-ui-site="Home-40" size={20} /><span data-ui-site="Home-41" className="immersive-menu-instance-copy"><strong data-ui-site="Home-42">{item.profile.name}</strong>
+                      <small data-ui-site="Home-43">{item.profile.game_version} · {item.actualInstance?.loader ?? item.profile.loader} · {t(item.installed ? 'common.installed' : item.actualInstance ? 'loaders.repairRequired' : 'common.notInstalled')}</small></span>
+                    {item.profile.instance_key === profile?.instance_key && <Check data-ui-site="Home-44" size={17} />}
                   </Menu.Item>
-                  <Menu.Item
-                    data-ui-site="Home-51"
-                    className="immersive-menu-action"
-                    label={t('immersive.manageAll')}
-                    onClick={() => onPage('instances')}
-                  >
-                    <Layers data-ui-site="Home-52" size={16} />
-                    {t('immersive.manageAll')}
-                    <ChevronRight data-ui-site="Home-53" size={14} />
-                  </Menu.Item>
-                </Menu.Popup>
-              </Menu.Positioner>
-            </Menu.Portal>
-          </Menu.Root>
-        </div>
-        <div data-ui-site="Home-54" className="immersive-launch-meta">
-          <button
-            data-ui-site="Home-55"
-            type="button"
-            onClick={() => onPage('accounts')}
-            className="immersive-account-link"
-          >
-            <UserRound data-ui-site="Home-56" size={13} />
-            <span data-ui-site="Home-57">{config.settings.offline_username}</span>
-            <small data-ui-site="Home-58">{t('common.offlineAccount')}</small>
-          </button>
-          <button
-            data-ui-site="Home-59"
-            type="button"
-            className="immersive-instance-settings"
-            onClick={() => onPage('instances')}
-            aria-label={t('immersive.manageInstance')}
-            title={t('immersive.manageInstance')}
-          >
-            <Settings2 data-ui-site="Home-60" size={15} />
-          </button>
-        </div>
+                </UiIdentity>)}
+                {!s.profiles.items.length && <p data-ui-site="Home-45" className="immersive-menu-empty">{t('immersive.empty')}</p>}
+              </div>
+              <Menu.Separator data-ui-site="Home-48" className="immersive-menu-divider" />
+              <Menu.Item data-ui-site="Home-49" className="immersive-menu-action" label={t('immersive.createNew')} onClick={() => a.profileDraft.openCreate()}><Plus data-ui-site="Home-50" size={16} />{t('immersive.createNew')}</Menu.Item>
+              {visible('instances') && <Menu.Item data-ui-site="Home-51" className="immersive-menu-action" label={t('immersive.manageAll')} onClick={() => a.navigation.navigate('instances')}><Box data-ui-site="Home-52" size={16} />{t('immersive.manageAll')}</Menu.Item>}
+            </Menu.Popup>
+          </Menu.Positioner></Menu.Portal>
+        </Menu.Root>
       </div>
-    </section>
-  );
+      <div data-ui-site="Home-54" className="immersive-launch-meta">
+        {visible('accounts') ? <button data-ui-site="Home-55" className="immersive-account-link" onClick={() => a.navigation.navigate('accounts')}>{accountContent}</button> : <div data-ui-site="Home-account-readonly" className="immersive-account-link">{accountContent}</div>}
+        {profile && <button data-ui-site="Home-59" className="immersive-instance-settings" aria-label={t('immersive.manageInstance')} title={t('immersive.manageInstance')}
+          disabled={!registered('custom.instance-details') && !entry?.capabilities.edit.allowed}
+          onClick={() => registered('custom.instance-details') ? a.navigation.navigate('custom.instance-details', { profileKey: profile.instance_key }) : a.instanceDraft.open(profile.instance_key)}><Settings2 data-ui-site="Home-60" size={16} /></button>}
+      </div>
+      {!profile && !s.profiles.items.length && <div data-ui-site="Home-empty-actions" className="home-empty-actions"><button data-ui-site="Home-import" className="text-button" disabled={!s.window.desktop} onClick={() => a.importDraft.open()}>{t('shellHome.import')}</button>{visible('custom.versions') && <button data-ui-site="Home-versions" className="text-button" onClick={() => a.navigation.navigate('custom.versions')}>{t('home.discoverVersions')}</button>}</div>}
+    </div>
+  </section>;
 }

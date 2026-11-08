@@ -22,6 +22,13 @@ const check = async (name, fn) => {
 };
 try {
   await page.waitForFunction(() => window.suiteFinalFixture?.controller.getActivation(), null, { timeout: 90000 });
+  await page.evaluate(() => window.suiteFinalFixture.setLanguage('en-US'));
+  if (await page.evaluate(() => window.suiteFinalFixture.controller.getSnapshot().initialSelectionRequired)) {
+    const choice = page.locator('[data-style-choice]');
+    await choice.locator('input[value="modern"]').check();
+    await choice.getByRole('button', { name: 'Use this interface', exact: true }).click();
+    await page.waitForFunction(() => !window.suiteFinalFixture.controller.getSnapshot().initialSelectionRequired);
+  }
   await page.evaluate(async (pickerOnly) => {
     await window.suiteFinalFixture.setLanguage('en-US');
     window.suiteFinalFixture.actions.navigation.navigate(pickerOnly ? 'home' : 'accounts');
@@ -409,15 +416,16 @@ try {
   await check('canonical_source_file_search_unknown_override', async () => {
     const search = editor.getByRole('textbox', { name: 'Search name, ID, page or source file' });
     if (!await search.count()) await editor.getByRole('button', { name: /^Target catalog/ }).click();
-    await search.fill('common/components/AccountAvatar.tsx');
+    const avatarSource = await page.evaluate(() => { const c = window.suiteFinalFixture.controller, path = c.getSnapshot().draft.manifest.views['component.account-avatar']; if (!path || c.getSnapshot().draft.files[path]?.encoding !== 'utf8') throw Error('Editable account-avatar binding missing'); return path; });
+    await search.fill(avatarSource);
     await editor.locator('.ui-target-list button').first().waitFor();
     assert.ok(await editor.locator('.ui-target-list button').count() > 0);
     await editor.locator('.ui-target-list button').first().click();
     await page.evaluate(() => { const c = window.suiteFinalFixture.controller, selector = c.getSnapshot().selection.selector; c.actions.selectTarget(Object.fromEntries(Object.entries(selector).reverse())); });
     assert.equal(await editor.locator('.ui-target-list button[aria-pressed="true"]').count(), 1, 'field order does not change complete-selector row identity');
-    assert.match(await editor.locator('.ui-target-details dd').nth(1).textContent(), /common\/components\/AccountAvatar.tsx/);
+    assert.ok((await editor.locator('.ui-target-details dd').nth(1).textContent()).includes(avatarSource));
     const known = await page.evaluate(() => ({ descriptor: window.suiteFinalFixture.controller.getSnapshot().currentTarget, selectedFile: window.suiteFinalFixture.controller.getSnapshot().selectedFile }));
-    assert.equal(known.descriptor.sourcePath, 'common/components/AccountAvatar.tsx'); assert.equal(known.selectedFile, known.descriptor.sourcePath);
+    assert.equal(known.descriptor.sourcePath, avatarSource); assert.equal(known.selectedFile, known.descriptor.sourcePath);
     await editor.getByRole('textbox', { name: 'Manual target ID' }).fill('manual.inspector-unknown');
     await editor.getByRole('button', { name: 'Select manual target', exact: true }).click();
     assert.match(await editor.locator('.ui-target-details [data-ui-site$=":TargetDetails-reason"]').textContent(), /unknown/);
@@ -444,7 +452,7 @@ try {
   await check('three_account_positions_scope_parent_hidden_cleanup', async () => {
     const result = await page.evaluate(async () => {
       const c = window.suiteFinalFixture.controller;
-      const source = `import {Fragment} from 'react';import {useLauncherSnapshot} from '@paradox/launcher';import {UiIdentity,UiView} from '@paradox/ui';import Avatar from './common/components/AccountAvatar';export default function Accounts({Original}){const account=useLauncherSnapshot().accounts.state.accounts[0];return <Fragment data-ui-site="Inspector-accounts-root" key="inspector-accounts-root"><Original/><UiIdentity namespace="account" value={account.id}><UiView data-ui-site="Inspector-third-avatar" id="component.account-avatar" Original={Avatar} props={{account,name:account.name}}/></UiIdentity><UiIdentity namespace="inspector-fixture" value="hidden-control"><button data-ui-site="Inspector-hidden" key="inspector-hidden" style={{display:"none"}}>Inspector hidden control</button></UiIdentity><UiView data-ui-site="Inspector-null-view" id="component.inspector-null"/></Fragment>}`;
+      const source = `import {Fragment} from 'react';import {useLauncherSnapshot} from '@paradox/launcher';import {UiIdentity,UiView} from '@paradox/ui';import Avatar from '${'./' + c.getSnapshot().draft.manifest.views['component.account-avatar']}';export default function Accounts({Original}){const account=useLauncherSnapshot().accounts.state.accounts[0];return <Fragment data-ui-site="Inspector-accounts-root" key="inspector-accounts-root"><Original/><UiIdentity namespace="account" value={account.id}><UiView data-ui-site="Inspector-third-avatar" id="component.account-avatar" Original={Avatar} props={{account,name:account.name}}/></UiIdentity><UiIdentity namespace="inspector-fixture" value="hidden-control"><button data-ui-site="Inspector-hidden" key="inspector-hidden" style={{display:"none"}}>Inspector hidden control</button></UiIdentity><UiView data-ui-site="Inspector-null-view" id="component.inspector-null"/></Fragment>}`;
       c.actions.createFile('InspectorAccounts.tsx', 'tsx'); c.actions.patchFile('InspectorAccounts.tsx', source);
       c.actions.createFile('Null.tsx', 'tsx'); c.actions.patchFile('Null.tsx', 'export default () => null');
       c.actions.patchManifest({ views: { ...c.getSnapshot().draft.manifest.views, 'page.accounts': 'InspectorAccounts.tsx', 'component.inspector-null': 'Null.tsx' }, routes: c.getSnapshot().draft.manifest.routes.map((route) => route.id === 'accounts' ? { ...route, entry: 'InspectorAccounts.tsx' } : route) });
@@ -462,7 +470,7 @@ try {
       await new Promise((yes) => requestAnimationFrame(() => requestAnimationFrame(yes))); c.refreshTargets();
       const eventual = c.getSnapshot().currentTarget, owners = window.suiteFinalFixture.owners();
       const avatars = owners.filter((owner) => owner.target === 'component.account-avatar' && owner.locator.business.some((id) => id.namespace === 'account' && id.value === 'account-a'));
-      const sidebar = avatars.find((owner) => owner.locator.calls.some((call) => call.site.includes('Shell-15')));
+      const sidebar = avatars.find((owner) => owner.locator.calls.some((call) => call.site.endsWith(':AppSidebar-avatar') || call.site.endsWith(':Shell-avatar')));
       if (!sidebar) throw Error('Topbar avatar unavailable: '+JSON.stringify(avatars.map((owner) => owner.locator)));
       c.actions.selectTarget({ kind: 'position', target: sidebar.target, locator: sidebar.locator });
       const exact = c.getSnapshot().currentTarget;

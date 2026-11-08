@@ -42,6 +42,7 @@ export interface UiEditorSnapshot {
   open: boolean;
   mode: 'normal' | 'builtin';
   loaded: boolean;
+  initialSelectionRequired: boolean;
   draft: UiSuiteBundle | null;
   dirty: boolean;
   selectedSuiteId: string | null;

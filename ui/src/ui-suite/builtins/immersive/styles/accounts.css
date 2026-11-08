@@ -1,0 +1,45 @@
+.accounts-page { min-width: 0; display: grid; gap: 22px; }
+.accounts-page h2 { margin: 0; font-size: 1.08rem; }
+.accounts-page p { margin: 0; line-height: 1.65; }
+.accounts-page button { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.accounts-page .field, .accounts-page input { min-width: 0; width: 100%; }
+.accounts-page .accounts-section-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.accounts-page .accounts-identity { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.accounts-page .accounts-identity > div { min-width: 0; display: grid; gap: 5px; }
+.accounts-page .accounts-identity strong { font-size: 1.12rem; overflow-wrap: anywhere; }
+.accounts-page .accounts-identity p, .accounts-page .accounts-identity small { color: var(--muted); overflow-wrap: anywhere; }
+.accounts-page .accounts-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.accounts-page .accounts-help { color: var(--muted); font-size: .86rem; }
+.accounts-page .accounts-eyebrow { color: var(--accent); font-size: .72rem; letter-spacing: .09em; margin-bottom: 8px; }
+.accounts-page .accounts-offline, .accounts-page .accounts-configuration { display: grid; align-content: start; gap: 17px; min-width: 0; }
+.accounts-page .accounts-microsoft { min-width: 0; display: grid; gap: 20px; align-content: start; }
+.accounts-page .accounts-microsoft-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+.accounts-page .accounts-microsoft-heading > div { min-width: 0; }
+.accounts-page .accounts-microsoft-heading > button { flex-shrink: 0; }
+.accounts-page .accounts-microsoft-heading h2 { font-size: 1.45rem; margin-bottom: 9px; }
+.accounts-page .accounts-list { display: grid; gap: 12px; min-width: 0; }
+.accounts-page .accounts-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; }
+.accounts-page .accounts-confirm { flex-basis: 100%; display: grid; gap: 12px; padding: 15px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+.accounts-page .accounts-confirm p { overflow-wrap: anywhere; }
+.accounts-page .accounts-notice { display: grid; justify-items: start; gap: 12px; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; padding: 18px; background: var(--surface); overflow-wrap: anywhere; }
+.accounts-page .accounts-recovery-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
+.accounts-page .accounts-empty { display: grid; justify-items: center; gap: 12px; color: var(--muted); padding: 34px 16px; border: 1px dashed var(--border); border-radius: 10px; text-align: center; }
+@media (max-width: 600px) {
+  .accounts-page { gap: 14px; }
+  .accounts-page .accounts-microsoft-heading { flex-direction: column; gap: 14px; }
+  .accounts-page .accounts-row { align-items: flex-start; }
+  .accounts-page .accounts-identity { flex-wrap: wrap; }
+  .accounts-page .accounts-actions { align-items: stretch; }
+  .accounts-page .accounts-actions > button { flex: 1 1 auto; }
+}
+.immersive-accounts { grid-template-columns: minmax(225px, .85fr) minmax(0, 1.65fr); align-items: start; gap: 28px; }
+.immersive-accounts .accounts-operation-sidebar { display: grid; gap: 25px; padding: 25px; min-width: 0; background: var(--surface); border-left: 3px solid var(--accent); }
+.immersive-accounts .accounts-operation-sidebar > .accounts-eyebrow { margin: 0; }
+.immersive-accounts .accounts-configuration { border-top: 1px solid var(--border); padding-top: 24px; }
+.immersive-accounts .accounts-main { display: grid; min-width: 0; gap: 24px; padding: 9px 0; }
+.immersive-accounts .accounts-row { border-bottom: 1px solid var(--border); padding: 20px 0; border-radius: 0; }
+.immersive-accounts .accounts-row:first-child { border-top: 1px solid var(--border); }
+.immersive-accounts .accounts-list { gap: 0; }
+.immersive-accounts .accounts-microsoft-heading { padding-bottom: 10px; }
+@media (max-width: 1040px) { .immersive-accounts { grid-template-columns: 1fr; } .immersive-accounts .accounts-operation-sidebar { grid-template-columns: 1fr 1fr; } .immersive-accounts .accounts-operation-sidebar > .accounts-eyebrow { grid-column: 1 / -1; } .immersive-accounts .accounts-configuration { border-top: 0; padding-top: 0; } }
+@media (max-width: 700px) { .immersive-accounts .accounts-operation-sidebar { grid-template-columns: 1fr; padding: 17px; } .immersive-accounts .accounts-configuration { border-top: 1px solid var(--border); padding-top: 22px; } }

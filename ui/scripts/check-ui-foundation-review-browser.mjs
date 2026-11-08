@@ -22,6 +22,7 @@ const report = {
   contentSecurityPolicy: fixture.contentSecurityPolicy,
   compiledHarness: await page.evaluate(() => typeof window.mountFoundationFixture === 'function'),
   observedPageErrors: fixture.observedPageErrors,
+  observedCspViolations: fixture.observedCspViolations,
   observedSourceModuleRequests: fixture.observedSourceModuleRequests,
   cases: [],
 };
@@ -36,11 +37,14 @@ async function settled() {
 }
 async function mount(shadow, dialog = false) {
   await page.evaluate(
-    async ({ shadow, dialog }) => {
-      if (!window.mountFoundationFixture) await import('/src/ui-foundation/browser-fixture.tsx');
+    async ({ shadow, dialog, compiled }) => {
+      if (!window.mountFoundationFixture) {
+        if (compiled) throw Error('Compiled Foundation fixture installer is missing');
+        await import('/src/ui-foundation/browser-fixture.tsx');
+      }
       window.mountFoundationFixture('dark', shadow, dialog);
     },
-    { shadow, dialog },
+    { shadow, dialog, compiled: process.env.PARADOX_TEST_NATIVE_CSP === '1' },
   );
   await page
     .getByRole(dialog ? 'dialog' : 'combobox', { name: dialog ? 'Action Dialog' : 'Choice' })
@@ -68,6 +72,13 @@ async function run(name, action) {
   }
 }
 try {
+  await page.waitForFunction(() => window.suiteFinalFixture?.controller.getActivation());
+  if (await page.evaluate(() => window.suiteFinalFixture.controller.getSnapshot().initialSelectionRequired)) {
+    const choice = page.locator('[data-style-choice]');
+    await choice.getByRole('radio', { name: /Immersive|沉浸式/ }).click();
+    await choice.getByRole('button', { name: /Use this interface|使用此界面/ }).click();
+    await page.waitForFunction(() => !window.suiteFinalFixture.controller.getSnapshot().initialSelectionRequired);
+  }
   for (const shadow of [false, true]) {
     const root = shadow ? 'shadow' : 'document';
     await run(`I1:disabled_restoration_stays_closed:${root}`, async (result) => {
@@ -179,11 +190,14 @@ try {
       .getByRole('button', { name: text('nav.instances') })
       .click();
     await page
-      .locator('.page-heading')
+      .locator('.instances-page')
       .getByRole('button', { name: text('app.createInstance'), exact: true })
       .click();
-    const profile = page.locator('.modal').filter({ has: page.locator('#profile-name') });
-    const name = profile.locator('#profile-name');
+    await page.waitForFunction(() => window.suiteFinalFixture.snapshot.navigation.routeId === 'custom.versions');
+    const version = page.locator('.versions-page article').filter({ hasText: '1.21.1' });
+    await version.getByRole('button', { name: text('common.createInstance'), exact: true }).click();
+    const profile = page.getByRole('dialog', { name: text('profileDialog.createTitle'), exact: true, includeHidden: true });
+    const name = profile.getByRole('textbox', { name: text('instances.name'), exact: true, includeHidden: true });
     await name.fill('Review retained draft');
     await name.focus();
     const editor = await openEditor(page);
@@ -266,6 +280,7 @@ try {
     await profile.getByRole('button', { name: text('common.cancel'), exact: true }).click();
   });
   assert.deepEqual(report.observedPageErrors, []);
+  assert.deepEqual(report.observedCspViolations, []);
   if (process.env.PARADOX_TEST_NATIVE_CSP === '1') {
     assert.ok(report.contentSecurityPolicy);
     assert.equal(report.compiledHarness, true);

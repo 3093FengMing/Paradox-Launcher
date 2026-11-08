@@ -18,6 +18,8 @@ export interface LauncherServices {
   notices: UiNoticeStore;
   getRouteId(): UiRouteId;
   getNavigation(): Readonly<{
+    // Private entry identity; search edits and unchanged registries retain it.
+    entryId: number;
     routeId: UiRouteId;
     params: Readonly<{ profileKey?: string }>;
     search: string;

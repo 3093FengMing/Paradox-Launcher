@@ -1,0 +1,15 @@
+.account-login { display: grid; gap: 20px; min-width: 0; }
+.account-login p { margin: 0; line-height: 1.6; }
+.account-login button { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.account-login-code { display: grid; gap: 12px; min-width: 0; justify-items: center; padding: 24px; color: var(--text); }
+.account-login-code > svg { color: var(--accent); }
+.account-login-code > p { color: var(--muted); font-size: .78rem; }
+.account-login-code > strong { font-size: 1.8rem; letter-spacing: .1em; overflow-wrap: anywhere; text-align: center; max-width: 100%; }
+.account-login-steps { display: grid; align-content: center; justify-items: start; gap: 13px; min-width: 0; }
+.account-login-steps > p { color: var(--muted); font-size: .85rem; }
+.account-login-uri { overflow-wrap: anywhere; max-width: 100%; }
+.account-login-footer { grid-column: 1 / -1; display: grid; justify-items: start; gap: 13px; padding-top: 17px; border-top: 1px solid var(--border); }
+.account-login-footer > p { color: var(--muted); font-size: .82rem; }
+@media (max-width: 600px) { .account-login { gap: 14px; } .account-login-code { padding: 16px; } .account-login-code > strong { font-size: 1.45rem; } .account-login-steps { justify-items: stretch; } }
+.modern-login .account-login-code { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; }
+.modern-login .account-login-open { width: 100%; }

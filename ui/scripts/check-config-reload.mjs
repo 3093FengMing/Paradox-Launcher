@@ -112,6 +112,158 @@ async function fixture({
   };
 }
 
+await test('initial config failure can recover through reload and initialize the permanent owner', async () => {
+  const f = await fixture({ holdBootstrap: true });
+  f.reads[0].reject(new Error('initial config unavailable'));
+  let launcher = await f.host.settle();
+  assert.equal(launcher.fatal, 'initial config unavailable');
+  assert.equal(launcher.bootstrap, null);
+  assert.equal(launcher.getSettingsDraft(), null);
+  assert.equal(launcher.requestedStartupRouteId, null);
+  await launcher.selectProfile('original-instance');
+  assert.equal(f.writes.length, 0, 'a write without valid configuration must still be rejected');
+  f.server.config.settings.memory_mb = 6144;
+  f.server.config.settings.personalization.startup_page = 'instances';
+  f.server.config_path = 'recovered.json';
+  const reloading = launcher.reloadConfig();
+  launcher = await f.host.settle();
+  assert.equal(f.reads.length, 2, 'retry must read even when no configuration was accepted');
+  assert.equal(launcher.saving, true);
+  assert.equal(launcher.fatal, 'initial config unavailable', 'fatal stays useful while retry is pending');
+  f.reads[1].finish();
+  await reloading;
+  launcher = await f.host.settle();
+  assert.equal(launcher.fatal, '');
+  assert.equal(launcher.bootstrap.config_path, 'recovered.json');
+  assert.equal(launcher.bootstrap.config.settings.memory_mb, 6144);
+  assert.equal(launcher.draft.memory_mb, 6144);
+  assert.equal(launcher.getSettingsDraft().memory_mb, 6144);
+  assert.equal(launcher.requestedStartupRouteId, 'instances');
+  assert.equal(launcher.startupPage, 'instances');
+  assert.equal(launcher.getGuardState().config.settings.memory_mb, 6144);
+  assert.equal(launcher.saving, false);
+  launcher.patchSettings('memory_mb', 8192);
+  assert.equal(launcher.getGuardState().config.settings.memory_mb, 6144, 'recovered draft is detached');
+  launcher.resetSettings();
+  assert.equal(launcher.getSettingsDraft().memory_mb, 6144);
+  assert.equal(f.writes.length, 0, 'bootstrap recovery itself never writes configuration');
+  f.host.unmount();
+});
+
+await test('failed initial retry keeps its useful fatal error and allows a later recovery', async () => {
+  const f = await fixture({ holdBootstrap: true });
+  f.reads[0].reject(new Error('initial config unavailable'));
+  let launcher = await f.host.settle();
+  const failed = launcher.reloadConfig();
+  await f.host.settle();
+  assert.equal(f.reads.length, 2, 'retry must reach the host');
+  f.reads[1].reject(new Error('retry host still unavailable'));
+  await failed;
+  launcher = await f.host.settle();
+  assert.equal(launcher.fatal, 'retry host still unavailable');
+  assert.equal(launcher.bootstrap, null);
+  assert.equal(launcher.getSettingsDraft(), null);
+  assert.equal(launcher.requestedStartupRouteId, null);
+  assert.equal(launcher.saving, false);
+  assert.deepEqual(f.notifications, [{ error: true, message: 'retry host still unavailable' }]);
+  assert.ok(launcher.logs.some((line) => line.message === 'retry host still unavailable'));
+  const recovered = launcher.reloadConfig();
+  await f.host.settle();
+  f.reads[2].finish();
+  await recovered;
+  launcher = await f.host.settle();
+  assert.equal(launcher.fatal, '');
+  assert.equal(launcher.draft.memory_mb, 4096);
+  assert.equal(launcher.saving, false);
+  f.host.unmount();
+});
+
+await test('queued recovery reloads preserve the first draft and startup route before a following save', async () => {
+  const f = await fixture({ holdBootstrap: true, holdWrites: true });
+  f.reads[0].reject(new Error('initial config unavailable'));
+  const launcher = await f.host.settle();
+  f.server.config.settings.personalization.startup_page = 'instances';
+  const first = launcher.reloadConfig();
+  const second = launcher.reloadConfig();
+  await f.host.settle();
+  assert.equal(f.reads.length, 2, 'recovery reads must be serialized');
+  f.server.config.settings.memory_mb = 6144;
+  f.server.config.settings.personalization.startup_page = 'settings';
+  f.server.config.profiles.push(structuredClone(importedProfile));
+  f.reads[1].finish();
+  await first;
+  let current = await f.host.settle();
+  assert.equal(f.reads.length, 3);
+  current.patchSettings('memory_mb', 8192);
+  current.patchPersonalization('font', 'serif');
+  const saving = current.saveSettings();
+  await f.host.settle();
+  assert.equal(f.writes.length, 0, 'save waits for the second read');
+  f.reads[2].finish();
+  await second;
+  current = await f.host.settle();
+  assert.equal(current.fatal, '');
+  assert.equal(current.bootstrap.config.settings.memory_mb, 6144);
+  assert.equal(current.getSettingsDraft().memory_mb, 8192);
+  assert.equal(current.getSettingsDraft().personalization.font, 'serif');
+  assert.equal(current.requestedStartupRouteId, 'instances', 'only the first accepted config selects startup');
+  assert.equal(f.writes.length, 1);
+  assert.equal(f.writes[0].config.settings.memory_mb, 8192);
+  assert.deepEqual(f.writes[0].config.profiles.map((item) => item.instance_key), [
+    'original-instance',
+    'imported-pack',
+  ]);
+  current.patchSettings('memory_mb', 12288);
+  f.writes[0].finish();
+  assert.equal(await saving, true);
+  current = await f.host.settle();
+  assert.equal(current.bootstrap.config.settings.memory_mb, 8192);
+  assert.equal(current.getSettingsDraft().memory_mb, 12288, 'the existing conditional ACK remains intact');
+  assert.equal(current.saving, false);
+  assert.deepEqual(f.notifications.filter((notice) => notice.error), []);
+  f.host.unmount();
+});
+
+for (const outcome of ['success', 'failure']) {
+  for (const boundary of ['unmount', 'reconnect']) {
+    await test(`initial recovery ignores late ${outcome} after ${boundary}`, async () => {
+      const f = await fixture({ holdBootstrap: true });
+      f.reads[0].reject(new Error('initial config unavailable'));
+      let launcher = await f.host.settle();
+      const recovering = launcher.reloadConfig();
+      const queued = launcher.reloadConfig();
+      await f.host.settle();
+      assert.equal(f.reads.length, 2, 'the recovery must begin before its lifecycle ends');
+      if (boundary === 'unmount') f.host.unmount();
+      else {
+        f.server.config.settings.memory_mb = 12288;
+        f.server.config.settings.personalization.startup_page = 'settings';
+        f.host.reconnectEffects();
+        f.reads[2].finish();
+        launcher = await f.host.settle();
+        assert.equal(launcher.fatal, '', 'a new lifecycle bootstrap clears an earlier fatal');
+        launcher.patchSettings('memory_mb', 16384);
+      }
+      if (outcome === 'success') f.reads[1].finish();
+      else f.reads[1].reject(new Error('obsolete recovery failure'));
+      await Promise.all([recovering, queued]);
+      launcher = await f.host.settle();
+      assert.equal(f.reads.length, boundary === 'unmount' ? 2 : 3, 'obsolete queued retry cannot start');
+      assert.equal(f.host.updatesAfterUnmount, 0);
+      assert.deepEqual(f.notifications, []);
+      if (boundary === 'reconnect') {
+        assert.equal(launcher.fatal, '');
+        assert.equal(launcher.bootstrap.config.settings.memory_mb, 12288);
+        assert.equal(launcher.getGuardState().config.settings.memory_mb, 12288);
+        assert.equal(launcher.getSettingsDraft().memory_mb, 16384);
+        assert.equal(launcher.requestedStartupRouteId, 'settings');
+        assert.equal(launcher.saving, false, 'old pending operations cannot alter the new lifecycle count');
+        f.host.unmount();
+      }
+    });
+  }
+}
+
 await test('d13_current_draft_is_detached_and_synchronous: initial, generic/nested patches and reset share one owner', async () => {
   const f = await fixture();
   const owner = f.launcher;

@@ -11,7 +11,7 @@ const config = structuredClone(initialConfig);
 config.settings.offline_username = 'Player';
 config.profiles.push({ ...config.profiles[0], instance_key: 'second-instance', name: 'Second world' });
 const oldBytes = { 'paradox.ui-customization.v1': '{opaque old bytes\n', 'paradox.ui-customization.v1.recovery.keep': 'legacy backup bytes' };
-const fixture = await createBrowserFixture({ config, oldNamespaceBytes: oldBytes });
+const fixture = await createBrowserFixture({ config, desktopBoundary: true, oldNamespaceBytes: oldBytes });
 const { page } = fixture;
 page.setDefaultTimeout(30000);
 const report = { checks: [], started_at: new Date().toISOString(), native_csp: fixture.contentSecurityPolicy };
@@ -26,6 +26,10 @@ async function closeEditor() {
 async function navigate(route) {
   await page.evaluate(route => window.suiteFinalFixture.actions.navigation.navigate(route), route);
   await page.waitForFunction(route => window.suiteFinalFixture.snapshot.navigation.routeId === route, route);
+}
+async function preserveNativeReload() {
+  const saved = await page.evaluate(() => { const d = window.foundationDesktop; return { config: d.config, accounts: d.accounts, suiteLibrary: d.suiteLibrary, suiteRaw: d.suiteRaw ? Array.from(d.suiteRaw) : null, suiteBackups: d.suiteBackups }; });
+  await page.addInitScript(saved => { Object.assign(window.foundationDesktop, saved); window.foundationDesktop.suiteRaw = saved.suiteRaw ? new Uint8Array(saved.suiteRaw) : null; }, saved);
 }
 async function check(name, action) {
   try { await action(); report.checks.push({ name, passed: true }); console.log('PASS ' + name); }
@@ -55,36 +59,38 @@ async function preview() {
   assert.deepEqual(await raw(), before, 'Preview does not write saved bytes');
 }
 const override = (target, entry = null, stylesheet = null, enabled = true) => ({ selector: { kind: 'type', target }, entry, stylesheet, enabled });
-const basicStyles = ['common/style.css', 'modern/style.css'];
-const profiles = () => page.locator('.profile-card');
+let basicStyles; // Captured from the editable source's actual manifest; imported source CSS is retained.
+const profiles = () => page.locator('.instance-row');
 let savedGlobal, wrappedRaw;
 try {
   await page.waitForFunction(() => window.suiteFinalFixture?.controller.getActivation(), null, { timeout: 90000 });
   await page.evaluate(() => window.suiteFinalFixture.setLanguage('en-US'));
+  if (await page.locator('[data-style-choice]').count()) { await page.locator('[data-style-choice] input[value="modern"]').check(); await page.locator('[data-style-choice]').getByRole('button', { name: 'Use this interface', exact: true }).click(); await page.waitForFunction(() => !window.suiteFinalFixture.controller.getSnapshot().initialSelectionRequired); }
+  await openEditor(); basicStyles = [...(await snapshot()).draft.manifest.styles]; await closeEditor();
   await navigate('instances');
   await check('real default entry has two existing business profiles', async () => {
     assert.equal(await profiles().count(), 2);
-    assert.equal(await profiles().first().locator('h3').textContent(), 'Original world');
+    assert.equal(await profiles().first().locator('[data-ui-site$=":ProfileCard-name"]').textContent(), 'Original world');
   });
   await check('visible CSS Preview versus exact Save and reload', async () => {
     await openEditor();
     const s = await snapshot(), styles = [...s.draft.manifest.styles, 'Final.css'];
-    await patch({ files: { 'Final.css': '.profile-card { outline: 3px solid rgb(10,200,30) !important; }' }, styles });
+    await patch({ files: { 'Final.css': '.instance-row { outline: 3px solid rgb(10,200,30) !important; }' }, styles });
     await preview();
-    await page.waitForFunction(() => getComputedStyle(document.querySelector('.profile-card')).outlineColor === 'rgb(10, 200, 30)');
+    await page.waitForFunction(() => getComputedStyle(document.querySelector('.instance-row')).outlineColor === 'rgb(10, 200, 30)');
     await editorLocator().getByRole('button', { name: 'Save suite', exact: true }).click();
     await page.waitForFunction(() => !window.suiteFinalFixture.controller.getSnapshot().pending);
     savedGlobal = await raw();
     const library = JSON.parse(Buffer.from(savedGlobal).toString());
     assert.equal(library.kind, 'paradox-ui-suite-library');
     const record = library.suites.find(x => x.instance_id === library.active_suite_id);
-    assert.deepEqual(record.overlay['Final.css'], { encoding: 'utf8', text: '.profile-card { outline: 3px solid rgb(10,200,30) !important; }' });
+    assert.deepEqual(record.overlay['Final.css'], { encoding: 'utf8', text: '.instance-row { outline: 3px solid rgb(10,200,30) !important; }' });
     assert.equal(library.settings, undefined); assert.equal(library.profiles, undefined);
-    await closeEditor(); await page.reload();
+    await closeEditor(); await preserveNativeReload(); await page.reload();
     await page.waitForFunction(() => window.suiteFinalFixture?.controller.getActivation(), null, { timeout: 90000 });
     await page.evaluate(() => window.suiteFinalFixture.setLanguage('en-US'));
     await navigate('instances');
-    await page.waitForFunction(() => getComputedStyle(document.querySelector('.profile-card')).outlineColor === 'rgb(10, 200, 30)');
+    await page.waitForFunction(() => getComputedStyle(document.querySelector('.instance-row')).outlineColor === 'rgb(10, 200, 30)');
     assert.deepEqual(await raw(), savedGlobal);
   });
   await check('one repeated profile uses a real position selector', async () => {
@@ -93,14 +99,14 @@ try {
       if (!owner) throw Error('actual profile owner not found');
       return { kind: 'position', target: owner.target, locator: owner.locator };
     });
-    await patch({ files: { 'Profile.css': ':scope h3 { color: rgb(190,70,10) !important; }' }, overrides: [{ selector, enabled: true, entry: null, stylesheet: 'Profile.css' }] });
+    await patch({ files: { 'Profile.css': ':scope .instance-row-name strong { color: rgb(190,70,10) !important; }' }, overrides: [{ selector, enabled: true, entry: null, stylesheet: 'Profile.css' }] });
     await preview();
-    const colors = await profiles().locator('h3').evaluateAll(xs => xs.map(x => getComputedStyle(x).color));
+    const colors = await profiles().locator('[data-ui-site$=":ProfileCard-name"]').evaluateAll(xs => xs.map(x => getComputedStyle(x).color));
     assert.equal(colors[0], 'rgb(190, 70, 10)'); assert.notEqual(colors[1], colors[0]);
     assert.deepEqual(await raw(), savedGlobal);
   });
   await check('pick native button, source import/export bytes, isolated scope and business selection', async () => {
-    const firstButton = profiles().first().locator('.profile-actions .secondary');
+    const firstButton = profiles().first().locator('.instance-actions .instance-details-button');
     const active = await page.evaluate(() => window.suiteFinalFixture.snapshot.profiles.activeKey);
     const editor = await openEditor();
     await editor.getByRole('button', { name: 'Pick target', exact: true }).click();
@@ -122,7 +128,7 @@ try {
     const output = resolve(artifacts, 'Single.css'); await (await downloaded).saveAs(output);
     assert.equal(await readFile(output, 'utf8'), content);
     await patch({ overrides: [{ selector: picked, enabled: true, entry: null, stylesheet: 'Single.css' }] }); await preview();
-    const colors = await profiles().locator('.profile-actions .secondary').evaluateAll(xs => xs.map(x => getComputedStyle(x).backgroundColor));
+    const colors = await profiles().locator('.instance-actions .instance-details-button').evaluateAll(xs => xs.map(x => getComputedStyle(x).backgroundColor));
     assert.equal(colors[0], 'rgb(40, 130, 160)'); assert.notEqual(colors[1], colors[0]);
     assert.equal(await page.evaluate(() => window.suiteFinalFixture.snapshot.profiles.activeKey), active);
     assert.deepEqual(await raw(), savedGlobal);
@@ -132,13 +138,13 @@ try {
     await page.getByRole('heading', { name: 'UI HTML layout', exact: true }).waitFor();
     assert.equal(await profiles().count(), 2);
     await page.getByRole('button', { name: 'UI create instance', exact: true }).click();
-    await page.locator('#profile-name').fill('UI custom world');
-    await page.locator('.modal form button[type=submit]').click();
-    await page.waitForFunction(() => document.querySelectorAll('.profile-card').length === 3);
+    await page.getByRole('dialog').getByRole('textbox', { name: 'Instance name', exact: true }).fill('UI custom world');
+    await page.locator('.profile-dialog form button[type=submit]').click();
+    await page.waitForFunction(() => document.querySelectorAll('.instance-row').length === 3);
   });
   await check('open modal draft and root style ownership survive Preview', async () => {
-    await profiles().first().getByRole('button', { name: 'Rename Original world', exact: true }).click();
-    await page.locator('#profile-name').fill('Keep dialog edits');
+    await profiles().first().getByRole('button', { name: 'More tools for Original world', exact: true }).click(); await page.getByRole('menuitem', { name: 'Rename instance', exact: true }).click();
+    await page.getByRole('dialog').getByRole('textbox', { name: 'Instance name', exact: true }).fill('Keep dialog edits');
     const selector = await page.locator('.modal').evaluate(element => {
       const dom = window.suiteFinalFixture.sourceOwners(element);
       const owner = window.suiteFinalFixture.owners().find(o => o.ownerId === dom.leafOwnerId);
@@ -147,9 +153,9 @@ try {
     });
     await patch({ files: { 'Modal.css': ':scope { outline: 3px solid rgb(1,2,3) !important; }' }, overrides: [{ selector, enabled: true, entry: null, stylesheet: 'Modal.css' }] }); await preview();
     assert.equal(await page.locator('.modal').evaluate(x => getComputedStyle(x).outlineColor), 'rgb(1, 2, 3)');
-    assert.notEqual(await page.locator('.modal-heading').evaluate(x => getComputedStyle(x).outlineColor), 'rgb(1, 2, 3)');
-    await closeEditor(); assert.equal(await page.locator('#profile-name').inputValue(), 'Keep dialog edits');
-    await page.locator('.modal-heading button').click();
+    assert.notEqual(await page.locator('.business-dialog-heading').evaluate(x => getComputedStyle(x).outlineColor), 'rgb(1, 2, 3)');
+    await closeEditor(); assert.equal(await page.getByRole('dialog').getByRole('textbox', { name: 'Instance name', exact: true }).inputValue(), 'Keep dialog edits');
+    await page.locator('.business-dialog-heading button').click();
   });
   const cardSource = 'import {useState} from "react";export default function Card({Original,props,snapshot,actions}){const [value,setValue]=useState("");const p=snapshot.profiles.items.find(x=>x.profile.instance_key===props.profileKey).profile;return <section data-testid="ui-tsx-card"><input aria-label={"Local "+p.name} value={value} onChange={e=>setValue(e.currentTarget.value)}/><Original {...props}/><button onClick={()=>actions.profileDraft.openRename(p.instance_key)}>UI rename {p.name}</button></section>}';
   const buttonSource = 'export default function Button({Original,props,children}){return <Original {...props} data-testid="ui-native-button">{children}</Original>}';
@@ -159,14 +165,14 @@ try {
     assert.equal(await page.getByTestId('ui-tsx-card').count(), 3);
     assert.ok(await page.getByTestId('ui-native-button').count() > 5);
     await page.getByRole('button', { name: 'UI rename Original world', exact: true }).click();
-    await page.locator('#profile-name').fill('Renamed through TSX'); await page.locator('.modal form button[type=submit]').click();
+    await page.getByRole('dialog').getByRole('textbox', { name: 'Instance name', exact: true }).fill('Renamed through TSX'); await page.locator('.profile-dialog form button[type=submit]').click();
     await page.getByRole('button', { name: 'UI rename Renamed through TSX', exact: true }).waitFor();
-    await page.locator('.account-avatar-button').click(); await page.waitForFunction(() => window.suiteFinalFixture.snapshot.navigation.routeId === 'accounts');
-    await page.locator('.sidebar').getByRole('button', { name: 'Downloads', exact: true }).click();
+    await page.locator('.sidebar-account').click(); await page.waitForFunction(() => window.suiteFinalFixture.snapshot.navigation.routeId === 'accounts');
+    await page.locator('.sidebar').getByRole('button', { name: 'Download tasks', exact: true }).click();
     await page.waitForFunction(() => window.suiteFinalFixture.snapshot.navigation.routeId === 'downloads');
     await navigate('instances');
     const active = await page.evaluate(() => window.suiteFinalFixture.snapshot.profiles.activeKey);
-    await page.getByRole('button', { name: 'Manage mods for Second world', exact: true }).click();
+    await profiles().filter({ hasText: 'Second world' }).getByRole('button', { name: 'Open details for Second world', exact: true }).click(); await page.locator('.instance-detail-tabs').getByRole('button', { name: 'Mods', exact: true }).click();
     assert.equal(await page.evaluate(() => window.suiteFinalFixture.snapshot.content.selectedProfileKey), 'second-instance');
     assert.equal(await page.evaluate(() => window.suiteFinalFixture.snapshot.profiles.activeKey), active);
     await page.locator('.sidebar').getByRole('button', { name: 'Logs', exact: true }).click();
@@ -186,7 +192,7 @@ try {
   await check('CSS-only Preview keeps local DOM/input and selected source draft', async () => {
     await page.getByLabel('Local Second world', { exact: true }).fill('unsaved component input');
     await page.getByLabel('Local Second world', { exact: true }).evaluate(x => { window.task13LocalInput = x; });
-    await patch({ files: { 'Final.css': '.profile-card {outline:4px solid rgb(30,80,170)!important}' } });
+    await patch({ files: { 'Final.css': '.instance-row {outline:4px solid rgb(30,80,170)!important}' } });
     await page.evaluate(() => window.suiteFinalFixture.controller.actions.selectFile('Final.css'));
     const value = await editorLocator().locator('textarea.ui-code').inputValue();
     await closeEditor(); await openEditor(); assert.equal(await editorLocator().locator('textarea.ui-code').inputValue(), value);
@@ -250,10 +256,11 @@ try {
     await page.waitForFunction(() => !window.suiteFinalFixture.controller.getSnapshot().pending && window.suiteFinalFixture.controller.getActivation());
     await recovery.waitFor({ state: 'hidden' });
     await page.keyboard.press('Control+Shift+F12'); await recovery.waitFor();
-    await recovery.getByRole('button', { name: 'Open default editor', exact: true }).click(); await closeEditor();
+    await recovery.getByRole('button', { name: 'Open default editor', exact: true }).click();
+    await editorLocator().waitFor(); await preview(); await closeEditor();
     assert.deepEqual(await page.evaluate(keys => Object.fromEntries(keys.map(key => [key, localStorage.getItem(key)])), Object.keys(oldBytes)), oldBytes);
-    assert.equal(await profiles().count(), 3); assert.equal(await profiles().first().locator('h3').textContent(), 'Renamed through TSX');
-    const backups = await page.evaluate(() => new Promise((resolve, reject) => { const request = indexedDB.open('paradox.ui-suite-library.v1',1); request.onsuccess = () => { const db=request.result, tx=db.transaction('backups','readonly'), r=tx.objectStore('backups').getAll(); r.onsuccess=()=>resolve(r.result.map(x=>Array.from(x))); tx.oncomplete=()=>db.close(); tx.onerror=()=>reject(tx.error); }; }));
+    assert.equal(await profiles().count(), 3); assert.equal(await profiles().first().locator('[data-ui-site$=":ProfileCard-name"]').textContent(), 'Renamed through TSX');
+    const backups = await page.evaluate(() => window.foundationDesktop.suiteBackups);
     assert.ok(backups.some(bytes => JSON.stringify(bytes) === JSON.stringify(before)), 'reset preserves previous raw source');
   });
   await check('320x240 normal editor dark heading and Save click', async () => {
@@ -271,13 +278,34 @@ try {
     await patch({ files: { 'Unsafe.tsx': 'window.task13UnsafeExecuted=true;export default function(){throw Error("unsafe startup executed")}' }, overrides: [override('component.profile-card','Unsafe.tsx')] });
     await editorLocator().getByRole('button', { name: 'Save suite', exact: true }).click();
     await page.waitForFunction(() => !window.suiteFinalFixture.controller.getSnapshot().pending);
-    const saved = await raw(); await page.goto(new URL('?ui-safe=1', page.url()).href);
+    const saved = await raw(); await preserveNativeReload(); await page.goto(new URL('?ui-safe=1', page.url()).href);
     await page.waitForFunction(() => window.suiteFinalFixture?.controller.getSnapshot().loaded &&
       window.suiteFinalFixture.controller.getActivation(), null, { timeout: 90000 });
     await page.evaluate(() => window.suiteFinalFixture.setLanguage('en-US'));
     assert.equal(await page.evaluate(() => window.task13UnsafeExecuted), undefined);
     await page.keyboard.press('Escape'); await page.evaluate(() => window.suiteFinalFixture.controller.recovery.openBuiltinEditor());
     await editorLocator().waitFor({ state: 'visible' });
+    const safeBefore = await page.evaluate(() => {
+      const c = window.suiteFinalFixture.controller, trusted = c.getActivation().trusted.bundle;
+      return { selectedSuiteId: c.getSnapshot().selectedSuiteId, files: trusted.files, views: trusted.manifest.views,
+        routes: trusted.manifest.routes, overrides: trusted.manifest.overrides,
+        saveWrites: window.foundationDesktop.calls.filter(call => call.command === 'save_ui_suite_library').length };
+    });
+    const copyBuiltin = editorLocator().getByRole('button', { name: 'Copy builtin', exact: true });
+    assert.equal(await copyBuiltin.count(), 1); await copyBuiltin.click();
+    await page.waitForFunction(previous => {
+      const s = window.suiteFinalFixture.controller.getSnapshot();
+      return !s.pending && s.selectedSuiteId !== previous && s.draft && !s.draft.files['Unsafe.tsx'];
+    }, safeBefore.selectedSuiteId);
+    const safeDraft = (await snapshot()).draft;
+    assert.deepEqual(safeDraft.files, safeBefore.files);
+    assert.deepEqual(safeDraft.manifest.views, safeBefore.views);
+    assert.deepEqual(safeDraft.manifest.routes, safeBefore.routes);
+    assert.deepEqual(safeDraft.manifest.overrides, safeBefore.overrides);
+    await preview();
+    assert.equal(await page.evaluate(() => window.task13UnsafeExecuted), undefined);
+    assert.deepEqual(await raw(), saved);
+    assert.equal(await page.evaluate(() => window.foundationDesktop.calls.filter(call => call.command === 'save_ui_suite_library').length), safeBefore.saveWrites);
     await closeEditor(); await navigate('instances'); assert.equal(await profiles().count(), 3); assert.deepEqual(await raw(), saved);
   });
   assert.deepEqual(fixture.observedPageErrors, []); assert.deepEqual(fixture.observedCspViolations, []);

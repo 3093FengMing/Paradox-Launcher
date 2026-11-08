@@ -1,0 +1,12 @@
+.avatar.account-avatar { width: 2.25em; height: 2.25em; flex: 0 0 auto; display: inline-grid; place-items: center; overflow: hidden; border-radius: min(6px,var(--radius)); background: var(--hover); color: var(--accent-ink); font-size: 1em; }
+.account-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+.activity-bar { display: flex; align-items: center; flex-wrap: wrap; gap: .7em; margin: .8em 0; padding: .85em; background: var(--surface); border: 1px solid var(--border); border-radius: min(6px,var(--radius)); color: var(--muted); font-size: .8125em; }
+.activity-bar > span { min-width: 0; flex: 1 1 10em; overflow-wrap: anywhere; }
+.activity-bar > svg { color: var(--accent-ink); flex-shrink: 0; }
+.activity-bar button { min-height: 2em; }
+.source-host-state { position: absolute; inset: var(--titlebar-height) 0 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .75em; padding: 1.5em; overflow: auto; background: var(--bg); color: var(--text); text-align: center; }
+.source-host-state > svg { color: var(--accent-ink); flex-shrink: 0; }
+.source-host-state h1 { font-size: 1.25em; margin: 0; }
+.source-host-state p { max-width: 36em; font-size: .875em; line-height: 1.6; margin: 0; overflow-wrap: anywhere; }
+.source-host-state button { padding: .6em 1.5em; min-height: 2.5em; }
+.source-error { justify-content: flex-start; padding-top: 8vh; }

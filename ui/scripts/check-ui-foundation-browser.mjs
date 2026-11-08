@@ -82,10 +82,11 @@ async function allBuiltinSelects() {
   const beforeSearch = await page.evaluate(
     () => window.foundationDesktop.calls.filter((call) => call.command === 'search_content').length,
   );
-  await choose(
-    page.getByRole('combobox', { name: text('content.projectType'), exact: true }),
-    text('content.types.shader'),
-  );
+  const kind = page.getByRole('group', { name: text('content.projectType'), exact: true })
+    .getByRole('button', { name: text('content.types.shader'), exact: true });
+  await kind.focus(); await page.keyboard.press('Enter');
+  assert.equal(await kind.getAttribute('aria-pressed'), 'true');
+  assert.equal(await page.evaluate(() => window.suiteFinalFixture.snapshot.content.kind), 'shader');
   assert.equal(
     await page.evaluate(
       () =>
@@ -95,7 +96,7 @@ async function allBuiltinSelects() {
     'choosing kind only changes the search draft',
   );
   await page
-    .locator('.content-layout form')
+    .locator('.discover-search form')
     .getByRole('button', { name: text('content.search'), exact: true })
     .click();
   await page.waitForFunction(() =>
@@ -140,18 +141,39 @@ async function allBuiltinSelects() {
 
   await navigate('instances');
   const profileName = config.profiles[0].name;
-  await page
-    .getByRole('button', {
-      name: text('instances.editLabel').replace('{{name}}', profileName),
-      exact: true,
-    })
-    .click();
+  const openInstanceSettings = async () => {
+    await page.locator('.instance-row').filter({ hasText: profileName })
+      .getByRole('button', { name: text('instancePages.toolsFor').replace('{{name}}', profileName), exact: true }).click();
+    await page.getByRole('menuitem', { name: text('instances.settings'), exact: true }).click();
+  };
+  await openInstanceSettings();
   let instanceDialog = page.getByRole('dialog', { name: text('instances.settings'), exact: true });
   await choose(
     instanceDialog.getByRole('combobox', { name: text('argumentTemplates.select'), exact: true }),
     'Foundation template',
   );
   assert.ok((await instanceDialog.innerText()).includes('Foundation template'));
+  const templateSelect = instanceDialog.getByRole('combobox', { name: text('argumentTemplates.select'), exact: true });
+  await templateSelect.click();
+  await page.evaluate(() => {
+    const native = window.__TAURI_INTERNALS__, original = native.invoke;
+    native.invoke = async (command, args) => {
+      if (command === 'choose_directory') {
+        await new Promise(resolve => window.foundationDesktop.releaseInstanceDirectory = resolve);
+        native.invoke = original;
+        return null;
+      }
+      return original(command, args);
+    };
+    void window.suiteFinalFixture.actions.instanceDraft.chooseDirectory();
+  });
+  await page.waitForFunction(() => window.suiteFinalFixture.snapshot.instanceDraft.picking);
+  await page.getByRole('listbox').waitFor({ state: 'hidden' });
+  assert.equal(await templateSelect.isDisabled(), true, 'actual instance directory picking disables the template Select Root');
+  assert.equal(await templateSelect.locator('.ui-select-value').innerText(), 'Foundation template');
+  await page.evaluate(() => window.foundationDesktop.releaseInstanceDirectory());
+  await page.waitForFunction(() => !window.suiteFinalFixture.snapshot.instanceDraft.picking);
+  assert.equal(await templateSelect.isDisabled(), false);
   await instanceDialog
     .getByRole('button', { name: text('instanceDialog.save'), exact: true })
     .click();
@@ -162,12 +184,7 @@ async function allBuiltinSelects() {
     ),
     'foundation-template',
   );
-  await page
-    .getByRole('button', {
-      name: text('instances.editLabel').replace('{{name}}', profileName),
-      exact: true,
-    })
-    .click();
+  await openInstanceSettings();
   instanceDialog = page.getByRole('dialog', { name: text('instances.settings'), exact: true });
   await choose(
     instanceDialog.getByRole('combobox', { name: text('argumentTemplates.select'), exact: true }),
@@ -187,40 +204,10 @@ async function allBuiltinSelects() {
 
   await navigate('settings');
   await choose(
-    page.getByRole('combobox', { name: text('personalization.backgroundFit'), exact: true }),
-    text('personalization.fitContain'),
-  );
-  await choose(
     page.getByRole('combobox', { name: text('personalization.font'), exact: true }),
     text('personalization.fonts.serif'),
   );
-  const fit = page.getByRole('combobox', {
-    name: text('personalization.backgroundFit'),
-    exact: true,
-  });
-  await fit.click();
-  await page.evaluate(() => {
-    window.foundationDesktop.backgroundPending = true;
-    document.querySelector('.personalization-settings .button-group button').click();
-  });
-  await page.getByRole('listbox').waitFor({ state: 'hidden' });
-  assert.equal(
-    await fit.isDisabled(),
-    true,
-    'choosing background explicitly disables the Select Root',
-  );
-  assert.equal(
-    await fit.locator('.ui-select-value').innerText(),
-    text('personalization.fitContain'),
-  );
-  await page.evaluate(() => {
-    window.foundationDesktop.releaseBackground(null);
-    window.foundationDesktop.backgroundPending = false;
-  });
-  await page.waitForFunction(
-    () => !document.querySelector('.personalization-settings [role="combobox"]').disabled,
-  );
-  await page.getByRole('button', { name: text('settings.tabs.advanced'), exact: true }).click();
+  await page.getByRole('tab', { name: text('settings.tabs.advanced'), exact: true }).click();
   await choose(
     page.getByRole('combobox', { name: text('personalization.startupPage'), exact: true }),
     text('nav.logs'),
@@ -253,15 +240,20 @@ async function allBuiltinSelects() {
     await page.evaluate(() => window.foundationDesktop.config.settings.personalization.font),
     'serif',
   );
-  check('builtin_selects:personalization_four_choices_drafts_save_and_disabled');
+  check('builtin_selects:personalization_supported_choices_drafts_save_and_disabled');
 
   await navigate('instances');
   await page
-    .locator('.page-heading')
+    .locator('.instances-page')
     .getByRole('button', { name: text('app.createInstance'), exact: true })
     .click();
-  const profile = page.locator('.modal').filter({ has: page.locator('#profile-name') });
-  const name = profile.locator('#profile-name');
+  await page.waitForFunction(() => window.suiteFinalFixture.snapshot.navigation.routeId === 'custom.versions');
+  const version = page.locator('.versions-page article').filter({ hasText: '1.21.1' });
+  await version.getByRole('button', { name: text('common.createInstance'), exact: true }).click();
+  assert.equal(await page.evaluate(() => window.suiteFinalFixture.snapshot.profileDraft.editor?.version), '1.21.1');
+  check('instances_create_registry_versions_row_profile_draft');
+  const profile = page.getByRole('dialog', { name: text('profileDialog.createTitle'), exact: true, includeHidden: true });
+  const name = profile.getByRole('textbox', { name: text('instances.name'), exact: true, includeHidden: true });
   await name.fill('Retained foundation draft');
   await choose(
     profile.getByRole('combobox', { name: text('loaders.type'), exact: true }),
@@ -271,7 +263,11 @@ async function allBuiltinSelects() {
   await page.waitForFunction(() =>
     window.foundationDesktop.calls.some((call) => call.command === 'loader_versions'),
   );
-  await page.waitForFunction(() => !document.querySelector('.modal [role="combobox"]:disabled'));
+  await page.waitForFunction(() => {
+    const catalog = window.suiteFinalFixture.snapshot.profileDraft.loaderCatalog;
+    return catalog.request?.loader === 'neoforge' && !catalog.pending;
+  });
+  assert.equal(await loader.isEnabled(), true, 'actual matching loader catalog re-enables its Select');
   const loaderSave = profile.getByRole('button', {
     name: text('common.createInstance'),
     exact: true,
@@ -281,10 +277,23 @@ async function allBuiltinSelects() {
   await choose(loader, 'test-loader-2 · ' + text('loaders.experimental'));
   assert.equal(await loaderSave.isEnabled(), true);
 
+  const originalProfile = await profile.elementHandle();
+  const originalName = await name.elementHandle();
+  assert.ok(originalProfile && originalName, 'capture the actual Profile Popup and forwarded native Input');
+  const retainedProfileDraft = await page.evaluate(() => structuredClone(window.suiteFinalFixture.snapshot.profileDraft.editor));
+  const assertRetainedProfile = async () => {
+    assert.deepEqual(await page.evaluate(() => window.suiteFinalFixture.snapshot.profileDraft.editor), retainedProfileDraft, 'ordinary editor retains the real complete Profile draft');
+    assert.equal(await profile.evaluate((element, original) => element === original && element.isConnected, originalProfile), true, 'ordinary editor retains the original connected Profile Popup');
+    assert.equal(await name.evaluate((element, original) => element === original && element.isConnected, originalName), true, 'ordinary editor retains the original forwarded native Input');
+    assert.equal(await name.inputValue(), 'Retained foundation draft');
+  };
   await name.focus();
   let editor = await openEditor(page);
+  // Base UI hides the lower modal from accessibility while the editor is
+  // topmost. The retained Popup is still rendered and the original owner/DOM
+  // handles below must survive; includeHidden observes that actual lower modal.
   assert.equal(await profile.isVisible(), true, 'opening editor keeps the original Profile Dialog');
-  assert.equal(await name.inputValue(), 'Retained foundation draft');
+  await assertRetainedProfile();
   await editor.getByRole('button', { name: new RegExp('^' + text('uiInspector.catalog')) }).click();
   const target = editor.getByRole('combobox', {
     name: text('uiInspector.group'),
@@ -319,7 +328,7 @@ async function allBuiltinSelects() {
   }
   await page.keyboard.press('Escape');
   await editor.waitFor({ state: 'hidden' });
-  assert.equal(await name.inputValue(), 'Retained foundation draft');
+  await assertRetainedProfile();
   assert.equal(
     await name.evaluate((element) => element.getRootNode().activeElement === element),
     true,
@@ -331,10 +340,10 @@ async function allBuiltinSelects() {
   await name.click();
   editor = page.getByRole('dialog', { name: text('uiSuiteEditor.title'), exact: true });
   await editor.waitFor({ state: 'visible' });
-  assert.equal(await name.inputValue(), 'Retained foundation draft');
+  await assertRetainedProfile();
   await editor.locator('header button').click();
   await editor.waitFor({ state: 'hidden' });
-  assert.equal(await name.inputValue(), 'Retained foundation draft');
+  await assertRetainedProfile();
   assert.equal(
     await name.evaluate((element) => element.getRootNode().activeElement === element),
     true,
@@ -365,7 +374,7 @@ async function allBuiltinSelects() {
 
   for (const theme of ['light', 'dark']) {
     await navigate('settings');
-    await page.getByRole('button', { name: text('settings.tabs.appearance'), exact: true }).click();
+    await page.getByRole('tab', { name: text('settings.tabs.appearance'), exact: true }).click();
     await page
       .getByRole('button', { name: text(`appearance.themes.${theme}`), exact: true })
       .click();
@@ -385,8 +394,10 @@ async function allBuiltinSelects() {
     );
     assert.equal(
       await menu.evaluate((element) => getComputedStyle(element).color),
-      theme === 'light' ? 'rgb(32, 33, 43)' : 'rgb(237, 237, 241)',
+      await page.locator('.app-shell').evaluate(element => getComputedStyle(element).color),
+      'source menu Portal retains the active player theme ink',
     );
+    assert.equal(await page.locator('.app-shell').getAttribute('data-theme'), theme);
     assert.equal(await menu.evaluate((element) => element.getRootNode() === document), true);
     await page.screenshot({ path: resolve(artifacts, `${theme}-menu.png`) });
     report.screenshots.push(`${theme}-menu.png`);
@@ -444,6 +455,7 @@ async function smallWindowEditor() {
   await page.keyboard.press('Escape');
   await popup.waitFor({ state: 'hidden' });
   const save = editor.getByRole('button', { name: text('uiSuiteEditor.save'), exact: true });
+  await save.scrollIntoViewIfNeeded();
   const saveBounds = await save.boundingBox();
   assert.ok(
     saveBounds.y >= 0 && saveBounds.y + saveBounds.height <= 240,
@@ -468,9 +480,9 @@ async function smallWindowEditor() {
 }
 async function scaledPortals() {
   await navigate('settings');
-  await page.getByRole('button', { name: text('settings.tabs.appearance'), exact: true }).click();
+  await page.getByRole('tab', { name: text('settings.tabs.appearance'), exact: true }).click();
   const slider = page.getByRole('slider', { name: text('appearance.scale'), exact: true });
-  await slider.fill('120');
+  await slider.focus(); await page.keyboard.press('End');
   await page.getByRole('button', { name: text('settings.save'), exact: true }).click();
   await page.waitForFunction(
     () => window.foundationDesktop.config.settings.appearance.ui_scale === 120,
@@ -487,7 +499,7 @@ async function scaledPortals() {
     (element) => getComputedStyle(element).fontSize,
   );
   const nativeFont = await page
-    .locator('.content-layout')
+    .locator('.discover-page')
     .getByRole('textbox', { name: text('content.search'), exact: true })
     .evaluate((element) => getComputedStyle(element).fontSize);
   assert.equal(
@@ -756,6 +768,13 @@ async function editorHeaderDrag() {
   }
 }
 try {
+  await page.waitForFunction(() => window.suiteFinalFixture?.controller.getActivation());
+  if (await page.evaluate(() => window.suiteFinalFixture.controller.getSnapshot().initialSelectionRequired)) {
+    const choice = page.locator('[data-style-choice]');
+    await choice.getByRole('radio', { name: /Immersive|沉浸式/ }).click();
+    await choice.getByRole('button', { name: /Use this interface|使用此界面/ }).click();
+    await page.waitForFunction(() => !window.suiteFinalFixture.controller.getSnapshot().initialSelectionRequired);
+  }
   await editorHeaderDrag();
   if (process.env.PARADOX_FOUNDATION_DRAG_ONLY === '1') {
     // Narrow RED/GREEN run; normal runs retain every existing foundation scenario.

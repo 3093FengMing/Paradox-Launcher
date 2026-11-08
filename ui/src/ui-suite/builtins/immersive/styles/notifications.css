@@ -1,0 +1,9 @@
+/* Independently installed in player and editor roots; no player tokens or global element rules. */
+.ui-notice-viewport.immersive-notice-viewport { z-index: 40; --ui-notice-viewport-bottom: 70px; --ui-notice-viewport-max-height: calc(100dvh - 172px); }
+.immersive-notice { pointer-events: auto; display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid var(--border, #465671); border-radius: 5px; background: var(--surface, #151923); color: var(--text, #dce3f0); box-shadow: 0 4px 18px #0003; font: 13px/1.5 var(--font-family, sans-serif); }
+.immersive-notice > svg { flex: 0 0 auto; margin-top: 2px; color: var(--accent-ink, #6387f5); }
+.immersive-notice[data-kind="error"] > svg, .immersive-notice[data-kind="warning"] > svg { color: #df9769; }
+.immersive-notice > span { flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.immersive-notice > button { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 28px; width: 28px; height: 28px; padding: 4px; border: 0; border-radius: 4px; background: transparent; color: inherit; cursor: pointer; }
+.immersive-notice > button:hover { background: var(--hover, #2a3a50); }
+.immersive-notice > button:focus-visible { outline: 2px solid var(--accent, #6387f5); outline-offset: 2px; }

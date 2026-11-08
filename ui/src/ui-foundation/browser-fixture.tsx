@@ -29,6 +29,8 @@ declare global {
     mountNoticeFixture?: (options?: {
       fixed?: boolean;
       portal?: boolean;
+      custom?: boolean;
+      defaultSecond?: boolean;
       container?: Element | DocumentFragment;
     }) => void;
     mountDragFixture?: () => void;
@@ -42,6 +44,7 @@ declare global {
       store: UiNoticeStore;
       advance(ms: number): void;
       views(count: number, removeFirst?: boolean): void;
+      presentation(root: 'section' | 'article' | null, theme?: 'light' | 'dark', messageSuffix?: string): void;
       unmount(): void;
       actions: number;
     };
@@ -146,9 +149,17 @@ window.mountNoticeFixture = (options = {}) => {
   const root = createRoot(mount);
   function Scene() {
     const [views, setViews] = useState([0]);
+    const [presentation, setPresentation] = useState<{
+      root: 'section' | 'article' | null;
+      theme: 'light' | 'dark';
+      messageSuffix: string;
+    }>({ root: 'section', theme: 'dark', messageSuffix: '' });
+    const NoticeTag = presentation.root;
     useEffect(() => retainNoticeStore(store), []);
     window.noticeFixture!.views = (count, removeFirst = false) =>
       setViews(removeFirst ? [1] : Array.from({ length: count }, (_, i) => i));
+    window.noticeFixture!.presentation = (root, theme = 'dark', messageSuffix = '') =>
+      setPresentation({ root, theme, messageSuffix });
     return (
       <>
         {!options.fixed && (
@@ -167,8 +178,30 @@ window.mountNoticeFixture = (options = {}) => {
           </button>
         )}
         {views.map((id) => (
-          <div key={id} data-notice-view={id}>
-            <NoticeViewport store={store} portalContainer={portalContainer} />
+          <div
+            key={id}
+            data-notice-view={id}
+            style={options.custom ? { position: 'absolute', left: 20, top: 40 + id * 160 } : undefined}
+          >
+            <NoticeViewport
+              store={store}
+              portalContainer={portalContainer}
+              className={options.custom ? 'fixture-notice-viewport' : undefined}
+              renderNotice={options.custom && (!options.defaultSecond || id === 0) ? ({ notice, noticeProps, dismiss, dismissLabel }) => NoticeTag ? (
+                <NoticeTag
+                  {...noticeProps}
+                  data-ui-site="fixture-source-notice"
+                  data-notice-id={notice.id}
+                  data-notice-owner={id}
+                  data-notice-theme={presentation.theme}
+                  style={{ padding: 12, pointerEvents: 'auto', background: presentation.theme === 'light' ? '#d6e0ff' : '#314060' }}
+                >
+                  <p data-ui-site="fixture-source-message">{notice.message}{presentation.messageSuffix}</p>
+                  <button type="button" aria-label={dismissLabel} onClick={dismiss}>Dismiss source notice</button>
+                  <button type="button">Within notice</button>
+                </NoticeTag>
+              ) : null : undefined}
+            />
           </div>
         ))}
       </>
@@ -178,6 +211,7 @@ window.mountNoticeFixture = (options = {}) => {
     store,
     actions: 0,
     views() {},
+    presentation() {},
     unmount() {
       root.unmount();
       host.remove();

@@ -20,6 +20,7 @@ function Sources({ children }: {children: ReactNode}) {
   useEffect(()=>{let owned:PreparedUiSuite|null=null,alive=true;void getPreparedBuiltin('modern').then(value=>{if(!alive){value.dispose();return;}owned=value;setFallback(value);});return()=>{alive=false;queueMicrotask(()=>owned?.dispose());};},[]);
   const actions=useMemo<PreviewFixture>(()=>({
     async preview(payload) {
+      await controller.whenInitialized();
       if(!controller.getSnapshot().draft || controller.getSnapshot().selectedSuiteId?.startsWith('builtin.'))await controller.actions.copyBuiltin('modern','Public API fixture');
       const draft=controller.getSnapshot().draft!;
       const views={...draft.manifest.views},overrides:UiTargetOverride[]=[];
@@ -28,7 +29,8 @@ function Sources({ children }: {children: ReactNode}) {
         if(target.endsWith('.original-instance'))overrides.push({selector:{kind:'business',target:target.slice(0,-'.original-instance'.length),identity:{namespace:'profile',value:'original-instance'}},entry:path,enabled:true,stylesheet:null});
         else views[target]=path;
       }
-      controller.actions.patchManifest({views,overrides});
+      const routes=draft.manifest.routes.map(route=>({...route,entry:views['page.'+route.id]??route.entry}));
+      controller.actions.patchManifest({views,routes,overrides});
       if(!await controller.actions.preview())throw Error(controller.getSnapshot().diagnostics.join('\n'));
     },
     async revert(){await controller.actions.revert();},

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { loadApp } from './lib/hook-test-host.mjs';
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
+import { loadApp, uiRoot } from './lib/hook-test-host.mjs';
 import { createFakeClock } from './lib/fake-clock.mjs';
 
 const runtime = loadApp()('ui-runtime/notices.ts');
@@ -11,6 +13,63 @@ const {
   releaseNoticeView,
   retainNoticeStore,
 } = runtime;
+
+await test('public notification presentation shares frozen notices and dismissal with the default viewport', () => {
+  const require = createRequire(new URL('../package.json', import.meta.url));
+  const React = require('react');
+  const { renderToStaticMarkup } = require('react-dom/server');
+  const store = createNoticeStore(createFakeClock());
+  for (const kind of ['info', 'success', 'warning', 'error']) store.publish(kind, `message-${kind}`);
+  const app = loadApp(new Map([
+    [resolve(uiRoot, 'src/launcher/compatibility.ts'), {
+      useLauncherCompatibility: () => ({ services: { launcher: { notices: store } } }),
+    }],
+    ['react-i18next', { useTranslation: () => ({ t: (key) => key }) }],
+  ]));
+  const { UiNotifications } = app('ui-foundation/index.ts');
+  const presentations = [];
+  const custom = () => renderToStaticMarkup(React.createElement(UiNotifications, {
+    className: 'source-stack',
+    renderNotice(presentation) {
+      presentations.push(presentation);
+      const { notice, noticeProps, dismiss, dismissLabel } = presentation;
+      return React.createElement('article', {
+        ...noticeProps,
+        'data-ui-site': 'source-notice',
+        'data-notice-id': notice.id,
+      }, React.createElement('p', null, notice.message), React.createElement('button', {
+        type: 'button', 'aria-label': dismissLabel, onClick: dismiss,
+      }, 'Dismiss'));
+    },
+  }));
+  const markup = custom();
+  assert.match(markup, /class="ui-notice-viewport source-stack"/);
+  assert.equal((markup.match(/<article /g) || []).length, 4);
+  assert.equal((markup.match(/role="status"/g) || []).length, 3);
+  assert.equal((markup.match(/role="alert"/g) || []).length, 1);
+  assert.equal((markup.match(/aria-atomic="true"/g) || []).length, 4);
+  assert.equal((markup.match(/data-ui-site="source-notice"/g) || []).length, 4);
+  const first = presentations[0];
+  assert.equal(first.notice, store.getSnapshot()[0]);
+  assert.ok(Object.isFrozen(first.notice));
+  assert.ok(Object.isFrozen(first));
+  assert.ok(Object.isFrozen(first.noticeProps));
+  assert.deepEqual(Object.keys(first).sort(), ['dismiss', 'dismissLabel', 'notice', 'noticeProps']);
+  assert.deepEqual(Object.keys(first.noticeProps).sort(), [
+    'aria-atomic', 'onBlur', 'onFocus', 'onPointerEnter', 'onPointerLeave', 'ref', 'role',
+  ]);
+  assert.equal(typeof first.noticeProps.ref, 'function');
+  assert.equal(first.dismissLabel, 'notices.dismiss');
+  const defaultMarkup = () => renderToStaticMarkup(React.createElement(UiNotifications));
+  assert.match(defaultMarkup(), /class="ui-notice ui-notice-info"/);
+  assert.match(defaultMarkup(), /<span>message-info<\/span>/);
+  first.dismiss();
+  assert.equal(store.getSnapshot().length, 3);
+  assert.doesNotMatch(custom(), /message-info/);
+  assert.doesNotMatch(defaultMarkup(), /message-info/);
+  assert.match(defaultMarkup(), /class="ui-notice ui-notice-error"/);
+  store.dispose();
+});
 
 await test('ttl_pause_sources_and_message_ownership', () => {
   for (const kind of ['info', 'success', 'warning', 'error']) {

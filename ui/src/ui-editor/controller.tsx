@@ -88,6 +88,7 @@ export function createUiEditorController(deps: UiEditorDependencies) { return ne
 export class UiEditorController {
   private state: UiEditorSnapshot;
   private library: UiSuiteLibrary | null = null;
+  private initialSelectionRequired = false;
   private builtinCatalog: {id:string;name:string;builtin:boolean}[] = [];
   private parent: UiSuiteRecord['parent_snapshot'] = null;
   private draftIdentity = 0;
@@ -118,7 +119,7 @@ export class UiEditorController {
   private highlightAbort: AbortController | null = null;
   private pickerCleanup: (() => void) | null = null;
   constructor(private readonly deps: UiEditorDependencies) {
-    this.state = frozen({ open: false, mode: 'normal', loaded: false, draft: null, dirty: false, selectedSuiteId: null,
+    this.state = frozen({ open: false, mode: 'normal', loaded: false, initialSelectionRequired: false, draft: null, dirty: false, selectedSuiteId: null,
       suites: [], selectedFile: null, selection: null, files: [], targets: [], currentTarget: null, targetAncestors: [], scopeChoices: [], picking: false, pending: null, diagnostics: [],
       previewing: false, suspended: deps.safe, resetConfirmationOpen: false });
     this.recoveryVisible = deps.safe;
@@ -197,6 +198,11 @@ export class UiEditorController {
     if (!this.connected) return;
     const message = `${sourcePath}: ${error instanceof Error ? error.message : String(error)}`;
     if (!this.state.diagnostics.includes(message)) this.error(new Error(message));
+  };
+  // App may fail before a SuiteProvider exists; use the same permanent Recovery owner.
+  reportPreparationFailure = (error: unknown): void => {
+    if (!this.connected) return;
+    this.error(error); this.disable();
   };
   subscribe = (listener: () => void): (() => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
   private publish(patch: Partial<UiEditorSnapshot> = {}) {
@@ -299,7 +305,7 @@ export class UiEditorController {
   // Launcher navigation/business snapshots are supplied by the existing provider.
   refreshTargets = (): void => { if (this.connected) this.updateTargets(); };
   private initialization: Promise<void> = Promise.resolve();
-  /** Completes after this connection has loaded, committed its default and activated or recovered. */
+  /** Completes after this connection has loaded and reached source choice, activation or Recovery. */
   whenInitialized = (): Promise<void> => this.initialization;
   private async load(life: number) {
     const load = ++this.loads, activation = this.activations, identity = this.draftIdentity;
@@ -320,22 +326,21 @@ export class UiEditorController {
           {id:'builtin.immersive',name:immersiveName,builtin:true}];
         this.publish();
       }
-      // Initialize once through the existing writer, after real source readiness.
-      // Only an actual acknowledgement changes the authoritative library.
-      if (this.library.active_suite_id === null && this.deps.waitForConfiguration) {
-        const id = `builtin.${this.deps.getDefaultBuiltin?.() ?? 'modern'}`;
-        await validateSuiteBundle(await this.deps.getBuiltinBundle(id === 'builtin.immersive' ? 'immersive' : 'modern'));
-        const write = this.writes;
-        await this.serialize(async () => {
-          if (!this.alive(life) || load !== this.loads || write !== this.writes || !this.library)
-            throw new DOMException('Superseded', 'AbortError');
-          if (this.library.active_suite_id !== null) return;
-          const candidate = detached(this.library); candidate.active_suite_id = id;
-          const ack = await this.deps.storage.saveSuiteLibrary(candidate, this.library.revision);
-          if (this.alive(life)) this.library = detached(ack);
-        });
-      }
       if (!this.alive(life) || load !== this.loads) return;
+      const ordinary = activation === this.activations && !this.state.suspended;
+      const pristine = this.library.revision === 0 && this.library.active_suite_id === null && this.library.suites.length === 0;
+      if (ordinary && this.deps.waitForConfiguration && (pristine || this.initialSelectionRequired)) {
+        this.initialSelectionRequired = true;
+        this.publish({ initialSelectionRequired: true });
+        if (!this.state.draft) await this.loadDraft('builtin.modern', life, activation);
+        if (this.alive(life) && activation === this.activations && !this.activation) this.installTrusted();
+        return;
+      }
+      // A reset/non-pristine library retains the ordinary default-selection behavior.
+      if (ordinary && !pristine && this.library.active_suite_id === null && this.deps.waitForConfiguration) {
+        await this.selectSuite(`builtin.${this.deps.getDefaultBuiltin?.() ?? 'modern'}`);
+        return;
+      }
       const stagedParent = identity === this.draftIdentity && !this.state.draft
         ? await this.loadDraft(this.library.active_suite_id ?? `builtin.${this.deps.getDefaultBuiltin?.() ?? 'modern'}`, life, activation, true) : null;
       if (this.alive(life) && this.state.suspended && !this.activation) this.installTrusted();
@@ -438,6 +443,7 @@ export class UiEditorController {
     const layers: SuiteActivationLayer[] = stagedParent ? [stagedParent] : [];
     try {
       const trusted = await this.prepareTrusted(life), trustedBundle = trusted.bundle;
+      if (!this.alive(life) || generation !== this.activations) throw new DOMException('Superseded', 'AbortError');
       const parentLayer = stagedParent ?? (parent ? await this.prepare(parent.bundle, `${id}.parent.${parent.digest}`, generation, life) : null);
       if (parentLayer && !stagedParent) layers.push(parentLayer);
       const primary = id === 'builtin.modern' && canonicalSuiteJson(draft) === canonicalSuiteJson(trustedBundle)
@@ -447,19 +453,41 @@ export class UiEditorController {
     } catch (error) { layers.forEach((layer) => layer.prepared.dispose()); throw error; }
   }
   private install(candidate: SuiteActivation, previewing: boolean, id: string, parentSnapshot: UiSuiteRecord['parent_snapshot']) {
-    const previous = this.activation;
-    this.definitionDisposals.splice(0).forEach((dispose) => dispose());
-    this.activation = candidate;
-    this.accepted = { bundle: detached(candidate.primary.bundle), id, parent: detached(parentSnapshot), previewing };
-    for (const layer of [candidate.primary, candidate.parent, candidate.trusted]) if (layer) this.definitionDisposals.push(publishUiDefinitions({ key: `editor:${layer.layerId}`, definitions: layer.prepared.sourceDefinitions }));
-    this.publish({ previewing, suspended: false }); previous?.dispose();
-    // The next frame reads the committed real roots/styles. Draft publication never calls this.
-    for (const preview of this.previews) preview.refresh();
+    const previous = this.activation, accepted = this.accepted, state = this.state;
+    const publishDefinitions = (activation: SuiteActivation) => {
+      // Read every prepared definition before replacing any publication.
+      const publications = [activation.primary, activation.parent, activation.trusted].filter(layer => layer !== null)
+        .map(layer => ({ key: `editor:${layer.layerId}`, definitions: layer.prepared.sourceDefinitions }));
+      const disposals: (() => void)[] = [];
+      try { for (const publication of publications) disposals.push(publishUiDefinitions(publication)); }
+      catch (error) { disposals.forEach(dispose => dispose()); throw error; }
+      return disposals;
+    };
+    const nextAccepted = { bundle: detached(candidate.primary.bundle), id, parent: detached(parentSnapshot), previewing };
+    let nextDefinitions: (() => void)[] = [];
+    try {
+      nextDefinitions = publishDefinitions(candidate);
+      this.activation = candidate; this.accepted = nextAccepted;
+      this.publish({ previewing, suspended: false });
+    } catch (error) {
+      nextDefinitions.forEach(dispose => dispose());
+      this.activation = previous; this.accepted = accepted; this.state = state;
+      // Matching layer keys can have replaced a previous definition token.
+      this.definitionDisposals.splice(0).forEach(dispose => dispose());
+      if (previous) this.definitionDisposals = publishDefinitions(previous);
+      throw error;
+    }
+    this.definitionDisposals.splice(0).forEach(dispose => dispose());
+    this.definitionDisposals = nextDefinitions;
+    previous?.dispose();
+    // Preview feedback cannot reject an installation that already owns the roots.
+    for (const preview of this.previews) { try { preview.refresh(); } catch (error) { this.error(error); } }
   }
   private async activate(draft: UiSuiteBundle, id: string, parent: UiSuiteRecord['parent_snapshot'], generation: number, life: number, previewing: boolean, stagedParent: SuiteActivationLayer | null = null) {
     const candidate = await this.prepareActivation(draft, id, parent, generation, life, stagedParent);
     if (!this.alive(life) || generation !== this.activations) { candidate.dispose(); return; }
-    this.install(candidate, previewing, id, parent);
+    try { this.install(candidate, previewing, id, parent); }
+    catch (error) { candidate.dispose(); throw error; }
   }
   private disposeActivation() { this.definitionDisposals.splice(0).forEach((dispose) => dispose()); this.activation?.dispose(); this.activation = null; }
   private disable() {
@@ -503,20 +531,77 @@ export class UiEditorController {
   private async selectSuite(id: string): Promise<boolean> {
     if (!this.library || (!['builtin.modern', 'builtin.immersive'].includes(id) && !this.library.suites.some((item) => item.instance_id === id))) return false;
     const op = this.begin('save'), generation = ++this.activations, write = this.writes;
+    const identity = this.draftIdentity, editRevision = this.editRevision;
+    const current = () => this.alive(op.life) && write === this.writes && generation === this.activations;
+    let candidate: SuiteActivation | null = null;
+    let selected = id, parent: UiSuiteRecord['parent_snapshot'] = null;
+    const prepare = async (suiteId: string) => {
+      const record = this.library?.suites.find(item => item.instance_id === suiteId);
+      if (!record && !['builtin.modern', 'builtin.immersive'].includes(suiteId)) throw new Error('Selected suite is no longer available');
+      parent = detached(record?.parent_snapshot ?? null);
+      const bundle = record ? materializeSuite(detached(record))
+        : await this.deps.getBuiltinBundle(suiteId === 'builtin.immersive' ? 'immersive' : 'modern');
+      if (!current()) throw new DOMException('Superseded', 'AbortError');
+      candidate = await this.prepareActivation(detached(bundle), suiteId, parent, generation, op.life);
+      if (!current()) throw new DOMException('Superseded', 'AbortError');
+    };
     try {
-      const ack = await this.serialize(async () => {
-        if (!this.alive(op.life) || write !== this.writes || !this.library) throw new DOMException('Superseded', 'AbortError');
-        const candidate = detached(this.library); candidate.active_suite_id = id;
-        const ack = await this.deps.storage.saveSuiteLibrary(candidate, this.library.revision);
-        if (this.alive(op.life)) this.library = detached(ack); return ack;
+      await prepare(id);
+      const persisted = await this.serialize(async () => {
+        if (!current() || !this.library) throw new DOMException('Superseded', 'AbortError');
+        if (!id.startsWith('builtin.') && !this.library.suites.some(item => item.instance_id === id)) throw new Error('Selected suite is no longer available');
+        const next = detached(this.library); next.active_suite_id = id;
+        try {
+          const ack = await this.deps.storage.saveSuiteLibrary(next, this.library.revision);
+          // A submitted write remains authoritative even if Recovery took over.
+          if (this.alive(op.life)) this.library = detached(ack);
+          if (current() && ack.active_suite_id !== selected) {
+            candidate?.dispose(); candidate = null;
+            if (!ack.active_suite_id) throw new Error('Saved library has no active suite');
+            selected = ack.active_suite_id; await prepare(selected);
+          }
+          return true;
+        } catch (error) {
+          if (!this.alive(op.life) || (error instanceof Error && error.name === 'AbortError')) throw error;
+          this.error(error);
+          try {
+            const authority = await this.deps.storage.loadSuiteLibrary();
+            if (!this.alive(op.life)) return false;
+            this.library = detached(authority); this.recoveryToken = null;
+          } catch (reloadError) {
+            if (this.alive(op.life)) {
+              this.library = null; this.error(reloadError); this.disable();
+              try {
+                const inspection = await this.deps.storage.inspectSuiteRecovery();
+                if (this.alive(op.life)) this.recoveryToken = inspection.token;
+              } catch (inspectionError) { if (this.alive(op.life)) this.error(inspectionError); }
+            }
+            return false;
+          }
+          if (!current() || !this.library.active_suite_id) return false;
+          // An external successful choice is installed under this same activation generation.
+          candidate?.dispose(); candidate = null;
+          selected = this.library.active_suite_id;
+          await prepare(selected);
+          return false;
+        }
       });
-      if (!this.alive(op.life) || write !== this.writes) return false;
-      if (generation !== this.activations) return true;
-      const stagedParent = await this.loadDraft(ack.active_suite_id!, op.life, generation);
-      if (this.state.draft && generation === this.activations) { this.recoveryVisible = false; await this.activate(this.state.draft, id, this.parent, generation, op.life, false, stagedParent); }
-      else stagedParent?.prepared.dispose();
+      if (!this.alive(op.life)) return false;
+      if (!current()) return persisted;
+      if (!persisted && (!this.library?.active_suite_id || selected !== this.library.active_suite_id)) return false;
+      if (!candidate) return false;
+      this.install(candidate, false, selected, parent);
+      const installed: SuiteActivation = candidate; candidate = null;
+      this.initialSelectionRequired = false; this.recoveryVisible = false;
+      this.publish({ initialSelectionRequired: false });
+      if (identity === this.draftIdentity && editRevision === this.editRevision) {
+        ++this.draftIdentity; this.parent = detached(parent); this.editRevision = 0;
+        this.publish({ selectedSuiteId: selected, selection: null });
+        this.publishDraft(detached(installed.primary.bundle), false);
+      }
       return true;
-    } catch (error) { if (this.alive(op.life)) this.error(error); return false; } finally { this.finish(op); }
+    } catch (error) { if (this.alive(op.life)) this.error(error); return false; }
+    finally { (candidate as SuiteActivation | null)?.dispose(); this.finish(op); }
   }
   private async copyBuiltin(id: 'modern' | 'immersive', name: string): Promise<void> {
     const op = this.begin('import'), identity = this.draftIdentity, revision = this.editRevision;
@@ -625,7 +710,8 @@ export class UiEditorController {
         if (this.alive(op.life)) this.library = detached(ack); return ack;
       });
       if (!this.alive(op.life) || write !== this.writes) return false;
-      this.confirmation = null; this.recoveryToken = null; this.publish({ loaded: true, resetConfirmationOpen: false });
+      this.confirmation = null; this.recoveryToken = null; this.initialSelectionRequired = false;
+      this.publish({ loaded: true, resetConfirmationOpen: false, initialSelectionRequired: false });
       if (generation !== this.activations) return true;
       this.disposeActivation(); this.recoveryVisible = false; ++this.draftIdentity; this.parent = null;
       this.publish({ draft: null, files: [], dirty: false, selectedSuiteId: ack.active_suite_id, selectedFile: null, selection: null, diagnostics: [], previewing: false });

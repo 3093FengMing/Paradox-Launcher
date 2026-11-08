@@ -284,6 +284,10 @@ async function journey(customEditor) {
 }
 
 try {
+  await page.locator('[data-style-choice]').waitFor();
+  await page.locator('[data-style-choice] input[value="modern"]').check();
+  await page.locator('[data-style-choice]').getByRole('button', { name: '使用此界面', exact: true }).click();
+  await page.locator('[data-style-choice]').waitFor({ state: 'hidden' });
   await page.waitForFunction(() => window.suiteFinalFixture?.controller.getActivation(), null, { timeout: 90000 });
   await page.evaluate(() => window.suiteFinalFixture.setLanguage('en-US'));
   await check('pick_edit_preview_save_reload_export', () => journey(false));

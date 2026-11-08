@@ -8,7 +8,7 @@ import { targetRegistry } from '../customization/context';
 import { jsx } from '../customization/jsx-runtime';
 import { UiFoundationProvider as EnvironmentHost, Button } from '@paradox/ui';
 import * as foundation from '@paradox/ui';
-import { useLauncherActions, useLauncherSnapshot } from '@paradox/launcher';
+import { useLauncherActions, useLauncherSnapshot, useUiEditorSnapshot } from '@paradox/launcher';
 import type { DeepReadonly, LauncherActions, LauncherSnapshot } from '@paradox/launcher';
 import App from '../App';
 import { useAccountAvatar } from '../hooks/useAccountAvatar';
@@ -16,11 +16,12 @@ import ContentPage from '../pages/ContentPage';
 import AccountsPage from '../pages/AccountsPage';
 import JavaSettings from '../components/JavaSettings';
 import * as routeHost from '../launcher/routeRegistry';
-import { builtinRoutes } from '../lib/navigation';
 import type { UiRouteDescriptor } from '../ui-suite/routes';
 import { installSuiteAssetsFixture } from './suite-assets-fixture';
 import { installSuiteStorageFixture } from './suite-storage-fixture';
 import { installSuiteCompilerFixture } from './suite-compiler-fixture';
+import { Capture } from './suite-final-fixture';
+import { useUiEditorController } from '../ui-editor/controller';
 
 const LocalBusinessHost = BusinessHost;
 const ChainedBusinessHost = LocalBusinessHost;
@@ -43,7 +44,7 @@ interface Fixture {
   targets(): string[];
   unmarkedProvider: boolean;
   aliasRuntime: Record<string, boolean>;
-  setRoutes?(custom: readonly UiRouteDescriptor[]): void;
+  setRoutes?(custom: readonly UiRouteDescriptor[]): void | Promise<void>;
   navigationHistory?: DeepReadonly<LauncherSnapshot['navigation']>[];
 }
 declare global {
@@ -52,6 +53,7 @@ declare global {
     mountLauncherAppFixture?: () => void;
     mountLauncherRouteFixture?: (strict?: boolean) => void;
     launcherFixture?: Fixture;
+    routeTask?: { sourceRoutes?: readonly UiRouteDescriptor[] };
   }
 }
 function Consumer({ id }: { id: string }) {
@@ -84,16 +86,57 @@ const View = customComponent('test.launcher.view', BuiltinView);
 const AppView = customComponent('test.launcher.app', App);
 function RouteHost() {
   const registry = routeHost.useActiveRouteRegistry();
+  const controller = useUiEditorController(), editor = useUiEditorSnapshot();
+  const [sourceReady, setSourceReady] = useState(false);
+  const [sourceError, setSourceError] = useState<Error | null>(null);
   useEffect(() => {
-    window.launcherFixture!.setRoutes = (custom) =>
-      registry.setActiveRouteRegistry([...builtinRoutes, ...custom]);
+    if (!editor.loaded) return;
+    let alive = true;
+    void controller.whenInitialized().then(() => {
+      if (!alive) return;
+      const activation = controller.getActivation();
+      if (!activation || controller.getSnapshot().suspended) throw Error('Actual route fixture source initialization failed');
+      for (const id of ['custom.help', 'custom.hidden']) {
+        const path = activation.primary.bundle.manifest.views['page.' + id];
+        if (!path || activation.primary.bundle.files[path]?.encoding !== 'utf8' ||
+          !activation.primary.prepared.routes.some(route => route.id === id && route.entry === path))
+          throw Error('Actual prepared route fixture source is missing: ' + id);
+      }
+      setSourceReady(true);
+    }).catch(error => { if (alive) setSourceError(error instanceof Error ? error : Error(String(error))); });
+    return () => { alive = false; };
+  }, [controller, editor.loaded]);
+  useEffect(() => {
+    window.launcherFixture!.setRoutes = async (custom) => {
+      const fixtureIds = new Set(['custom.help', 'custom.hidden']);
+      if (!controller.getSnapshot().draft) {
+        const prepared = window.routeTask?.sourceRoutes;
+        if (!prepared) throw Error('Actual prepared route fixture source is missing');
+        registry.setActiveRouteRegistry([...prepared.filter(route => !fixtureIds.has(route.id)), ...custom]);
+        return;
+      }
+      await controller.whenInitialized();
+      const draft = controller.getSnapshot().draft!;
+      const views = { ...draft.manifest.views };
+      for (const route of custom) {
+        if (!draft.files[route.entry]) controller.actions.createFile(route.entry, 'tsx');
+        controller.actions.patchFile(route.entry, 'export default function FixtureRoute(){return <section data-route-fixture="actual-source">Actual fixture custom route</section>}');
+        views['page.' + route.id] = route.entry;
+      }
+      controller.actions.patchManifest({ views, routes: [...draft.manifest.routes.filter(route => !fixtureIds.has(route.id)), ...custom] });
+      if (!await controller.actions.preview()) throw Error(controller.getSnapshot().diagnostics.join('\n') || 'Actual route fixture preview failed');
+      const prepared = controller.getActivation()?.primary.prepared.routes;
+      if (!prepared) throw Error('Actual prepared route fixture activation is missing');
+      registry.setActiveRouteRegistry(prepared);
+    };
     return () => {
       delete window.launcherFixture!.setRoutes;
     };
-  }, [registry]);
-  return <AppHost />;
+  }, [registry, controller]);
+  if (sourceError) throw sourceError;
+  return <AppHost renderApp={sourceReady} />;
 }
-function AppHost() {
+function AppHost({ renderApp = true }: { renderApp?: boolean } = {}) {
   const manager = usePreviewFixture();
   const [copies, setCopies] = useState(false);
   useEffect(() => {
@@ -130,7 +173,7 @@ export default function Presets() {const drafts=useLauncherSnapshot().drafts;con
     window.launcherFixture!.replaceInstance = () =>
       manager.preview({
         views: {
-          'component.instance-settings-dialog.original-instance': {
+          'dialog.instance-settings.original-instance': {
                 source: `import { useLauncherSnapshot,useLauncherActions } from '@paradox/launcher';
 export default function ReplacementInstance() { const draft=useLauncherSnapshot().instanceDraft; const actions=useLauncherActions().instanceDraft; return <section data-instance-replacement><input aria-label="Replacement environment key" value={draft.environment[0]?.key ?? ''} onChange={e=>actions.setEnvironment([{...draft.environment[0],key:e.target.value}])}/><textarea aria-label="Replacement environment value" value={draft.environment[0]?.value ?? ''} onChange={e=>actions.setEnvironment([{...draft.environment[0],value:e.target.value}])}/></section>; }`,
           },
@@ -139,7 +182,7 @@ export default function ReplacementInstance() { const draft=useLauncherSnapshot(
     window.launcherFixture!.replaceApp = () =>
       manager.preview({
         views: {
-          'test.launcher.app': {
+          'layout.shell': {
                 source: `import { useLauncherSnapshot } from '@paradox/launcher';
 export default function ReplacementApp() { const snapshot=useLauncherSnapshot(); return <main data-app-replacement><input aria-label="Replacement typing"/><span>{snapshot.config.ready ? 'Ready' : 'Loading'}</span></main>; }`,
           },
@@ -149,9 +192,10 @@ export default function ReplacementApp() { const snapshot=useLauncherSnapshot();
   }, [manager]);
   return (
     <>
+      <Capture />
       <Consumer id="a" />
       <Consumer id="b" />
-      <AppView />
+      {renderApp && <AppView />}
       {copies && (
         <section data-domain-copies>
           <ContentPage />

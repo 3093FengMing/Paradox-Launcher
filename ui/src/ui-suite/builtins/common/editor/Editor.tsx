@@ -16,6 +16,7 @@ import SourceEditor from './SourceEditor';
 import AssetManager from './AssetManager';
 import TargetCatalog from './TargetCatalog';
 import TargetDetails from './TargetDetails';
+import './base.css';
 import './style.css';
 export default function Editor() {
   const s = useUiEditorSnapshot(),

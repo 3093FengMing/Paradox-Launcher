@@ -62,7 +62,7 @@ export function LauncherProvider({
   const launcher = useLauncher();
   const accounts = useAccounts(launcher.reportError);
   const java = useJava(launcher.reportError);
-  const { scan, reloadConfig, refreshCatalog, reportError } = launcher;
+  const { scan, reloadConfig, reportError } = launcher;
   const { discover } = java;
   const onFinished = useCallback(
     (task: DownloadTask) => {
@@ -75,15 +75,16 @@ export function LauncherProvider({
   const downloads = useDownloadQueue(launcher.reportError, onFinished);
   const closeRequest = useCloseRequest(launcher.reportError);
   const systemDark = useSystemTheme();
-  const [navigation, setNavigation] = useState<Omit<NavigationSnapshot, 'requestedStartupRouteId'>>(
-    () => ({
-      routeId: 'home',
-      params: {},
-      search: '',
-      routesReady: initialRouteRegistry === 'builtin',
-      routes: initialRouteRegistry === 'builtin' ? builtinRoutes : [],
-    }),
-  );
+  const [navigation, setNavigation] = useState<
+    Omit<NavigationSnapshot, 'requestedStartupRouteId'> & { entryId: number }
+  >(() => ({
+    entryId: 0,
+    routeId: 'home',
+    params: {},
+    search: '',
+    routesReady: initialRouteRegistry === 'builtin',
+    routes: initialRouteRegistry === 'builtin' ? builtinRoutes : [],
+  }));
   const navigationRef = useRef(navigation);
   const startupApplied = useRef(false);
   const { routeId, params, search } = navigation;
@@ -193,9 +194,6 @@ export function LauncherProvider({
   useEffect(() => {
     void applyLanguagePreference(language ?? 'zh-CN').catch(reportError);
   }, [language, reportError]);
-  useEffect(() => {
-    if (routeId === 'downloads') void refreshCatalog();
-  }, [routeId, refreshCatalog]);
   const publishNavigation = useCallback((next: typeof navigation) => {
     navigationRef.current = next;
     Object.assign(current.current, {
@@ -224,6 +222,7 @@ export function LauncherProvider({
           : null;
       publishNavigation({
         ...active,
+        entryId: active.entryId + 1,
         routeId: resolved,
         params: profileKey ? { profileKey } : {},
         search: '',
@@ -249,6 +248,7 @@ export function LauncherProvider({
         const changed = applyStartup || resolved !== active.routeId;
         publishNavigation({
           ...active,
+          entryId: changed ? active.entryId + 1 : active.entryId,
           routes: detached,
           routesReady: true,
           routeId: resolved,
@@ -265,6 +265,7 @@ export function LauncherProvider({
       startupApplied.current = true;
       publishNavigation({
         ...active,
+        entryId: active.entryId + 1,
         routeId: resolveRoute(requested, active.routes),
         params: {},
         search: '',
@@ -304,6 +305,7 @@ export function LauncherProvider({
       notices: launcher.notices,
       getRouteId: () => current.current.routeId,
       getNavigation: () => ({
+        entryId: navigationRef.current.entryId,
         routeId: current.current.routeId,
         params: { ...current.current.params },
         search: current.current.search,
@@ -497,7 +499,14 @@ export function LauncherProvider({
       choosingBackground,
       choosingGameDirectory,
     },
-    navigation: { ...navigation, requestedStartupRouteId: launcher.requestedStartupRouteId },
+    navigation: {
+      routeId,
+      params,
+      search,
+      routesReady: navigation.routesReady,
+      routes: navigation.routes,
+      requestedStartupRouteId: launcher.requestedStartupRouteId,
+    },
     appearance: { value: appearance, personalization, theme, variables, background },
     window: { desktop: api.desktop, request: closeRequest.request, closing: closeRequest.closing },
     notifications: { items: notices },

@@ -1,0 +1,29 @@
+/* immersive: tokens. Retained page rules are owned here during the source redesign. */
+[data-theme="dark"] {
+  --shadow: 0 1px 3px #00000016, 0 0 0 1px #ffffff06;
+  --bg: #263247;
+  --sidebar: #354259;
+  --surface: #151923;
+  --input: #151923;
+  --hover: #2a3a50;
+  --border: #465671;
+  --text: #dce3f0;
+  --muted: #bac7dd;
+  --faint: #9eadc4;
+  --titlebar: #606dcc;
+  --titlebar-height: 2.75em;
+}
+[data-theme="light"] {
+  --shadow: 0 1px 3px #16162f05, 0 0 0 1px #16162f08;
+  --bg: #edf1f8;
+  --sidebar: #e2e8f2;
+  --surface: #ffffff;
+  --input: #ffffff;
+  --hover: #e8edf5;
+  --border: #cbd5e5;
+  --text: #17253a;
+  --muted: #52627a;
+  --faint: #63728a;
+  --titlebar: #606dcc;
+  --titlebar-height: 2.75em;
+}

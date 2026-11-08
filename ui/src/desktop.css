@@ -193,15 +193,6 @@ main {
     0 0 0 1px #b9c8ef12,
     0 2px 4px #00000012;
 }
-.banner-illustration {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  background-image: var(--banner-image, url('./ui-suite/builtins/common/assets/world.svg'));
-  background-position: center;
-  background-size: var(--background-size, cover);
-  background-repeat: no-repeat;
-}
 .launch-banner::after {
   content: '';
   position: absolute;
@@ -272,9 +263,6 @@ main {
   color: #afc5c4;
   font-size: 0.61em;
   backdrop-filter: blur(8px);
-}
-.no-art .banner-illustration {
-  display: none;
 }
 .home-bottom-grid {
   display: grid;

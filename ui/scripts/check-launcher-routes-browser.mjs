@@ -51,7 +51,17 @@ const settled = () =>
   page.evaluate(
     () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
   );
+const confirmInitialChoice = async () => {
+  const chooser = page.locator('[data-style-choice]');
+  await page.locator('[data-style-choice], .page-heading').first().waitFor();
+  if (await chooser.count()) {
+    assert.equal(await chooser.locator('input[type="radio"]:checked').count(), 1);
+    await chooser.locator('button[type="submit"]').click();
+    await chooser.waitFor({ state: 'detached' });
+  }
+};
 try {
+  await confirmInitialChoice();
   if (!production)
     await page.evaluate(async () => {
       const entry = document.querySelector('script[type="module"][src*="/src/main.tsx"]');
@@ -63,14 +73,39 @@ try {
   await page.evaluate(() => {
     const native = window.__TAURI_INTERNALS__,
       invoke = native.invoke;
-    window.routeTask = { holdConfig: false, held: [] };
+    window.routeTask = { holdConfig: false, held: [], holdSource: false, heldSource: [] };
     native.invoke = async (command, args) => {
       const value = await invoke(command, args);
       if (command === 'get_config' && window.routeTask.holdConfig)
         return new Promise((resolve) => window.routeTask.held.push(() => resolve(value)));
+      if (command === 'get_ui_suite_library' && window.routeTask.holdSource)
+        return new Promise((resolve) => window.routeTask.heldSource.push(() => resolve(value)));
       return value;
     };
   });
+  await page.evaluate(async (custom) => {
+    const controller = window.suiteFinalFixture.controller;
+    await controller.whenInitialized();
+    const selected = controller.getSnapshot().selectedSuiteId;
+    if (selected?.startsWith('builtin.')) {
+      await controller.actions.copyBuiltin(selected.slice('builtin.'.length), 'Route source fixture');
+      if (controller.getSnapshot().selectedSuiteId === selected)
+        throw Error(controller.getSnapshot().diagnostics.join('\n') || 'Actual route fixture source copy failed');
+    }
+    const draft = controller.getSnapshot().draft;
+    if (!draft) throw Error('Actual route fixture source draft is missing');
+    const views = { ...draft.manifest.views };
+    for (const route of custom) {
+      if (!controller.getSnapshot().draft.files[route.entry]) controller.actions.createFile(route.entry, 'tsx');
+      controller.actions.patchFile(route.entry, 'export default function FixtureRoute(){return <section data-route-fixture="actual-source">Actual fixture custom route</section>}');
+      views['page.' + route.id] = route.entry;
+    }
+    controller.actions.patchManifest({ views, routes: [...draft.manifest.routes, ...custom] });
+    if (!await controller.actions.save()) throw Error(controller.getSnapshot().diagnostics.join('\n') || 'Actual route fixture source save failed');
+    const prepared = controller.getActivation()?.primary.bundle.manifest.routes;
+    if (!prepared) throw Error('Actual route fixture source activation is missing');
+    window.routeTask.sourceRoutes = structuredClone(prepared);
+  }, [help, hidden]);
   for (const [locale, width, order, strict] of [
     ['zh-CN', 1240, 'config-first', false],
     ['en-US', 1240, 'registry-first', false],
@@ -86,18 +121,24 @@ try {
         window.foundationDesktop.calls = [];
         window.routeTask.holdConfig = true;
         window.routeTask.held = [];
+        window.routeTask.holdSource = true;
+        window.routeTask.heldSource = [];
         window.mountLauncherRouteFixture(strict);
       },
       { locale, strict },
     );
     await page.waitForFunction(
-      () => window.launcherFixture.setRoutes && window.routeTask.held.length > 0,
+      () => window.launcherFixture.setRoutes && window.routeTask.held.length > 0 && window.routeTask.heldSource.length > 0,
     );
     let before = await page.evaluate(() => window.launcherFixture.views.a.snapshot.navigation);
     assert.equal(before.requestedStartupRouteId, null);
     assert.equal(before.routesReady, false);
     const publish = (custom) =>
-      page.evaluate((routes) => window.launcherFixture.setRoutes(routes), custom);
+      page.evaluate((routes) => {
+        window.routeTask.holdSource = false;
+        window.routeTask.heldSource.splice(0).forEach((release) => release());
+        return window.launcherFixture.setRoutes(routes);
+      }, custom);
     const releaseConfig = () =>
       page.evaluate(() => {
         window.routeTask.holdConfig = false;
@@ -128,7 +169,10 @@ try {
       () => window.launcherFixture.views.a.snapshot.navigation.routeId === 'custom.help',
     );
     await page.locator('.page-heading h1').filter({ hasText: help.title }).waitFor();
-    assert.equal(await page.locator('.breadcrumb strong').innerText(), help.title);
+    assert.equal(
+      await page.locator('.sidebar .nav-item[aria-current="page"]').getAttribute('title'),
+      help.title,
+    );
     assert.equal(await page.locator('.page-heading p').innerText(), help.description);
     assert.equal(
       await page
@@ -252,7 +296,7 @@ try {
     await page.waitForFunction(
       (expected) =>
         document
-          .querySelector('.personalization-settings [role="combobox"]')
+          .querySelector('.settings-personalization [role="combobox"]')
           ?.textContent.includes(expected),
       text('personalization.startupUnavailable'),
     );
@@ -325,7 +369,20 @@ try {
       ),
       1,
     );
-    await page.locator('.sidebar').getByRole('button', { name: help.title, exact: true }).click();
+    if (width === 320) {
+      const trigger = page.locator('.mobile-navigation').getByRole('button', {
+        name: text('responsiveUi.navigation'),
+        exact: true,
+      });
+      await trigger.click();
+      const item = page.getByRole('menuitem', { name: help.title, exact: true });
+      await item.focus();
+      await page.keyboard.press('Enter');
+      await page.getByRole('menu').waitFor({ state: 'hidden' });
+      assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
+    } else {
+      await page.locator('.sidebar').getByRole('button', { name: help.title, exact: true }).click();
+    }
     await page.locator('.page-heading h1').filter({ hasText: help.title }).waitFor();
     assert.equal(
       await page.evaluate(() => window.launcherFixture.views.a.snapshot.navigation.routeId),
@@ -351,6 +408,15 @@ try {
   }
 } catch (error) {
   report.failure = error.stack;
+  report.failureState = await page.evaluate(() => ({
+    navigation: window.launcherFixture?.views.a?.snapshot.navigation,
+    config: window.launcherFixture?.views.a?.snapshot.config,
+    editor: window.suiteFinalFixture?.controller.getSnapshot(),
+    activationRoutes: window.suiteFinalFixture?.controller.getActivation()?.primary.bundle.manifest.routes,
+    heldConfig: window.routeTask?.held.length,
+    heldSource: window.routeTask?.heldSource.length,
+    liveHeading: [...document.querySelectorAll('.page-heading')].map((element) => ({ text: element.textContent, visible: element.getBoundingClientRect().width > 0 })),
+  })).catch((snapshotError) => ({ error: String(snapshotError) }));
   await page.screenshot({ path: resolve(artifacts, `${mode}-failure.png`) });
   await writeFile(
     resolve(artifacts, `${mode}-failure-body.txt`),

@@ -32,6 +32,10 @@ try {
     });
   await page.waitForFunction(() => typeof window.mountLauncherAppFixture === 'function');
   await page.evaluate(() => window.mountLauncherAppFixture());
+  await page.locator('[data-style-choice]').waitFor();
+  await page.locator('[data-style-choice] input[value="modern"]').check();
+  await page.locator('[data-style-choice]').getByRole('button', { name: '使用此界面', exact: true }).click();
+  await page.locator('[data-style-choice]').waitFor({ state: 'hidden' });
   await page.waitForFunction(() => window.launcherFixture.views.a?.snapshot.config.ready);
   await page.evaluate(() => {
     const a = window.launcherFixture.views.a.actions;
@@ -356,14 +360,14 @@ try {
       );
       await page.evaluate(() => window.appearanceTask4.actions.settings.setTab('appearance'));
       const importButton = page
-        .locator('.appearance-presets')
+        .locator('.settings-presets')
         .getByRole('button', { name: '导入预设', exact: true });
       const saveButton = page.getByRole('button', { name: '保存当前外观', exact: true });
       assert.equal(await importButton.isDisabled(), true);
       assert.equal(await saveButton.isDisabled(), true);
       await reachable(importButton, `preset-import-pending-${size.width}-${outcome}`);
       await reachable(saveButton, `preset-save-pending-${size.width}-${outcome}`);
-      assert.equal(await page.locator('.appearance-presets button:enabled').count(), 0);
+      assert.equal(await page.locator('.settings-presets button:enabled').count(), 0);
       await page.evaluate(() => window.launcherFixture.replaceAppearance());
       const replacement = page.getByRole('button', {
         name: 'Import replacement preset',

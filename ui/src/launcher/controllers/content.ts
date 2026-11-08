@@ -8,6 +8,7 @@ import type {
 import type { LauncherServices } from '../services';
 import { domainBlocked, findProfile, useControllerOwner } from './owner';
 import i18n from '../../i18n';
+import { errorMessage } from '../../lib/errors';
 const categories: readonly ContentCategory[] = ['mods', 'resourcepacks', 'shaderpacks', 'saves'];
 const kinds: readonly ContentKind[] = ['mod', 'modpack', 'resourcepack', 'shader'];
 const initial = (): ContentSnapshot => ({
@@ -17,7 +18,9 @@ const initial = (): ContentSnapshot => ({
   kind: 'mod',
   request: null,
   results: null,
+  searchError: null,
   list: null,
+  listRequest: null,
   pending: false,
   searching: false,
   removing: null,
@@ -26,6 +29,7 @@ const initial = (): ContentSnapshot => ({
 const reconnect = (state: ContentSnapshot): ContentSnapshot => ({
   ...state,
   list: null,
+  listRequest: null,
   pending: false,
   searching: false,
 });
@@ -39,7 +43,7 @@ export function useContentController(services: LauncherServices): {
     initialized: false,
     explicitEmpty: false,
     activated: false,
-    navigation: null as string | null,
+    navigation: null as number | null,
     listKey: null as string | null,
     listToken: 0,
     searchToken: 0,
@@ -47,14 +51,24 @@ export function useContentController(services: LauncherServices): {
     operationGeneration: -1,
     picking: false,
   }));
+  const navigationTarget = () => {
+    const navigation = owner.services.getNavigation();
+    const detail = navigation.routeId === 'custom.instance-details';
+    const scoped = navigation.routeId === 'content' || navigation.routeId.startsWith('custom.');
+    const key = scoped ? navigation.params.profileKey : undefined;
+    return {
+      stamp: navigation.entryId,
+      explicit: detail || key !== undefined,
+      detail,
+      key: key && findProfile(owner.services, key) ? key : null,
+    };
+  };
   const selectedKey = () => {
-    const navigation = owner.services.getNavigation(),
-      key = navigation.params.profileKey;
-    return navigation.routeId === 'content' &&
-      key &&
-      key !== requests.navigation &&
-      findProfile(owner.services, key)
-      ? key
+    const target = navigationTarget();
+    // Details always belong to their current route. Other custom pages consume
+    // an entry hint once, so their explicit discovery selector remains usable.
+    return target.detail || (target.explicit && target.stamp !== requests.navigation)
+      ? target.key
       : owner.state.selectedProfileKey;
   };
   const identity = () => {
@@ -68,13 +82,20 @@ export function useContentController(services: LauncherServices): {
         }
       : null;
   };
-  const sameIdentity = (value: ReturnType<typeof identity>) =>
-    JSON.stringify(value) === JSON.stringify(identity());
+  const sameIdentity = (value: ReturnType<typeof identity>) => {
+    const current = identity();
+    return value === null
+      ? current === null
+      : current !== null &&
+          value.profileKey === current.profileKey &&
+          value.directory === current.directory &&
+          value.category === current.category;
+  };
   const active = () => requests.activated || owner.services.getNavigation().routeId === 'content';
   const invalidateList = () => {
     requests.listToken++;
     requests.listKey = null;
-    owner.commit({ ...owner.state, list: null, removing: null });
+    owner.commit({ ...owner.state, list: null, listRequest: null, removing: null });
   };
   const requestList = async (force = false) => {
     const value = identity();
@@ -89,7 +110,11 @@ export function useContentController(services: LauncherServices): {
     requests.listKey = key;
     const token = ++requests.listToken,
       generation = owner.generation;
-    owner.commit({ ...owner.state, list: null });
+    owner.commit({
+      ...owner.state,
+      list: null,
+      listRequest: { ...value, loading: true, error: null },
+    });
     const current = () =>
       owner.mounted &&
       generation === owner.generation &&
@@ -97,9 +122,20 @@ export function useContentController(services: LauncherServices): {
       sameIdentity(value);
     try {
       const entries = await owner.services.api.listContent(value.profileKey, value.category);
-      if (current()) owner.commit({ ...owner.state, list: { ...value, entries } });
+      if (current())
+        owner.commit({
+          ...owner.state,
+          list: { ...value, entries },
+          listRequest: { ...value, loading: false, error: null },
+        });
     } catch (error) {
-      if (current()) owner.services.launcher.reportError(error);
+      if (current()) {
+        owner.commit({
+          ...owner.state,
+          listRequest: { ...value, loading: false, error: errorMessage(error) },
+        });
+        owner.services.launcher.reportError(error);
+      }
     }
   };
   const canMutate = () =>
@@ -144,6 +180,9 @@ export function useContentController(services: LauncherServices): {
     Object.freeze({
       selectProfile: (key) => {
         if (!owner.mounted || (key !== null && !findProfile(owner.services, key))) return;
+        const target = navigationTarget();
+        if (target.detail && key !== target.key) return;
+        requests.navigation = target.stamp;
         requests.initialized = true;
         requests.explicitEmpty = key === null;
         requests.activated = true;
@@ -183,6 +222,7 @@ export function useContentController(services: LauncherServices): {
         const previous = owner.state.request;
         if (
           offset > 0 &&
+          !(previous?.offset === offset && owner.state.searchError !== null) &&
           (!previous || !owner.state.results || offset >= owner.state.results.total_hits)
         )
           return;
@@ -192,7 +232,13 @@ export function useContentController(services: LauncherServices): {
             : { query: owner.state.query, kind: owner.state.kind, offset };
         const token = ++requests.searchToken,
           generation = owner.generation;
-        owner.commit({ ...owner.state, request, results: null, searching: true });
+        owner.commit({
+          ...owner.state,
+          request,
+          results: null,
+          searching: true,
+          searchError: null,
+        });
         const current = () =>
           owner.mounted && generation === owner.generation && token === requests.searchToken;
         try {
@@ -203,7 +249,10 @@ export function useContentController(services: LauncherServices): {
           );
           if (current()) owner.commit({ ...owner.state, results });
         } catch (error) {
-          if (current()) owner.services.launcher.reportError(error);
+          if (current()) {
+            owner.commit({ ...owner.state, searchError: errorMessage(error) });
+            owner.services.launcher.reportError(error);
+          }
         } finally {
           if (current()) owner.commit({ ...owner.state, searching: false });
         }
@@ -296,23 +345,18 @@ export function useContentController(services: LauncherServices): {
   useEffect(() => {
     if (!owner.mounted) return;
     const config = owner.services.launcher.getGuardState().config,
-      navigation = owner.services.getNavigation();
-    const navigationKey =
-      navigation.routeId === 'content' ? (navigation.params.profileKey ?? '') : null;
-    if (navigationKey !== requests.navigation) {
-      requests.navigation = navigationKey;
-      if (
-        navigationKey &&
-        config?.profiles.some((profile) => profile.instance_key === navigationKey)
-      ) {
+      target = navigationTarget();
+    if (target.stamp !== requests.navigation) {
+      requests.navigation = target.stamp;
+      if (target.explicit) {
         requests.initialized = true;
-        requests.explicitEmpty = false;
-        owner.commit({ ...owner.state, selectedProfileKey: navigationKey });
-        invalidateList();
+        requests.explicitEmpty = target.key === null;
+        owner.commit({ ...owner.state, selectedProfileKey: target.key, removing: null });
       }
     }
     if (
       config &&
+      !target.detail &&
       (!requests.initialized || (owner.state.selectedProfileKey !== null && !identity()))
     ) {
       requests.initialized = true;
@@ -326,12 +370,8 @@ export function useContentController(services: LauncherServices): {
       invalidateList();
     }
     if (
-      owner.state.list &&
-      !sameIdentity({
-        profileKey: owner.state.list.profileKey,
-        directory: owner.state.list.directory,
-        category: owner.state.list.category,
-      })
+      (owner.state.list && !sameIdentity(owner.state.list)) ||
+      (owner.state.listRequest && !sameIdentity(owner.state.listRequest))
     )
       invalidateList();
     void requestList();
@@ -351,6 +391,10 @@ export function useContentController(services: LauncherServices): {
         ...owner.state,
         selectedProfileKey: selectedKey(),
         list,
+        listRequest:
+          owner.state.listRequest && sameIdentity(owner.state.listRequest)
+            ? owner.state.listRequest
+            : null,
         removing: list ? owner.state.removing : null,
       };
     },

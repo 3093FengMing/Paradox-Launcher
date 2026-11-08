@@ -325,6 +325,7 @@ let launcher = await host.settle();
 const starting = launcher.runAction('launch', profile);
 launcher = await host.settle();
 assert.equal(launcher.busy.status, 'started');
+assert.equal(launcher.getGuardState().launchProfileKey, profile.instance_key);
 emit(activity('started'));
 launcher = await host.settle();
 const stopping = launcher.stopGame();
@@ -333,6 +334,7 @@ assert.equal(stopCalls, 1, 'rapid stop clicks must issue only one IPC request');
 emit(activity('cancelling'));
 launcher = await host.settle();
 assert.equal(launcher.busy.status, 'cancelling');
+assert.equal(launcher.getGuardState().launchProfileKey, profile.instance_key);
 await launcher.runAction('launch', profile);
 assert.equal(launchCalls, 1, 'cancelling must prevent another launch');
 stop.resolve();
@@ -361,9 +363,15 @@ assert.equal(
 emit({ action: 'launch', status: 'finished', message: '启动已取消' });
 launcher = await host.settle();
 assert.equal(launcher.busy, null, 'backend terminal event must release busy');
+assert.equal(launcher.getGuardState().launchProfileKey, null);
 
 emit(activity('running'));
 launcher = await host.settle();
+assert.equal(
+  launcher.getGuardState().launchProfileKey,
+  null,
+  'external activity has unknown identity',
+);
 stop = deferred();
 const failedStop = launcher.stopGame();
 emit(activity('cancelling'));
@@ -397,6 +405,7 @@ assert.equal(
   null,
   'command rejection before registration must release optimistic busy',
 );
+assert.equal(launcher.getGuardState().launchProfileKey, null);
 
 const originalAccounts = {
   client_id: '7fd2b4de-f119-4ab8-8d8e-906af5efe6f3',

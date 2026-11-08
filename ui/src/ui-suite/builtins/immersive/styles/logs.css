@@ -1,0 +1,48 @@
+.immersive-logs { display: grid; gap: 18px; min-width: 0; container-type: inline-size; }
+.immersive-logs .logs-intro { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start; gap: 14px; }
+.immersive-logs .logs-intro > div:first-child { display: grid; gap: 7px; min-width: 0; }
+.immersive-logs .logs-intro h2 { font-size: 1.1em; margin: 0; }
+.immersive-logs .logs-intro p { font-size: .8em; color: var(--muted); margin: 0; overflow-wrap: anywhere; }
+.immersive-logs .logs-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.immersive-logs .logs-actions button { white-space: nowrap; }
+.immersive-logs .logs-workspace { display: grid; grid-template-columns: 135px minmax(0, 1fr); gap: 18px; }
+.immersive-logs .logs-levels { display: flex; flex-direction: column; align-items: stretch; gap: 4px; min-width: 0; }
+.immersive-logs .logs-caption { color: var(--muted); font-size: .75em; margin: 5px 9px 8px; }
+.immersive-logs .logs-level-choice { justify-content: start; text-align: left; background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: min(5px, var(--radius)); padding: 10px; overflow-wrap: anywhere; }
+.immersive-logs .logs-level-choice.selected { color: var(--text); background: var(--surface); border-color: var(--border); }
+.immersive-logs .logs-main { display: grid; gap: 12px; min-width: 0; }
+.immersive-logs .logs-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; min-width: 0; }
+.immersive-logs .logs-search { display: flex; align-items: center; gap: 8px; flex: 1 1 210px; min-width: 0; }
+.immersive-logs .logs-search > svg { flex-shrink: 0; color: var(--muted); }
+.immersive-logs .logs-search input { width: 100%; min-width: 0; }
+.immersive-logs .logs-follow { display: flex; align-items: center; gap: 8px; font-size: .78em; color: var(--muted); }
+.immersive-logs .logs-follow .toggle { flex-shrink: 0; }
+.immersive-logs .logs-panel { overflow: hidden; padding: 0; border: 1px solid var(--border); border-radius: min(6px, var(--radius)); background: var(--surface); min-width: 0; }
+.immersive-logs .logs-console-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 11px 13px; border-bottom: 1px solid var(--border); font-size: .78em; }
+.immersive-logs .logs-console-heading small { margin-left: auto; color: var(--muted); font-size: .93em; }
+.immersive-logs .logs-console { height: clamp(12em, 54dvh, 38em); overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding: 7px 13px; user-select: text; -webkit-app-region: no-drag; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: .77em; line-height: 1.8; color: var(--text); }
+.immersive-logs .logs-line { display: grid; grid-template-columns: minmax(10em, auto) minmax(0, 1fr); gap: 4px 13px; padding: 6px 0; border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent); }
+.immersive-logs .logs-line-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+.immersive-logs .logs-line time { color: var(--muted); overflow-wrap: anywhere; }
+.immersive-logs .logs-line b { font-size: .92em; overflow-wrap: anywhere; }
+.immersive-logs .logs-line > span { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+.immersive-logs .logs-line[data-level=error] b { color: #ffadba; }
+.immersive-logs .logs-line[data-level=warn] b { color: #f3d282; }
+[data-theme=light] .immersive-logs .logs-line[data-level=error] b { color: #a12739; }
+[data-theme=light] .immersive-logs .logs-line[data-level=warn] b { color: #805800; }
+.immersive-logs .logs-empty { display: grid; justify-items: center; gap: 9px; padding: 38px 12px; text-align: center; }
+.immersive-logs .logs-empty p { margin: 0; }
+.immersive-logs .logs-empty small { max-width: 30em; color: var(--muted); overflow-wrap: anywhere; }
+.immersive-logs .logs-console:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -3px; }
+@container (max-width: 650px) {
+  .immersive-logs .logs-workspace { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .immersive-logs .logs-levels { flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .immersive-logs .logs-caption { width: 100%; margin-left: 0; }
+  .immersive-logs .logs-level-choice { flex: 1 1 auto; }
+  .immersive-logs .logs-line { grid-template-columns: minmax(0, 1fr); }
+}
+@container (max-width: 300px) {
+  .immersive-logs .logs-actions, .immersive-logs .logs-follow { width: 100%; }
+  .immersive-logs .logs-actions button { flex: 1 1 auto; }
+  .immersive-logs .logs-console, .immersive-logs .logs-console-heading { padding-left: 10px; padding-right: 10px; }
+}

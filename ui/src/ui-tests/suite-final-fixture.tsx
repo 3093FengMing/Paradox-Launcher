@@ -11,6 +11,15 @@ import { attachSuiteStyles } from '../ui-suite/prepared';
 import type { PreparedUiSuite } from '../ui-suite/prepared';
 import i18n from '../i18n';
 
+// Imported only by the foundation-test entry's existing source context. The
+// desktop boundary is injected by the runner before the actual owner starts.
+// eslint-disable-next-line react-refresh/only-export-components -- Mode-only source fault boundary.
+export async function getFoundationBuiltinBundle(id: 'modern' | 'immersive') {
+  const failure = (window as unknown as { foundationDesktop?: { sourceFailure?: string | null } }).foundationDesktop?.sourceFailure;
+  if (failure) throw Error(failure);
+  return getBuiltinBundle(id);
+}
+
 const replacementEditorSource = `import {useState} from 'react';import {useUiEditorSnapshot,useUiEditorActions} from '@paradox/launcher';import {Button,Dialog,UiView} from '@paradox/ui';export default function Editor(){const s=useUiEditorSnapshot(),a=useUiEditorActions();const [value,setValue]=useState('');return <Dialog.Root open onOpenChange={open=>{if(!open)a.close()}}><Dialog.Portal><Dialog.Popup aria-label="Replacement editor" style={{pointerEvents:'auto',background:'#223',color:'white',padding:20}}><Dialog.Title render={<h1/>}>Replacement editor</Dialog.Title><input aria-label="Replacement local input" value={value} onChange={e=>setValue(e.currentTarget.value)}/><p data-pending>{s.pending}</p><p data-editor-draft>{s.dirty?'Unsaved':''}</p><Button onClick={()=>a.close()}>Close replacement</Button><UiView id="host.notifications"/></Dialog.Popup></Dialog.Portal></Dialog.Root>}`;
 const turn = () => new Promise<void>((resolve) => setTimeout(resolve, 60));
 const equal = (a: unknown, b: unknown, message: string) => {
@@ -22,6 +31,7 @@ interface Fixture {
   snapshot: DeepReadonly<LauncherSnapshot>;
   actions: LauncherActions;
   run(name: string): Promise<{ checks: string[]; failures: string[] }>;
+  editOnboarding(id: 'modern' | 'immersive'): Promise<{ source: string; preview: boolean; saved: boolean; selected: string | null }>;
   setLanguage(language: string): Promise<unknown>;
   importValid(): Promise<boolean>;
   validArchive(): Promise<number[]>;
@@ -52,6 +62,23 @@ export function Capture() {
   const controller = useUiEditorController(), snapshot = useLauncherSnapshot(), actions = useLauncherActions();
   window.suiteFinalFixture = {
     controller,snapshot,actions,
+    async editOnboarding(id) {
+      await controller.actions.copyBuiltin(id, 'Edited onboarding ' + id);
+      const draft = controller.getSnapshot().draft!, source = draft.manifest.views['onboarding.style-choice'], file = draft.files[source];
+      if (!source || file?.encoding !== 'utf8') throw Error('Expected editable onboarding binding');
+      const heading = /(<h1\b[^>]*>)\s*\{t\(['"]onboarding\.title['"]\)\}\s*(<\/h1>)/;
+      check(heading.test(file.text), 'current onboarding heading patch anchor');
+      controller.actions.patchFile(source, file.text.replace(heading, '$1' + '{"Edited onboarding ' + id + '"}' + '$2'));
+      // Register the ordinary source as a normal page so its saved version remains inspectable after restart.
+      controller.actions.patchManifest({ views: { ...controller.getSnapshot().draft!.manifest.views, 'page.home': source }, routes: controller.getSnapshot().draft!.manifest.routes.map(route => route.id === 'home' ? { ...route, entry: source } : route) });
+      const preview = await controller.actions.preview();
+      await turn();
+      check(document.querySelector('[data-style-choice] h1')?.textContent === 'Edited onboarding ' + id, 'actual onboarding Preview output: ' + JSON.stringify({ preview, diagnostics: controller.getSnapshot().diagnostics, heading: document.querySelector('[data-style-choice] h1')?.textContent, source: controller.getSnapshot().draft!.files[source] }));
+      const owned = listOwners().filter(owner => owner.metadata.sourcePath === source);
+      check(owned.length > 0, 'onboarding owns its actual source metadata');
+      const saved = await controller.actions.save();
+      return { source, preview, saved, selected: controller.getSnapshot().selectedSuiteId };
+    },
     setLanguage: (language) => i18n.changeLanguage(language),
     owners: listOwners,
     probeStyleAttachment(prepared) {

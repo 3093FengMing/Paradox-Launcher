@@ -6,42 +6,49 @@
   "version": "1.0.0",
   "name": "Immersive",
   "views": {
+    "onboarding.style-choice": "immersive/onboarding/StyleChoice.tsx",
+    "component.style-preview": "immersive/onboarding/StylePreview.tsx",
     "layout.shell": "immersive/Shell.tsx",
     "page.home": "immersive/Home.tsx",
     "tool.editor": "common/editor/Editor.tsx",
-    "page.instances": "common/pages/InstancesPage.tsx",
-    "page.downloads": "common/pages/DownloadsPage.tsx",
-    "page.accounts": "common/pages/AccountsPage.tsx",
-    "page.content": "common/pages/ContentPage.tsx",
-    "page.logs": "common/pages/LogsPage.tsx",
-    "page.settings": "common/pages/SettingsPage.tsx",
-    "component.app-sidebar": "common/components/AppSidebar.tsx",
-    "component.activity-bar": "common/components/ActivityBar.tsx",
-    "component.profile-card": "common/components/ProfileCard.tsx",
-    "component.download-queue": "common/components/DownloadQueue.tsx",
-    "component.account-avatar": "common/components/AccountAvatar.tsx",
-    "component.java-settings": "common/components/JavaSettings.tsx",
-    "component.argument-templates": "common/components/ArgumentTemplates.tsx",
-    "component.appearance-settings": "common/components/AppearanceSettings.tsx",
-    "component.personalization-settings": "common/components/PersonalizationSettings.tsx",
-    "component.appearance-presets": "common/components/AppearancePresets.tsx",
-    "component.window-bar": "common/components/WindowBar.tsx",
-    "component.launcher-dialog": "common/dialogs/LauncherDialog.tsx",
-    "dialog.profile": "common/dialogs/ProfileDialog.tsx",
-    "dialog.instance-settings": "common/dialogs/InstanceSettingsDialog.tsx",
-    "dialog.import-instances": "common/dialogs/ImportInstancesDialog.tsx",
-    "dialog.remove-profile": "common/dialogs/RemoveProfileDialog.tsx",
-    "dialog.close-request": "common/dialogs/CloseRequestDialog.tsx",
-    "dialog.launch-account": "common/dialogs/LaunchAccountDialog.tsx",
-    "dialog.login": "common/dialogs/AccountLoginDialog.tsx",
-    "dialog.preset": "common/dialogs/AppearancePresetDialog.tsx",
-    "dialog.argument-template": "common/dialogs/ArgumentTemplateDialog.tsx",
-    "host.loading": "common/Loading.tsx",
-    "host.error": "common/Error.tsx",
-    "host.notifications": "common/Notifications.tsx",
+    "page.instances": "immersive/pages/InstancesPage.tsx",
+    "page.downloads": "immersive/pages/DownloadsPage.tsx",
+    "page.accounts": "immersive/pages/AccountsPage.tsx",
+    "page.content": "immersive/pages/DiscoverPage.tsx",
+    "page.logs": "immersive/pages/LogsPage.tsx",
+    "page.settings": "immersive/pages/SettingsPage.tsx",
+    "component.app-sidebar": "immersive/components/AppSidebar.tsx",
+    "component.activity-bar": "immersive/components/ActivityBar.tsx",
+    "component.profile-card": "immersive/components/ProfileCard.tsx",
+    "component.download-queue": "immersive/components/DownloadQueue.tsx",
+    "component.account-avatar": "immersive/components/AccountAvatar.tsx",
+    "component.java-settings": "immersive/components/JavaSettings.tsx",
+    "component.argument-templates": "immersive/components/ArgumentTemplates.tsx",
+    "component.appearance-settings": "immersive/components/AppearanceSettings.tsx",
+    "component.personalization-settings": "immersive/components/PersonalizationSettings.tsx",
+    "component.appearance-presets": "immersive/components/AppearancePresets.tsx",
+    "component.window-bar": "immersive/components/WindowBar.tsx",
+    "component.launcher-dialog": "immersive/dialogs/LauncherDialog.tsx",
+    "dialog.profile": "immersive/dialogs/ProfileDialog.tsx",
+    "dialog.instance-settings": "immersive/dialogs/InstanceSettingsDialog.tsx",
+    "dialog.import-instances": "immersive/dialogs/ImportInstancesDialog.tsx",
+    "dialog.remove-profile": "immersive/dialogs/RemoveProfileDialog.tsx",
+    "dialog.close-request": "immersive/dialogs/CloseRequestDialog.tsx",
+    "dialog.launch-account": "immersive/dialogs/LaunchAccountDialog.tsx",
+    "dialog.login": "immersive/dialogs/AccountLoginDialog.tsx",
+    "dialog.preset": "immersive/dialogs/AppearancePresetDialog.tsx",
+    "dialog.argument-template": "immersive/dialogs/ArgumentTemplateDialog.tsx",
+    "host.loading": "immersive/Loading.tsx",
+    "host.error": "immersive/Error.tsx",
+    "host.notifications": "immersive/Notifications.tsx",
     "tool.editor.files": "common/editor/FileTree.tsx",
     "tool.editor.source": "common/editor/SourceEditor.tsx",
-    "tool.editor.assets": "common/editor/AssetManager.tsx"
+    "tool.editor.assets": "common/editor/AssetManager.tsx",
+    "page.custom.instance-details": "immersive/pages/InstanceDetailPage.tsx",
+    "component.instance-detail": "immersive/components/InstanceDetail.tsx",
+    "component.local-content": "immersive/components/LocalContent.tsx",
+    "page.custom.versions": "immersive/pages/VersionsPage.tsx",
+    "control.environment-editor": "immersive/components/EnvironmentEditor.tsx"
   },
   "routes": [
     {
@@ -56,7 +63,7 @@
     },
     {
       "id": "instances",
-      "entry": "common/pages/InstancesPage.tsx",
+      "entry": "immersive/pages/InstancesPage.tsx",
       "title": "nav.instances",
       "description": "pages.instances.description",
       "navigation": true,
@@ -65,8 +72,28 @@
       "icon": "Layers"
     },
     {
+      "id": "custom.instance-details",
+      "entry": "immersive/pages/InstanceDetailPage.tsx",
+      "title": "instancePages.title",
+      "description": "instancePages.description",
+      "navigation": false,
+      "startupSelectable": false,
+      "order": 11,
+      "icon": "Box"
+    },
+    {
+      "id": "custom.versions",
+      "entry": "immersive/pages/VersionsPage.tsx",
+      "title": "versionDownloads.title",
+      "description": "versionDownloads.description",
+      "navigation": true,
+      "startupSelectable": true,
+      "order": 15,
+      "icon": "Boxes"
+    },
+    {
       "id": "downloads",
-      "entry": "common/pages/DownloadsPage.tsx",
+      "entry": "immersive/pages/DownloadsPage.tsx",
       "title": "nav.downloads",
       "description": "pages.downloads.description",
       "navigation": true,
@@ -76,7 +103,7 @@
     },
     {
       "id": "accounts",
-      "entry": "common/pages/AccountsPage.tsx",
+      "entry": "immersive/pages/AccountsPage.tsx",
       "title": "nav.accounts",
       "description": "pages.accounts.description",
       "navigation": true,
@@ -86,17 +113,17 @@
     },
     {
       "id": "content",
-      "entry": "common/pages/ContentPage.tsx",
+      "entry": "immersive/pages/DiscoverPage.tsx",
       "title": "nav.content",
       "description": "content.description",
       "navigation": true,
       "startupSelectable": true,
       "order": 40,
-      "icon": "Puzzle"
+      "icon": "Compass"
     },
     {
       "id": "logs",
-      "entry": "common/pages/LogsPage.tsx",
+      "entry": "immersive/pages/LogsPage.tsx",
       "title": "nav.logs",
       "description": "pages.logs.description",
       "navigation": true,
@@ -106,7 +133,7 @@
     },
     {
       "id": "settings",
-      "entry": "common/pages/SettingsPage.tsx",
+      "entry": "immersive/pages/SettingsPage.tsx",
       "title": "nav.settings",
       "description": "pages.settings.description",
       "navigation": true,
@@ -115,169 +142,8 @@
       "icon": "Settings2"
     }
   ],
-  "styles": [
-    "common/style.css",
-    "immersive/style.css"
-  ],
+  "styles": [],
   "files": [
-    {
-      "path": "common/Error.tsx",
-      "kind": "tsx",
-      "bytes": 597,
-      "sha256": "acd0d28c636e0ceca3622268d179d54db090c91e71d4f9597877ba780f65654c"
-    },
-    {
-      "path": "common/Loading.tsx",
-      "kind": "tsx",
-      "bytes": 467,
-      "sha256": "6c40e1e00903be4f344684a21ef2323867a7684b4cc0cd52f13cbea93633c299"
-    },
-    {
-      "path": "common/Notifications.tsx",
-      "kind": "tsx",
-      "bytes": 152,
-      "sha256": "e32e3a9bbffca2955c73bcea2622e2e37abcc6039b43a949a1861bb4319142cd"
-    },
-    {
-      "path": "common/assets/landscape.svg",
-      "kind": "asset",
-      "bytes": 3131,
-      "sha256": "3474516756880057721598ff9a4cab12823e04fdade312210d8ed228cbde2d0e",
-      "media_type": "image/svg+xml"
-    },
-    {
-      "path": "common/assets/world.svg",
-      "kind": "asset",
-      "bytes": 3131,
-      "sha256": "d6a9b772b3ec484fc7a07c4ab6fb25d2caedfa8de41a4317368491c7a46c480a",
-      "media_type": "image/svg+xml"
-    },
-    {
-      "path": "common/components/AccountAvatar.tsx",
-      "kind": "tsx",
-      "bytes": 1187,
-      "sha256": "7fae8b9b1406143ef01605e2859ebdc01720182e71fc68a454fc7ee6c246b286"
-    },
-    {
-      "path": "common/components/ActivityBar.tsx",
-      "kind": "tsx",
-      "bytes": 1747,
-      "sha256": "08db719e8e877a97a944a20b0e092d428b3cb8c8d4d269db5e5abdc441d11f03"
-    },
-    {
-      "path": "common/components/AppSidebar.tsx",
-      "kind": "tsx",
-      "bytes": 5063,
-      "sha256": "3dfabee738563db67be5b0aea35b2f9808ced6667b6c93a1e05ecdb2e9f233c2"
-    },
-    {
-      "path": "common/components/AppearancePresets.tsx",
-      "kind": "tsx",
-      "bytes": 6771,
-      "sha256": "4635a16b57f08674c736d3d71f81fb9afbf21dba68c0628554a1b62c6718183d"
-    },
-    {
-      "path": "common/components/AppearanceSettings.tsx",
-      "kind": "tsx",
-      "bytes": 12684,
-      "sha256": "daaf18909e2cb8ff7ff921a40adb8b521366ef1d4da108fc78f848c9ee252596"
-    },
-    {
-      "path": "common/components/ArgumentTemplates.tsx",
-      "kind": "tsx",
-      "bytes": 3763,
-      "sha256": "9cacd63d4309ffa5a4d6cff80183d991d61baf29079b0225e5d98196e43656e6"
-    },
-    {
-      "path": "common/components/DownloadQueue.tsx",
-      "kind": "tsx",
-      "bytes": 6263,
-      "sha256": "ea96fea1bea60348c57c211dc41a930d25146a6d7a964e915da2f73d4997e2b0"
-    },
-    {
-      "path": "common/components/JavaSettings.tsx",
-      "kind": "tsx",
-      "bytes": 9057,
-      "sha256": "6c19cb12eb436a93915323cfb1ac5c69585ac8d25864376d47df7f80be2dd266"
-    },
-    {
-      "path": "common/components/PersonalizationSettings.tsx",
-      "kind": "tsx",
-      "bytes": 7858,
-      "sha256": "799d6be560755f26b2fbe9f6bbd24ba137169baec9f07fae7f14d7fda513b73f"
-    },
-    {
-      "path": "common/components/ProfileCard.tsx",
-      "kind": "tsx",
-      "bytes": 6191,
-      "sha256": "9f73624a968c10c37d32553df46632f2e0743b528561970d6c2051d9b13afc13"
-    },
-    {
-      "path": "common/components/WindowBar.tsx",
-      "kind": "tsx",
-      "bytes": 2751,
-      "sha256": "71d94431ebaed4a1fdcf43a8d94d315db35beceff611a58fe4de3c0604603df2"
-    },
-    {
-      "path": "common/dialogs/AccountLoginDialog.tsx",
-      "kind": "tsx",
-      "bytes": 2838,
-      "sha256": "4aa2d43fb6bedae23b075e0fa18366be92fd9fa697b78c8d6771b49d5c8d8422"
-    },
-    {
-      "path": "common/dialogs/AppearancePresetDialog.tsx",
-      "kind": "tsx",
-      "bytes": 5948,
-      "sha256": "168b6eeeb2d80f69244b096fcc08bdeb077416d6033630b4da53b0f757a0ff35"
-    },
-    {
-      "path": "common/dialogs/ArgumentTemplateDialog.tsx",
-      "kind": "tsx",
-      "bytes": 4049,
-      "sha256": "493fb4ed2a42ca8263d090a88ec14eeb03ef605d3bdd1ef8fe0b99dfdcda709d"
-    },
-    {
-      "path": "common/dialogs/CloseRequestDialog.tsx",
-      "kind": "tsx",
-      "bytes": 1870,
-      "sha256": "d7a7bda124792d5bf6ff70b241b6c5d184d7004d98e886d2ce583bab586c1c82"
-    },
-    {
-      "path": "common/dialogs/ImportInstancesDialog.tsx",
-      "kind": "tsx",
-      "bytes": 5355,
-      "sha256": "bacc0dd2f7a816a5cfeb6cbf80a2bf380f0da9eaff187d08a1d7055db0d20c7c"
-    },
-    {
-      "path": "common/dialogs/InstanceSettingsDialog.tsx",
-      "kind": "tsx",
-      "bytes": 10354,
-      "sha256": "6241729bb9ef66574bb69d15d516125f74a1c9df7208bdb89aaf100426dceaa4"
-    },
-    {
-      "path": "common/dialogs/LaunchAccountDialog.tsx",
-      "kind": "tsx",
-      "bytes": 2474,
-      "sha256": "78a4f8e5ddba45751c751b5d939e1b7615faed14c15dc6da87b2e4f35d3826a5"
-    },
-    {
-      "path": "common/dialogs/LauncherDialog.tsx",
-      "kind": "tsx",
-      "bytes": 2756,
-      "sha256": "12805f8cd97db0ea8e03e406ca7b1e1e72588b4b669b6b344632722bf7bb4b9e"
-    },
-    {
-      "path": "common/dialogs/ProfileDialog.tsx",
-      "kind": "tsx",
-      "bytes": 9106,
-      "sha256": "458621d927092330711dab7a347e0640818b3b0a0f8143c467a31f7fa5633d69"
-    },
-    {
-      "path": "common/dialogs/RemoveProfileDialog.tsx",
-      "kind": "tsx",
-      "bytes": 3241,
-      "sha256": "115cc65f1effa2fb22e02c9a272a2926a8a040962fad350d92ed00cbba5a92cc"
-    },
     {
       "path": "common/editor/AssetManager.tsx",
       "kind": "tsx",
@@ -287,8 +153,8 @@
     {
       "path": "common/editor/Editor.tsx",
       "kind": "tsx",
-      "bytes": 10888,
-      "sha256": "b9d2fe2f9da9d61e8adfc267593443290b57288d29d7fc476120db63f125dd6d"
+      "bytes": 10909,
+      "sha256": "4b5ef760d68ab475569c973fe83fb77e5e2c21175c2f45ef19863873d898c41a"
     },
     {
       "path": "common/editor/FileTree.tsx",
@@ -321,16 +187,16 @@
       "sha256": "491402225b72579ab92db35869dcf073efd793622c49e2addf7e2b18a7a09b53"
     },
     {
+      "path": "common/editor/base.css",
+      "kind": "css",
+      "bytes": 4260,
+      "sha256": "d3bff9398a405c3605a4bfe64de054da7c9db2b22398dcd7dfb6566e1f163235"
+    },
+    {
       "path": "common/editor/style.css",
       "kind": "css",
       "bytes": 5701,
       "sha256": "2d9c5006d61b07eff490a044bfdba5e9c46dbfff7e7a43f444a016bc0ddd352b"
-    },
-    {
-      "path": "common/lib/EnvironmentEditor.tsx",
-      "kind": "tsx",
-      "bytes": 2825,
-      "sha256": "7ac315a36288719eefa2a643662be8f18ffd3cbc155744f211e5a3b9d54e539c"
     },
     {
       "path": "common/lib/appearance-presets.ts",
@@ -339,10 +205,28 @@
       "sha256": "abd709bc670c9e6418fb80177f9336fc1f953b5b2b074cbaf31e98da9c6705b0"
     },
     {
+      "path": "common/lib/appearance.ts",
+      "kind": "ts",
+      "bytes": 332,
+      "sha256": "545e1d1d797df9bee1476b5e2b2b46968c285da68aa8ec5429976e66875867fc"
+    },
+    {
       "path": "common/lib/colors.ts",
       "kind": "ts",
       "bytes": 513,
       "sha256": "d8e4e4645f655115db5a7fa22748cb71568260b79a098a1437af3cdc9f50dbf9"
+    },
+    {
+      "path": "common/lib/dialog-display.ts",
+      "kind": "ts",
+      "bytes": 2535,
+      "sha256": "40c511199ebc13d7c4bf072831e181a21b2511431ea97de547a7cd554df207c8"
+    },
+    {
+      "path": "common/lib/download-display.ts",
+      "kind": "ts",
+      "bytes": 2619,
+      "sha256": "f7109768477864e1384bb6c15eab3a156999fde5cfeed261807e679a82b766e0"
     },
     {
       "path": "common/lib/download.ts",
@@ -351,16 +235,40 @@
       "sha256": "4f8db96a86a905954f51a45c1fa4f5c8cd2c582c436d12c7e5756855db73dab6"
     },
     {
+      "path": "common/lib/instance-display.ts",
+      "kind": "ts",
+      "bytes": 4969,
+      "sha256": "1ad74faa14b3b51023bf7d7650c2519ee54cb8d886f52deb2915b32cafb9c271"
+    },
+    {
+      "path": "common/lib/launcher-display.ts",
+      "kind": "ts",
+      "bytes": 919,
+      "sha256": "f390a9921f6f8360a588a6e1ce07c28c2c95aee9e5de273fcabe82b402272787"
+    },
+    {
+      "path": "common/lib/log-display.ts",
+      "kind": "ts",
+      "bytes": 1243,
+      "sha256": "1e9f34dec1a6213512c21ad11cbaa5f12a9a2babfbac86b2c1de6b99664135b0"
+    },
+    {
       "path": "common/lib/navigation.ts",
       "kind": "ts",
-      "bytes": 213,
-      "sha256": "fdbe4a063967ba952cd594399d6a8c230c66b1505d1cefcacde94eb358a68a4d"
+      "bytes": 469,
+      "sha256": "c6c12f4b3292dd08a0c0770f54fe76bbd2eeb3ae2d2718ecc6feabaf28681a2c"
     },
     {
       "path": "common/lib/runtime-message.ts",
       "kind": "ts",
       "bytes": 3438,
       "sha256": "4ee86f4a83163d8f43142a8e0157b1219860b0bfe02f17ecf4b76cec5b494d42"
+    },
+    {
+      "path": "common/lib/settings-display.ts",
+      "kind": "ts",
+      "bytes": 3270,
+      "sha256": "67ca738cdeba2190d5df1ecc74f0802d107f9e09281bfec6af7c622200529c10"
     },
     {
       "path": "common/lib/version.ts",
@@ -371,86 +279,380 @@
     {
       "path": "common/lib/view.tsx",
       "kind": "tsx",
-      "bytes": 1224,
-      "sha256": "0aea0483034c65b62d70e1c3554e4d65419489b28d36ec9c31556c014d9515a5"
+      "bytes": 1193,
+      "sha256": "316a418bb75e1eebfbf6072187744e0e4d7b5bce348056386ee9f0440803708e"
     },
     {
-      "path": "common/pages/AccountsPage.tsx",
+      "path": "immersive/Error.tsx",
       "kind": "tsx",
-      "bytes": 11833,
-      "sha256": "b765282854767c872721639c1ff66869826f9d1500536567c9596f7b27ee0584"
-    },
-    {
-      "path": "common/pages/ContentPage.tsx",
-      "kind": "tsx",
-      "bytes": 12613,
-      "sha256": "9df54a1fbbe20d56fc90bc98b1a9e73706989d953f55e917bdc686642cf1b366"
-    },
-    {
-      "path": "common/pages/DownloadsPage.tsx",
-      "kind": "tsx",
-      "bytes": 7629,
-      "sha256": "7b224183180f3987cd1526e6593e00020d73a4b62d020224bcd263190ccca7a2"
-    },
-    {
-      "path": "common/pages/InstancesPage.tsx",
-      "kind": "tsx",
-      "bytes": 4562,
-      "sha256": "3d8f6713aeb3867a6acae6c021e900b44c22ee3dfa4d45d28e84981d8383eca5"
-    },
-    {
-      "path": "common/pages/LogsPage.tsx",
-      "kind": "tsx",
-      "bytes": 2706,
-      "sha256": "c3ecc2c2f99172062013198fd70aea5c741e46dc6ba8cef3915601be8b00966d"
-    },
-    {
-      "path": "common/pages/SettingsPage.tsx",
-      "kind": "tsx",
-      "bytes": 17638,
-      "sha256": "c2dd737994cd83a4d5e33a7ecf990882e7acc61aa3c6ff9eeb838520ddb28338"
-    },
-    {
-      "path": "common/style.css",
-      "kind": "css",
-      "bytes": 51869,
-      "sha256": "a86e1e54058db618da6708e755231e2a5c5b685edd3bb08aa8a94f45490ca3ae"
-    },
-    {
-      "path": "common/styles/account-avatar.css",
-      "kind": "css",
-      "bytes": 562,
-      "sha256": "ef0920b28ec65afd283ac7d18e5558a437c3f391b5e7745c88467600c7c0ec26"
-    },
-    {
-      "path": "common/styles/common.css",
-      "kind": "css",
-      "bytes": 67686,
-      "sha256": "a266933f7d487a7436b27bb3dfa6dcfd8d111d0fbc311bc305cb9855db19d3fc"
-    },
-    {
-      "path": "common/styles/presets.css",
-      "kind": "css",
-      "bytes": 2293,
-      "sha256": "e540a8a7ae9761912b8300a3fd224604ece74713778288b822d0a6785bf64f82"
+      "bytes": 736,
+      "sha256": "bbd1e6636a49a9aee6723d064ff94cc2262539b267981871aea9dd4afd6a6a46"
     },
     {
       "path": "immersive/Home.tsx",
       "kind": "tsx",
-      "bytes": 12209,
-      "sha256": "8c7b6546e7d7114d7186ed298b03b6a295eef45f89bb0ed4e714dcc230c89a3b"
+      "bytes": 10682,
+      "sha256": "11d932678ab700d88cecf6e3d92375553ac3374e8e1633238e4879292155ae41"
+    },
+    {
+      "path": "immersive/Loading.tsx",
+      "kind": "tsx",
+      "bytes": 531,
+      "sha256": "17db03afa7c86fb0ce8d2d2e34725541c138f3f5559b387912ca400257ccf158"
+    },
+    {
+      "path": "immersive/Notifications.tsx",
+      "kind": "tsx",
+      "bytes": 1055,
+      "sha256": "d559033c74321c50b7a9cd5b7d845d5d52d10bae22483e494d42b4efe4ad6616"
     },
     {
       "path": "immersive/Shell.tsx",
       "kind": "tsx",
-      "bytes": 5568,
-      "sha256": "1e2dab4d4684809a7b67d477a0cfe0373908f9cb981faeaebec889f66b3b4399"
+      "bytes": 3914,
+      "sha256": "0a4c0ea9dc816efd179eecea1786d17cc7cb18880b0f93e527bf69ee54617971"
+    },
+    {
+      "path": "immersive/components/AccountAvatar.tsx",
+      "kind": "tsx",
+      "bytes": 811,
+      "sha256": "a116a38a5ddc09e25a62d9950e91f3eef3e0eb8a464880afb9841b431ab8620f"
+    },
+    {
+      "path": "immersive/components/ActivityBar.tsx",
+      "kind": "tsx",
+      "bytes": 1816,
+      "sha256": "c15295cab74eb9a58b067a0cdd4c7942d4288cce0ba4afa3d9dba425a3040342"
+    },
+    {
+      "path": "immersive/components/AppSidebar.tsx",
+      "kind": "tsx",
+      "bytes": 12764,
+      "sha256": "d702f5238b2f8ea0e20fbdbaa2d9538050f88a980743e84a6dd53c1e1b3c8007"
+    },
+    {
+      "path": "immersive/components/AppearancePresets.tsx",
+      "kind": "tsx",
+      "bytes": 4956,
+      "sha256": "b50f026c333042360653dd58c9f06abb681ca81ab6453f7082516d50cbb918d4"
+    },
+    {
+      "path": "immersive/components/AppearanceSettings.tsx",
+      "kind": "tsx",
+      "bytes": 10471,
+      "sha256": "df7788fa58c25cb6e664cfa693d2779e771903b68d42f3e1b5cde931bf192c8f"
+    },
+    {
+      "path": "immersive/components/ArgumentTemplates.tsx",
+      "kind": "tsx",
+      "bytes": 3331,
+      "sha256": "2d9c27a5608ad9596745bebb84ac02145af8a807e514b606044a57fb227ec612"
+    },
+    {
+      "path": "immersive/components/DownloadQueue.tsx",
+      "kind": "tsx",
+      "bytes": 9823,
+      "sha256": "849946bf0d08756644a31de1ada54eea9f124c1e2392b9d06f70ff7b77ea0500"
+    },
+    {
+      "path": "immersive/components/EnvironmentEditor.tsx",
+      "kind": "tsx",
+      "bytes": 2814,
+      "sha256": "4a19fd43bee924354da47721beb31e94a007191a3cc22e57f52dcf42c07a0c5c"
+    },
+    {
+      "path": "immersive/components/InstanceDetail.tsx",
+      "kind": "tsx",
+      "bytes": 12832,
+      "sha256": "5c7832763002e90297d39245adf974a4816b79df9ef89296984905bdad86e31d"
+    },
+    {
+      "path": "immersive/components/JavaSettings.tsx",
+      "kind": "tsx",
+      "bytes": 6834,
+      "sha256": "687e9c2345672c8d9d44a78f0dfd74fb090d85657776f4ec9e6a889f90cfd24d"
+    },
+    {
+      "path": "immersive/components/LocalContent.tsx",
+      "kind": "tsx",
+      "bytes": 6431,
+      "sha256": "880a50abefce7ce642f8ce30597533c4e358c1f031dba03a304e6f07893ec1b8"
+    },
+    {
+      "path": "immersive/components/PersonalizationSettings.tsx",
+      "kind": "tsx",
+      "bytes": 3866,
+      "sha256": "a5ecfbad516df03aacf4df79903598f83fc57e66aa2f905febd7614d083db8bd"
+    },
+    {
+      "path": "immersive/components/ProfileCard.tsx",
+      "kind": "tsx",
+      "bytes": 6123,
+      "sha256": "13a3c2a8a11b8e42343bcb3b45735e86c49b8a4600df1cc458a1ffda94da330b"
+    },
+    {
+      "path": "immersive/components/WindowBar.tsx",
+      "kind": "tsx",
+      "bytes": 2083,
+      "sha256": "00f1ed564f395d903c100270b2357760d12c5ec47ea9502251e4e433705fb2c3"
+    },
+    {
+      "path": "immersive/dialogs/AccountLoginDialog.tsx",
+      "kind": "tsx",
+      "bytes": 2864,
+      "sha256": "f8ae777e2b49b59db5cadb6e53c48d9dfa4f583fbe9faf563cc535ce621ebd9d"
+    },
+    {
+      "path": "immersive/dialogs/AppearancePresetDialog.tsx",
+      "kind": "tsx",
+      "bytes": 4946,
+      "sha256": "8b25de1c3f265778e9ebaba35b3a7adde9c61136fcaadc2f5e976ee14cbaec2e"
+    },
+    {
+      "path": "immersive/dialogs/ArgumentTemplateDialog.tsx",
+      "kind": "tsx",
+      "bytes": 3899,
+      "sha256": "c51fd4c56d0ebbcb42f544439f89a74f6f4f46f32842a5b00101ed93f480168e"
+    },
+    {
+      "path": "immersive/dialogs/CloseRequestDialog.tsx",
+      "kind": "tsx",
+      "bytes": 2003,
+      "sha256": "cc80f01d7d70fb90df31d1d4d10d349d71c8cadd8a5c4ae4fb9f7daaa88b9b89"
+    },
+    {
+      "path": "immersive/dialogs/ImportInstancesDialog.tsx",
+      "kind": "tsx",
+      "bytes": 4836,
+      "sha256": "124155042a03c011fc943f3f64b6336b5802d8962968b2a5df655a12423cca8a"
+    },
+    {
+      "path": "immersive/dialogs/InstanceSettingsDialog.tsx",
+      "kind": "tsx",
+      "bytes": 11068,
+      "sha256": "70da39f549c5668076113c76236d66fdb943f6c38a8604ddfdd7638ff4cf0dce"
+    },
+    {
+      "path": "immersive/dialogs/LaunchAccountDialog.tsx",
+      "kind": "tsx",
+      "bytes": 2410,
+      "sha256": "5c382a45f12fe061a27bfac9bebb12daca8ffc47c33055b9845dd0bcf572bbb4"
+    },
+    {
+      "path": "immersive/dialogs/LauncherDialog.tsx",
+      "kind": "tsx",
+      "bytes": 3478,
+      "sha256": "05190b737dceff321974a7584d957ac3760bab8af1cb4d61890a3e3cadf6d35a"
+    },
+    {
+      "path": "immersive/dialogs/ProfileDialog.tsx",
+      "kind": "tsx",
+      "bytes": 5777,
+      "sha256": "3ef92548dcd59849da01851d430f96edb75e5d14fe3302d608b71a436148fa46"
+    },
+    {
+      "path": "immersive/dialogs/RemoveProfileDialog.tsx",
+      "kind": "tsx",
+      "bytes": 3863,
+      "sha256": "765c7cfbe99cf4967ea9f5eb803682ebee90781db929287e666b0c041d8fcc34"
+    },
+    {
+      "path": "immersive/onboarding/StyleChoice.tsx",
+      "kind": "tsx",
+      "bytes": 1974,
+      "sha256": "67b2525ee3b2e8c7339ae811dc5c206e1fcda3aa9869ff8f9f9fe94b27c54bef"
+    },
+    {
+      "path": "immersive/onboarding/StylePreview.tsx",
+      "kind": "tsx",
+      "bytes": 837,
+      "sha256": "23cc4982fd73a9bc2000b34c053401b841dbce5f4141c35bbae43e4129c41a36"
+    },
+    {
+      "path": "immersive/onboarding/style.css",
+      "kind": "css",
+      "bytes": 4447,
+      "sha256": "3b87b736e30ca471b441c7105d8c6bbbde728df7488e74e5355044412ddadc9a"
+    },
+    {
+      "path": "immersive/pages/AccountsPage.tsx",
+      "kind": "tsx",
+      "bytes": 12132,
+      "sha256": "f871596fa69126045767de94d0007ac86734e32c6f4a9954457d540ecee37056"
+    },
+    {
+      "path": "immersive/pages/DiscoverPage.tsx",
+      "kind": "tsx",
+      "bytes": 10775,
+      "sha256": "5509d5d3fa3e05714d60bda0fadb603ac7fec7b5fe345b433a657bd1900b296d"
+    },
+    {
+      "path": "immersive/pages/DownloadsPage.tsx",
+      "kind": "tsx",
+      "bytes": 2084,
+      "sha256": "77124d9e693ade348aeccb57ac766e87dfe4c78859321a5b20a966bd81ef3dc0"
+    },
+    {
+      "path": "immersive/pages/InstanceDetailPage.tsx",
+      "kind": "tsx",
+      "bytes": 2683,
+      "sha256": "a7d834bf5459cd01f76bb3b0368037e51a85dc32933a0220955855be6a0b178b"
+    },
+    {
+      "path": "immersive/pages/InstancesPage.tsx",
+      "kind": "tsx",
+      "bytes": 7382,
+      "sha256": "6e7f05eb941524a7a22847f09f0dca7b1ae9af21e3ede76f2c52517d656857ec"
+    },
+    {
+      "path": "immersive/pages/LogsPage.tsx",
+      "kind": "tsx",
+      "bytes": 5767,
+      "sha256": "2040e08c8a4c38f92392b8129d3562984a8b0d67ae290c78da78769d7ac20f9c"
+    },
+    {
+      "path": "immersive/pages/SettingsPage.tsx",
+      "kind": "tsx",
+      "bytes": 16655,
+      "sha256": "db9a3f317ae9d34e6ab5edfeebb1662b14dab074b1213c581ce75b81837b241e"
+    },
+    {
+      "path": "immersive/pages/VersionsPage.tsx",
+      "kind": "tsx",
+      "bytes": 6549,
+      "sha256": "93d845f91641c1fcc0de1f66e602d20422a403145834f29011c4efc52bbe6881"
     },
     {
       "path": "immersive/style.css",
       "kind": "css",
-      "bytes": 15985,
-      "sha256": "61b8d7afcbd9d4ef1da3f0930542ca10a0eb4df989cc414e8c9538f1d04c0c3a"
+      "bytes": 117,
+      "sha256": "ee3860dc8e02f700ab5b0cb0d2e5aa9c07c5d94f30b9c9a0c575144920c56387"
+    },
+    {
+      "path": "immersive/styles/account-login.css",
+      "kind": "css",
+      "bytes": 1500,
+      "sha256": "5aa866d0a8caa9d60b0002b7e35857e2820545c916712b27a1f693517b2dc797"
+    },
+    {
+      "path": "immersive/styles/accounts.css",
+      "kind": "css",
+      "bytes": 4622,
+      "sha256": "841ec64af8e8f26f8b94fefae7b182b43000fd45a0b4fae3928e672a0c244c4e"
+    },
+    {
+      "path": "immersive/styles/appearance-presets.css",
+      "kind": "css",
+      "bytes": 1978,
+      "sha256": "9c5d74ae02359e9148130cb6a9dc33ad937d6865c2f1244e6cfb95623a280032"
+    },
+    {
+      "path": "immersive/styles/business-dialogs.css",
+      "kind": "css",
+      "bytes": 7678,
+      "sha256": "af9a8fc36b23b8ed4fa1cee62a013bd44082274a37f2962362f1e48213df5aad"
+    },
+    {
+      "path": "immersive/styles/components.css",
+      "kind": "css",
+      "bytes": 18668,
+      "sha256": "a50c89cb3b1cbc0b2934466d37b0ead7da50ec1cd25102c3444b1c50468f34a9"
+    },
+    {
+      "path": "immersive/styles/discover.css",
+      "kind": "css",
+      "bytes": 5045,
+      "sha256": "2f16e5a698d4d5a6dc7b9f5f76906454be8310069b979e033a0077a20b4bd1df"
+    },
+    {
+      "path": "immersive/styles/downloads.css",
+      "kind": "css",
+      "bytes": 6236,
+      "sha256": "85c9ef674db70fa16d4feed8511602259fb511a125a662817fb574d4b62b580f"
+    },
+    {
+      "path": "immersive/styles/home.css",
+      "kind": "css",
+      "bytes": 5461,
+      "sha256": "d2aac94c1f7807f49415816f1facb3c8ca5f7b128b40ca52f270efeb70bf5c8d"
+    },
+    {
+      "path": "immersive/styles/host-components.css",
+      "kind": "css",
+      "bytes": 1459,
+      "sha256": "9e3a262d1e5635d649872d50f4948bbed3a47ff8158b7810baaee62c9b9094f3"
+    },
+    {
+      "path": "immersive/styles/instance-detail.css",
+      "kind": "css",
+      "bytes": 9902,
+      "sha256": "fa311436e13d7c43dc67e2e69bdc2fcbe5baa067f2b1c8feeb22e8aa5fdf05f2"
+    },
+    {
+      "path": "immersive/styles/instances.css",
+      "kind": "css",
+      "bytes": 6216,
+      "sha256": "fc7c5f022f9df6c770bc779d84fbd23f4f0aa32cd6f6db26f9b3a0fa329db6a1"
+    },
+    {
+      "path": "immersive/styles/java-settings.css",
+      "kind": "css",
+      "bytes": 2914,
+      "sha256": "b3eda81d06b3af8a9ba825e73d626aea398b70092269326d3c46174108dc2643"
+    },
+    {
+      "path": "immersive/styles/layout.css",
+      "kind": "css",
+      "bytes": 6499,
+      "sha256": "c0e4f9685ab3f6ae77d231a4d36942e7ac40699f534976559c96cf58d831d973"
+    },
+    {
+      "path": "immersive/styles/logs.css",
+      "kind": "css",
+      "bytes": 4654,
+      "sha256": "4c3a5cc726ad80fe07fe26e36dfbf4080de214b3e969b15910dfc8ecb388de2c"
+    },
+    {
+      "path": "immersive/styles/notifications.css",
+      "kind": "css",
+      "bytes": 1304,
+      "sha256": "80c1ae39a468dc5cea735edbd37d94673990d8d3bfd46edff0a88bffe7bd2a2a"
+    },
+    {
+      "path": "immersive/styles/pages.css",
+      "kind": "css",
+      "bytes": 11591,
+      "sha256": "867712dd85615fa260184b976471b23e2add13101a139db0fce8682ac6900228"
+    },
+    {
+      "path": "immersive/styles/profile-dialog.css",
+      "kind": "css",
+      "bytes": 2209,
+      "sha256": "99ca85dfa799f7ea8b74e660b65a87558965a122393bfa0893e0590a8dd7cb7e"
+    },
+    {
+      "path": "immersive/styles/responsive.css",
+      "kind": "css",
+      "bytes": 5067,
+      "sha256": "43397a76df939e1b8a0085bff73104afa97a02ed5cfbdb010c4ec85b2238ff73"
+    },
+    {
+      "path": "immersive/styles/settings.css",
+      "kind": "css",
+      "bytes": 9015,
+      "sha256": "26b1aa48bd2edf655afb62d09ab6f492d46fe54b7d737eed3609ab7598469942"
+    },
+    {
+      "path": "immersive/styles/tokens.css",
+      "kind": "css",
+      "bytes": 711,
+      "sha256": "4d3fbddd5361aaf05542f461f383ff14239153e2ffd575b7b4aab6d213c52432"
+    },
+    {
+      "path": "immersive/styles/versions.css",
+      "kind": "css",
+      "bytes": 3775,
+      "sha256": "877d1a5b6ea4635e98122176e13b3020a3bbd9165172fb8d31dd6ec28c26c08d"
     }
   ],
   "overrides": []

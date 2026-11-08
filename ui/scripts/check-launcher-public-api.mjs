@@ -27,6 +27,328 @@ const customHelp = {
   order: 8,
   icon: 'CircleHelp',
 };
+const detailRoute = { ...customHelp, id: 'custom.instance-details' };
+function twoProfiles() {
+  const config = structuredClone(initialConfig);
+  config.profiles.push({ ...config.profiles[0], instance_key: 'instance-b', name: 'Instance B' });
+  return config;
+}
+await test('launch_B_while_active_A: accepted runtime owns B through account selection, terminal and stale ACK', async () => {
+  const config = twoProfiles();
+  const f = await fixture({
+    config,
+    holdLaunch: true,
+    installedInstances: config.profiles.map((p) => ({
+      instance_key: p.instance_key,
+      game_version: p.game_version,
+      loader: p.loader,
+      loader_version: p.loader_version,
+      root: `${config.settings.game_directory}/versions/${p.instance_key}`,
+    })),
+  });
+  const { actions } = await f.current();
+  await actions.launch.request('instance-b');
+  let snapshot = (await f.current()).snapshot;
+  assert.equal(snapshot.launch.selection.profileKey, 'instance-b');
+  assert.equal(snapshot.launch.profileKey, null, 'selection is not an accepted launch');
+  const start = actions.launch.confirmAccount();
+  snapshot = (await f.current()).snapshot;
+  assert.equal(snapshot.profiles.activeKey, 'original-instance');
+  assert.deepEqual(f.launchKeys, ['instance-b']);
+  assert.equal(snapshot.launch.profileKey, 'instance-b');
+  assert.equal(snapshot.launch.phase, 'started');
+  await actions.config.reload();
+  actions.settings.patchAppearance('interface_style', 'modern');
+  assert.equal((await f.current()).snapshot.launch.profileKey, 'instance-b');
+  const emit = f.subscriptions.find((x) => x.kind === 'launcher').callbacks[0];
+  emit({ action: 'launch', status: 'running', message: '' });
+  assert.equal((await f.current()).snapshot.launch.profileKey, 'instance-b');
+  emit({ action: 'launch', status: 'finished', message: '' });
+  assert.equal((await f.current()).snapshot.launch.profileKey, null);
+  await actions.launch.request('original-instance');
+  const next = actions.launch.confirmAccount();
+  await f.current();
+  f.launches[0].reject(new Error('old action rejected after next action started'));
+  await start;
+  assert.equal((await f.current()).snapshot.launch.profileKey, 'original-instance');
+  f.launches[1].reject(new Error('rejected before registration'));
+  await next;
+  snapshot = (await f.current()).snapshot;
+  assert.equal(snapshot.launch.profileKey, null);
+  assert.equal(snapshot.launch.phase, 'idle');
+  emit({ action: 'launch', status: 'running', message: 'externally started' });
+  assert.equal((await f.current()).snapshot.launch.profileKey, null);
+  emit({ action: 'launch', status: 'finished', message: '' });
+  await actions.launch.request('instance-b');
+  const reconnectStart = actions.launch.confirmAccount();
+  await f.current();
+  emit({ action: 'launch', status: 'running', message: '' });
+  f.host.reconnectEffects();
+  snapshot = (await f.current()).snapshot;
+  assert.equal(snapshot.launch.phase, 'running');
+  assert.equal(snapshot.launch.profileKey, null, 'native reconnect has unknown identity');
+  f.launches[2].resolve();
+  await reconnectStart;
+  f.host.unmount();
+});
+await test('no_render_navigate_B_then_toggle_A and missing_detail_key_cannot_fallback', async () => {
+  const f = await fixture({ config: twoProfiles() });
+  const { actions, registry } = await f.current();
+  registry.setActiveRouteRegistry([...builtinRegistry(f), detailRoute, customHelp]);
+  actions.navigation.navigate('custom.instance-details', { profileKey: 'original-instance' });
+  actions.content.selectProfile('original-instance');
+  f.contentLists[0].resolve([
+    { name: 'a.jar', category: 'mods', size: 1, enabled: true, record: null },
+  ]);
+  await f.current();
+  actions.content.beginRemove('a.jar');
+  actions.navigation.navigate('custom.instance-details', { profileKey: 'instance-b' });
+  const toggle = actions.content.toggleMod('a.jar');
+  const remove = actions.content.confirmRemove();
+  assert.equal(f.contentMutations.length, 0, 'new navigation guards before any render');
+  await Promise.all([toggle, remove]);
+  assert.equal((await f.current()).snapshot.content.selectedProfileKey, 'instance-b');
+  assert.equal((await f.current()).snapshot.content.list, null);
+  for (const params of [{}, { profileKey: 'missing' }, { profileKey: 17 }]) {
+    actions.navigation.navigate('custom.instance-details', params);
+    actions.content.selectProfile('original-instance');
+    await actions.content.toggleMod('a.jar');
+    await actions.content.exportInstance();
+    assert.equal((await f.current()).snapshot.content.selectedProfileKey, null);
+    assert.equal((await f.current()).snapshot.content.listRequest, null);
+    assert.equal(f.contentMutations.length, 0);
+    assert.equal(f.exports.length, 0);
+  }
+  actions.navigation.navigate('custom.help', { profileKey: 'instance-b' });
+  await f.current();
+  actions.content.selectProfile('original-instance');
+  assert.equal(
+    (await f.current()).snapshot.content.selectedProfileKey,
+    'original-instance',
+    'discovery selector may override consumed hint',
+  );
+  actions.navigation.navigate('custom.help');
+  actions.content.selectProfile('instance-b');
+  assert.equal((await f.current()).snapshot.content.selectedProfileKey, 'instance-b');
+  actions.navigation.navigate('custom.instance-details', { profileKey: 'instance-b' });
+  f.server.config.profiles.pop();
+  await actions.config.reload();
+  assert.equal((await f.current()).snapshot.content.selectedProfileKey, null);
+  assert.equal((await f.current()).snapshot.content.listRequest, null);
+  f.host.unmount();
+});
+for (const route of ['content', 'custom.help']) {
+  await test(`fix1_repeated_explicit_navigation_${route}: same route/key is a new entry, manual selection stays within the current entry`, async () => {
+    const f = await fixture({ config: twoProfiles() });
+    const { actions, registry, services } = await f.current();
+    const routes = [...builtinRegistry(f), customHelp];
+    registry.setActiveRouteRegistry(routes);
+    actions.navigation.navigate(route, { profileKey: 'instance-b' });
+    const firstEntry = services.getNavigation().entryId;
+    await f.current();
+    actions.content.selectProfile('original-instance');
+    f.contentLists.at(-1).resolve([
+      { name: 'a.jar', category: 'mods', size: 1, enabled: true, record: null },
+    ]);
+    await f.current();
+    actions.navigation.setSearch('same entry search edit');
+    actions.content.patchSearch({ query: 'same entry draft edit' });
+    registry.setActiveRouteRegistry(routes);
+    let snapshot = (await f.current()).snapshot;
+    assert.equal(services.getNavigation().entryId, firstEntry);
+    assert.equal(Object.hasOwn(snapshot.navigation, 'entryId'), false);
+    assert.equal(snapshot.content.selectedProfileKey, 'original-instance');
+    actions.content.beginRemove('a.jar');
+    assert.equal((await f.current()).snapshot.content.removing, 'a.jar');
+    actions.navigation.navigate(route, { profileKey: 'instance-b' });
+    assert.notEqual(services.getNavigation().entryId, firstEntry);
+    const toggle = actions.content.toggleMod('a.jar');
+    const remove = actions.content.confirmRemove();
+    assert.equal(f.contentMutations.length, 0, 'fresh identical navigation rejects A before render');
+    await Promise.all([toggle, remove]);
+    snapshot = (await f.current()).snapshot;
+    assert.equal(snapshot.content.selectedProfileKey, 'instance-b');
+    assert.equal(snapshot.content.list, null);
+    assert.equal(snapshot.content.removing, null);
+    assert.equal(snapshot.content.listRequest.profileKey, 'instance-b');
+    f.host.unmount();
+  });
+}
+await test('late_A_after_B and directory_changed_same_key: list request owns loading/error independently of writes', async () => {
+  const f = await fixture({ config: twoProfiles() });
+  const { actions } = await f.current();
+  actions.content.selectProfile('original-instance');
+  const a = f.contentLists.at(-1);
+  let snapshot = (await f.current()).snapshot;
+  assert.equal(snapshot.content.listRequest.loading, true);
+  assert.equal(snapshot.content.pending, false);
+  actions.content.selectProfile('instance-b');
+  const b = f.contentLists.at(-1);
+  a.reject(new Error('obsolete A read'));
+  await f.current();
+  assert.equal((await f.current()).snapshot.content.listRequest.error, null);
+  b.reject(new Error('B read failed'));
+  snapshot = (await f.current()).snapshot;
+  assert.equal(snapshot.content.listRequest.loading, false);
+  assert.equal(snapshot.content.listRequest.error, 'B read failed');
+  publicValue(snapshot.content.listRequest);
+  const retry = actions.content.refresh();
+  assert.equal((await f.current()).snapshot.content.listRequest.error, null);
+  const oldDirectory = f.contentLists.at(-1);
+  f.server.config.profiles[1].game_directory = 'C:/New-B';
+  await actions.config.reload();
+  oldDirectory.resolve([
+    { name: 'old.jar', category: 'mods', size: 1, enabled: true, record: null },
+  ]);
+  await retry;
+  snapshot = (await f.current()).snapshot;
+  assert.equal(snapshot.content.list, null);
+  assert.equal(snapshot.content.listRequest.directory, 'C:/New-B');
+  f.contentLists
+    .at(-1)
+    .resolve([{ name: 'new.jar', category: 'mods', size: 1, enabled: true, record: null }]);
+  snapshot = (await f.current()).snapshot;
+  assert.equal(snapshot.content.list.entries[0].name, 'new.jar');
+  assert.equal(snapshot.content.listRequest.loading, false);
+  assert.equal(snapshot.content.listRequest.error, null);
+  f.host.unmount();
+});
+await test('search_failed_later_page_retries_exact_accepted_request_only', async () => {
+  const f = await fixture();
+  const { actions } = await f.current();
+  actions.content.patchSearch({ query: 'original', kind: 'mod' });
+  const first = actions.content.search();
+  f.contentSearches[0].resolve({ hits: [], total_hits: 100, offset: 0 });
+  await first;
+  const later = actions.content.search(20);
+  f.contentSearches[1].reject(new Error('page failed'));
+  await later;
+  assert.equal((await f.current()).snapshot.content.searchError, 'page failed');
+  actions.content.patchSearch({ query: 'draft changed', kind: 'shader' });
+  await actions.content.search(40);
+  assert.equal(f.contentSearches.length, 2, 'arbitrary new page without results is rejected');
+  const retry = actions.content.search(20);
+  assert.equal(f.contentSearches.length, 3);
+  assert.deepEqual((await f.current()).snapshot.content.request, {
+    query: 'original',
+    kind: 'mod',
+    offset: 20,
+  });
+  assert.equal((await f.current()).snapshot.content.searchError, null);
+  f.contentSearches[2].resolve({ hits: [], total_hits: 100, offset: 20 });
+  await retry;
+  f.host.unmount();
+});
+await test('scan_current_roots_own_loading_error_and_retry', async () => {
+  const f = await fixture({ holdScans: true });
+  const { actions } = await f.current();
+  assert.equal((await f.current()).snapshot.profiles.scanning, true);
+  f.scans[0].reject(new Error('first scan failed'));
+  assert.equal((await f.current()).snapshot.profiles.scanError, 'first scan failed');
+  const retry = actions.profiles.scan();
+  assert.equal((await f.current()).snapshot.profiles.scanError, null);
+  f.server.config.settings.game_directory = 'C:/new-root';
+  await actions.config.reload();
+  f.scans[1].reject(new Error('obsolete root failure'));
+  await retry;
+  let snapshot = (await f.current()).snapshot;
+  assert.equal(snapshot.profiles.scanError, null);
+  assert.equal(snapshot.profiles.scanning, true);
+  f.scans[2].resolve(f.scans[2].instances);
+  snapshot = (await f.current()).snapshot;
+  assert.equal(snapshot.profiles.scanning, false);
+  assert.equal(snapshot.profiles.scanError, null);
+  f.host.unmount();
+});
+await test('current_read_tokens_ignore_superseded_success_failure_and_teardown', async () => {
+  const f = await fixture({ config: twoProfiles(), holdScans: true });
+  const { actions } = await f.current();
+  const scan = actions.profiles.scan();
+  f.scans[0].reject(new Error('superseded scan'));
+  assert.equal((await f.current()).snapshot.profiles.scanError, null);
+  assert.equal((await f.current()).snapshot.profiles.scanning, true);
+  f.scans[1].resolve(f.scans[1].instances);
+  await scan;
+  actions.content.selectProfile('original-instance');
+  const listA = f.contentLists.at(-1);
+  actions.content.selectProfile('instance-b');
+  listA.resolve([{ name: 'stale-a.jar', category: 'mods', size: 1, enabled: true, record: null }]);
+  assert.equal((await f.current()).snapshot.content.list, null);
+  assert.equal((await f.current()).snapshot.content.listRequest.profileKey, 'instance-b');
+  const first = actions.content.search();
+  actions.content.patchSearch({ query: 'new' });
+  const second = actions.content.search();
+  f.contentSearches[0].reject(new Error('superseded search'));
+  await first;
+  assert.equal((await f.current()).snapshot.content.searchError, null);
+  assert.equal((await f.current()).snapshot.content.searching, true);
+  const pendingScan = actions.profiles.scan();
+  f.host.reconnectEffects();
+  await f.current();
+  const currentScan = actions.profiles.scan();
+  f.scans[2].reject(new Error('old lifecycle scan'));
+  await pendingScan;
+  assert.equal((await f.current()).snapshot.profiles.scanning, true);
+  assert.equal((await f.current()).snapshot.profiles.scanError, null);
+  f.host.unmount();
+  for (const read of f.scans) read.resolve(read.instances);
+  for (const read of f.contentLists) read.resolve([]);
+  f.contentSearches[1].reject(new Error('after reconnect'));
+  await Promise.all([currentScan, second]);
+  assert.equal(f.host.updatesAfterUnmount, 0);
+});
+await test('public_read_state_is_detached_whitelisted_and_display_helpers_use_exact_current_ids', async () => {
+  const f = await fixture();
+  const { snapshot, services, actions } = await f.current();
+  const helpers = f.app('ui-suite/builtins/common/lib/launcher-display.ts');
+  assert.deepEqual(helpers.resolveActiveAccount(snapshot), {
+    account: snapshot.accounts.state.accounts[0],
+    name: 'Alex',
+    kind: 'microsoft',
+  });
+  assert.equal(
+    helpers.resolveProfileEntry(snapshot, 'original-instance'),
+    snapshot.profiles.items[0],
+  );
+  assert.equal(helpers.resolveProfileEntry(snapshot, 'missing'), null);
+  assert.equal(helpers.resolveProfileEntry(snapshot, null), null);
+  f.accounts.active = 'missing';
+  await actions.accounts.reload();
+  actions.settings.patch('offline_username', 'UnsavedDraft');
+  assert.deepEqual(helpers.resolveActiveAccount((await f.current()).snapshot), {
+    account: null,
+    name: initialConfig.settings.offline_username,
+    kind: 'offline',
+  });
+  const shell = structuredClone(snapshot);
+  shell.launch.token = 'PRIVATE';
+  shell.content.listRequest = {
+    profileKey: 'original-instance',
+    directory: 'C:/read',
+    category: 'mods',
+    loading: false,
+    error: 'Read failed',
+    token: 'PRIVATE',
+    owner: { secret: 'PRIVATE' },
+  };
+  const projected = f.app('launcher/snapshot.ts').createLauncherSnapshot(services, {
+    ...shell,
+    loaderCatalog: shell.catalog.loaders,
+    accountUi: shell.accounts,
+    javaUi: shell.java,
+  });
+  publicValue(projected);
+  assert.equal(JSON.stringify(projected).includes('PRIVATE'), false);
+  shell.content.listRequest.directory = 'mutated';
+  assert.equal(projected.content.listRequest.directory, 'C:/read');
+  assert.throws(() => {
+    projected.content.listRequest.loading = true;
+  }, TypeError);
+  assert.throws(() => {
+    projected.launch.profileKey = 'mutated';
+  }, TypeError);
+  f.host.unmount();
+});
 function builtinRegistry(f) {
   return f.app('lib/navigation.ts').builtinRoutes;
 }
@@ -126,6 +448,7 @@ await test('missing_custom_route_falls_back_without_rewriting', async () => {
   a.actions.navigation.setSearch('custom query');
   const immediate = a.services.getNavigation();
   assert.deepEqual(immediate, {
+    entryId: immediate.entryId,
     routeId: 'custom.help',
     params: { profileKey: 'original-instance' },
     search: 'custom query',
@@ -136,7 +459,9 @@ await test('missing_custom_route_falls_back_without_rewriting', async () => {
   assert.equal(f.contentLists.length, 0);
   assert.equal(f.counts.catalog, 0);
   a.registry.setActiveRouteRegistry(builtinRegistry(f));
-  assert.deepEqual(a.services.getNavigation(), { routeId: 'home', params: {}, search: '' });
+  assert.deepEqual(a.services.getNavigation(), {
+    entryId: immediate.entryId + 1, routeId: 'home', params: {}, search: '',
+  });
   a.registry.setActiveRouteRegistry([...builtinRegistry(f), customHelp]);
   a = await f.current();
   assert.equal(a.snapshot.navigation.routeId, 'home');
@@ -148,9 +473,12 @@ await test('missing_custom_route_falls_back_without_rewriting', async () => {
   a.actions.navigation.navigate('downloads', { profileKey: 'original-instance' });
   assert.deepEqual(a.services.getNavigation().params, {});
   await f.current();
-  assert.equal(f.counts.catalog, 1);
+  // Downloads navigation no longer fetches versions; the version source owns catalog refresh.
+  assert.equal(f.counts.catalog, 0);
   a.actions.navigation.navigate('custom.missing', { profileKey: 'original-instance' });
-  assert.deepEqual(a.services.getNavigation(), { routeId: 'home', params: {}, search: '' });
+  assert.deepEqual(a.services.getNavigation(), {
+    entryId: immediate.entryId + 4, routeId: 'home', params: {}, search: '',
+  });
   a.actions.settings.patchPersonalization('font', 'serif');
   a.actions.settings.setStartupRoute('custom.help');
   assert.equal(a.services.launcher.getSettingsDraft().personalization.font, 'serif');

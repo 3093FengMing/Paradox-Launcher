@@ -126,7 +126,7 @@ impl Default for Appearance {
             border_radius: 14,
             compact_sidebar: false,
             reduce_motion: false,
-            background_art: true,
+            background_art: false,
             background_blur: 0,
             background_dim: 8,
             sidebar_opacity: 62,
@@ -442,6 +442,22 @@ pub fn validate_instance_key(key: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn new_appearance_has_no_background_art_and_saved_artwork_is_preserved() {
+        assert!(!Appearance::default().background_art);
+        let mut saved = serde_json::to_value(AppConfig::default()).unwrap();
+        let saved_image = format!("{}.png", "a".repeat(64));
+        saved["settings"]["appearance"]["background_art"] = serde_json::json!(true);
+        saved["settings"]["personalization"]["background_file"] = serde_json::json!(saved_image);
+        let restored: AppConfig = serde_json::from_value(saved).unwrap();
+        restored.validate().unwrap();
+        assert!(restored.settings.appearance.background_art);
+        assert_eq!(
+            restored.settings.personalization.background_file,
+            saved_image
+        );
+    }
 
     #[test]
     fn instance_keys_cannot_escape_the_game_directory() {

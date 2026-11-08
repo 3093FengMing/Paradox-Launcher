@@ -1,0 +1,232 @@
+/* Ordinary editor appearance, independent of both player style trees. */
+[data-theme="dark"] {
+  --bg: #151517;
+  --sidebar: #19191d;
+  --surface: #1e1e23;
+  --input: #18181c;
+  --hover: #29292f;
+  --border: #ffffff0d;
+  --text: #ededf1;
+  --muted: #a2a2ad;
+  --faint: #777783;
+  --shadow: 0 1px 3px #00000016, 0 0 0 1px #ffffff06;
+}
+[data-theme="light"] {
+  --bg: #f8f9fc;
+  --sidebar: #f0f1f5;
+  --surface: #ffffff;
+  --input: #f7f8fb;
+  --hover: #eceef4;
+  --border: #17172b0d;
+  --text: #20212b;
+  --muted: #686b7b;
+  --faint: #838797;
+  --shadow: 0 1px 3px #16162f05, 0 0 0 1px #16162f08;
+}
+* {
+  box-sizing: border-box;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55em;
+  border: 0;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+button:not(:disabled):active {
+  transform: translateY(1px);
+}
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent, #a3e635);
+  outline-offset: 3px;
+}
+input,
+textarea,
+select {
+  min-width: 0;
+  width: 100%;
+  color: var(--text);
+  background: var(--input);
+  border: 1px solid var(--border);
+  border-radius: min(10px, var(--radius));
+  padding: 0.8em 1em;
+  transition: border-color 0.15s;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--faint);
+}
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+select:focus-visible {
+  outline: 2px solid var(--accent, #a3e635);
+  outline-offset: 3px;
+}
+input[type="range"] {
+  padding: 0;
+  accent-color: var(--accent-ink);
+  border: 0;
+  cursor: pointer;
+}
+input[type="checkbox"] {
+  width: auto;
+  accent-color: var(--accent-ink);
+}
+input[type="color"] {
+  width: 30px;
+  height: 30px;
+  padding: 2px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 650;
+}
+code {
+  font-family: Consolas, "Cascadia Code", monospace;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 0.8em;
+}
+.primary,
+.secondary {
+  white-space: nowrap;
+}
+.primary {
+  background: var(--accent);
+  border: 1px solid transparent;
+}
+.primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 85%, white);
+}
+.secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.secondary:hover:not(:disabled) {
+  background: var(--hover);
+  border-color: var(--faint);
+}
+.text-button {
+  background: none;
+  padding: 0;
+  color: var(--muted);
+}
+.text-button:hover {
+  color: var(--accent-ink);
+}
+.icon-button {
+  background: transparent;
+  color: var(--faint);
+  padding: 6px;
+  border-radius: 7px;
+}
+.icon-button:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+button {
+  transition: transform 120ms var(--ease-out);
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+button:active:not(:disabled) {
+  transform: none;
+}
+button:active:not(:disabled):not(:focus-visible) {
+  transform: scale(0.97);
+}
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline-color: var(--accent-ink);
+}
+input,
+textarea {
+  font-size: 0.82em;
+  padding: 12px 13px;
+  border-radius: min(9px, var(--radius));
+}
+textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+.primary,
+.secondary {
+  font-weight: 500;
+  font-size: 0.78em;
+  padding: 10px 15px;
+  min-height: 37px;
+  border: 0;
+  border-radius: min(8px, var(--radius));
+}
+.primary {
+  color: var(--accent-fg);
+  box-shadow:
+    0 1px 2px #0000001a,
+    inset 0 1px 0#ffffff18;
+}
+.secondary {
+  box-shadow: var(--shadow);
+}
+.primary.small,
+.secondary.small {
+  font-size: 0.7em;
+  padding: 7px 10px;
+  min-height: 29px;
+}
+.text-button {
+  font-size: 0.75em;
+}
+.field > span {
+  font-size: 0.8em;
+  font-weight: 500;
+}
+.field > small {
+  font-size: 0.71em;
+}
+.field input,
+.field textarea,
+.field .ui-select-trigger {
+  font-size: 0.82em;
+}
+@media (prefers-reduced-motion: reduce) {
+  button:active {
+    transform: none !important;
+  }
+}
+@media (hover: none) {
+  .primary:hover {
+    background: var(--accent);
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .primary:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+}

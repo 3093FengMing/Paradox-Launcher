@@ -48,7 +48,12 @@ else
   root.render(
     <React.StrictMode>
       <LauncherProvider initialRouteRegistry="suite">
-        <UiEditorSourceContext.Provider value={{ getBuiltinBundle, getBuiltinName }}>
+        <UiEditorSourceContext.Provider value={{
+          getBuiltinBundle: import.meta.env.MODE === 'foundation-test'
+            ? async id => (await import('./ui-tests/suite-final-fixture')).getFoundationBuiltinBundle(id)
+            : getBuiltinBundle,
+          getBuiltinName,
+        }}>
           <UiEditorProvider>
             <App />
             {FinalCapture && <React.Suspense fallback={null}><FinalCapture /></React.Suspense>}

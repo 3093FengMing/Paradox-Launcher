@@ -72,6 +72,7 @@ export interface ProfileSnapshot {
 }
 export interface LaunchSnapshot {
   phase: 'idle' | 'started' | 'running' | 'cancelling';
+  profileKey: string | null;
   canStop: boolean;
   selection: {
     profileKey: string;
@@ -128,6 +129,14 @@ export interface ContentSnapshot {
   kind: ContentKind;
   request: { query: string; kind: ContentKind; offset: number } | null;
   results: ContentSearch | null;
+  searchError: string | null;
+  listRequest: {
+    profileKey: string;
+    directory: string;
+    category: ContentCategory;
+    loading: boolean;
+    error: string | null;
+  } | null;
   list: {
     profileKey: string;
     directory: string;
@@ -174,7 +183,13 @@ export interface LauncherSnapshot {
     choosingBackground: boolean;
     choosingGameDirectory: boolean;
   };
-  profiles: { items: ProfileSnapshot[]; activeKey: string | null; installed: InstalledInstance[] };
+  profiles: {
+    items: ProfileSnapshot[];
+    activeKey: string | null;
+    installed: InstalledInstance[];
+    scanning: boolean;
+    scanError: string | null;
+  };
   activity: Activity | null;
   launch: LaunchSnapshot;
   profileDraft: ProfileDraftSnapshot;

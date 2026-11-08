@@ -45,6 +45,18 @@ type ConfigOperation = (current: AppConfig) => Promise<AppConfig | Bootstrap>;
 interface LauncherLogLine extends LogLine {
   localSequence?: number;
 }
+interface ScanRead {
+  generation: number;
+  request: number;
+  roots: string;
+  scanning: boolean;
+  error: string | null;
+}
+const scanRoots = (config: AppConfig | null) =>
+  JSON.stringify([
+    config?.settings.game_directory,
+    config?.profiles.map((profile) => [profile.instance_key, profile.game_directory]),
+  ]);
 
 function sameLog(left: LogIdentity | undefined, right: LogIdentity): boolean {
   return left?.session === right.session && left.sequence === right.sequence;
@@ -105,6 +117,8 @@ export function useLauncher() {
   const configQueue = useRef<Promise<void>>(Promise.resolve());
   const lifecycle = useRef(0);
   const scanSequence = useRef(0);
+  const scanRead = useRef<ScanRead | null>(null);
+  const [, renderScan] = useState(0);
   const actionSequence = useRef(0);
   const historySequence = useRef(0);
   const historyRestored = useRef(false);
@@ -112,6 +126,7 @@ export function useLauncher() {
   const clearedThrough = useRef<LogIdentity | null>(null);
   const localLogSequence = useRef(0);
   const busyRef = useRef<Activity | null>(null);
+  const launchProfileKey = useRef<string | null>(null);
   const stopPending = useRef(false);
   const lastNotification = useRef<{
     message: string;
@@ -184,6 +199,9 @@ export function useLauncher() {
   useEffect(() => {
     const lifecycleRef = lifecycle;
     const generation = ++lifecycleRef.current;
+    // Reconnected native activity has no reliable instance identity.
+    launchProfileKey.current = null;
+    scanRead.current = null;
     pendingWritesRef.current = 0;
     setPendingWrites(0);
     pendingClear.current = null;
@@ -197,6 +215,7 @@ export function useLauncher() {
         setBootstrap(data);
         setDraft(structuredClone(data.config.settings));
         setStartupPage((previous) => previous ?? data.config.settings.personalization.startup_page);
+        setFatal('');
       })
       .catch((error) => {
         if (!disposed) setFatal(errorMessage(error));
@@ -208,6 +227,7 @@ export function useLauncher() {
           if (event.action === 'install') return;
           if (event.status === 'finished' || event.status === 'error') {
             busyRef.current = null;
+            launchProfileKey.current = null;
             setBusy(null);
             notify(event.message, event.status === 'error');
           } else {
@@ -234,7 +254,11 @@ export function useLauncher() {
       });
     return () => {
       disposed = true;
-      if (lifecycleRef.current === generation) lifecycleRef.current++;
+      if (lifecycleRef.current === generation) {
+        lifecycleRef.current++;
+        launchProfileKey.current = null;
+        scanRead.current = null;
+      }
       unsubscribe?.();
     };
   }, [notify, receiveLog, reportError, setDraft]);
@@ -305,15 +329,22 @@ export function useLauncher() {
 
   // Reads and writes share one queue, so a delayed reload cannot replace a newer
   // save and every update builds on the last acknowledged config.
-  const enqueueConfig = useCallback((operation: ConfigOperation): Promise<AppConfig> => {
+  const enqueueConfig = useCallback((operation?: ConfigOperation): Promise<AppConfig> => {
     const generation = lifecycle.current;
     pendingWritesRef.current++;
     setPendingWrites((previous) => previous + 1);
     const task = configQueue.current.then(async () => {
       const current = configRef.current;
-      if (generation !== lifecycle.current || !current)
-        throw new Error(i18n.t('messages.configNotReady'));
-      const result = await operation(current);
+      if (generation !== lifecycle.current) throw new Error(i18n.t('messages.configNotReady'));
+      let result: AppConfig | Bootstrap;
+      if (operation) {
+        if (!current) throw new Error(i18n.t('messages.configNotReady'));
+        result = await operation(current);
+      } else {
+        // A reload can establish the first valid config after bootstrap failed.
+        // Writes still require the queue's latest acknowledged configuration.
+        result = await api.getConfig();
+      }
       const config = 'config' in result ? result.config : result;
       if (lifecycle.current === generation) {
         if (!config.settings.personalization.retain_logs) historySequence.current++;
@@ -321,6 +352,11 @@ export function useLauncher() {
         setBootstrap((previous) =>
           'config' in result ? result : previous ? { ...previous, config } : previous,
         );
+        if (!current) {
+          setDraft(structuredClone(config.settings));
+          setStartupPage((previous) => previous ?? config.settings.personalization.startup_page);
+        }
+        if (!operation) setFatal('');
       }
       return config;
     });
@@ -334,34 +370,38 @@ export function useLauncher() {
         setPendingWrites((previous) => previous - 1);
       }
     });
-  }, []);
+  }, [setDraft]);
 
   const scan = useCallback(async () => {
-    const generation = lifecycle.current;
-    const request = ++scanSequence.current;
-    const directory = configRef.current?.settings.game_directory;
-    const profileRoots = JSON.stringify(
-      configRef.current?.profiles.map((profile) => [profile.instance_key, profile.game_directory]),
-    );
+    const read: ScanRead = {
+      generation: lifecycle.current,
+      request: ++scanSequence.current,
+      roots: scanRoots(configRef.current),
+      scanning: true,
+      error: null,
+    };
+    scanRead.current = read;
+    renderScan((value) => value + 1);
+    const current = () =>
+      read.generation === lifecycle.current &&
+      read.request === scanSequence.current &&
+      read.roots === scanRoots(configRef.current);
     try {
       const instances = await api.inspectInstances();
-      if (
-        generation === lifecycle.current &&
-        request === scanSequence.current &&
-        directory === configRef.current?.settings.game_directory &&
-        profileRoots ===
-          JSON.stringify(
-            configRef.current?.profiles.map((profile) => [
-              profile.instance_key,
-              profile.game_directory,
-            ]),
-          )
-      ) {
+      if (current()) {
         installedRef.current = instances;
         setInstalled(instances);
       }
     } catch (error) {
-      if (generation === lifecycle.current && request === scanSequence.current) reportError(error);
+      if (current()) {
+        read.error = errorMessage(error);
+        reportError(error);
+      }
+    } finally {
+      if (current()) {
+        read.scanning = false;
+        renderScan((value) => value + 1);
+      }
     }
   }, [reportError]);
 
@@ -369,9 +409,12 @@ export function useLauncher() {
   const reloadConfig = useCallback(async () => {
     const generation = lifecycle.current;
     try {
-      await enqueueConfig(() => api.getConfig());
+      await enqueueConfig();
     } catch (error) {
-      if (generation === lifecycle.current) reportError(error);
+      if (generation === lifecycle.current) {
+        if (!configRef.current) setFatal(errorMessage(error));
+        reportError(error);
+      }
     }
   }, [enqueueConfig, reportError]);
   const profileRoots = JSON.stringify(
@@ -545,6 +588,7 @@ export function useLauncher() {
       message: i18n.t('messages.checkingJava'),
     };
     busyRef.current = activity;
+    launchProfileKey.current = profile.instance_key;
     setBusy(activity);
     try {
       await api.launchInstance(profile.instance_key);
@@ -554,6 +598,7 @@ export function useLauncher() {
       // Once activity events arrive, only a backend terminal event releases busy.
       if (busyRef.current === activity) {
         busyRef.current = null;
+        launchProfileKey.current = null;
         setBusy(null);
       }
       reportError(error);
@@ -715,12 +760,23 @@ export function useLauncher() {
     getSettingsDraft: (): DeepReadonly<Settings> | null =>
       draftRef.current ? structuredClone(draftRef.current) : null,
     updateArgumentTemplates,
-    getGuardState: () => ({
-      config: configRef.current,
-      installed: installedRef.current,
-      busy: busyRef.current,
-      saving: pendingWritesRef.current > 0,
-    }),
+    getGuardState: () => {
+      const read = scanRead.current;
+      const currentScan =
+        read &&
+        read.generation === lifecycle.current &&
+        read.request === scanSequence.current &&
+        read.roots === scanRoots(configRef.current);
+      return {
+        config: configRef.current,
+        installed: installedRef.current,
+        busy: busyRef.current,
+        launchProfileKey: launchProfileKey.current,
+        scanning: currentScan ? read.scanning : false,
+        scanError: currentScan ? read.error : null,
+        saving: pendingWritesRef.current > 0,
+      };
+    },
     notices,
     bootstrap,
     draft,

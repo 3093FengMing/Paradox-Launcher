@@ -1,0 +1,29 @@
+.immersive-versions { display: grid; gap: 18px; min-width: 0; }
+.immersive-versions .versions-intro { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 24px; border-radius: 15px; background: var(--surface); border: 1px solid var(--border); }
+.immersive-versions .versions-eyebrow { font-size: .67em; color: var(--accent-ink); letter-spacing: .2em; }
+.immersive-versions .versions-intro h2 { font-size: 1.6em; margin: 6px 0; }
+.immersive-versions .versions-intro p { font-size: .83em; max-width: 460px; }
+.immersive-versions .versions-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; }
+.immersive-versions .versions-search { display: flex; flex: 1; min-width: 180px; position: relative; align-items: center; }
+.immersive-versions .versions-search svg { position: absolute; left: 15px; color: var(--muted); }
+.immersive-versions .versions-search input { padding-left: 42px; }
+.immersive-versions .versions-snapshots { display: flex; gap: 9px; align-items: center; color: var(--muted); font-size: .8em; }
+.immersive-versions .versions-kind-filters { display: flex; flex-wrap: wrap; gap: 9px; }
+.immersive-versions .versions-kind-filters button { background: var(--sidebar); color: var(--muted); border: 1px solid var(--border); padding: 10px 15px; border-radius: 24px; font-size: .85em; }
+.immersive-versions .versions-kind-filters button[aria-pressed="true"] { color: var(--text); background: var(--surface); border-color: var(--accent-ink); }
+.immersive-versions .versions-kind-filters button span:last-child { margin-left: 8px; font-variant-numeric: tabular-nums; font-size: .85em; }
+.immersive-versions .versions-cache { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; font-size: .75em; color: var(--muted); }
+.immersive-versions .versions-cache > span:last-child { margin-left: auto; }
+.immersive-versions .versions-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.immersive-versions .versions-card { display: grid; gap: 18px; padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 13px; min-width: 0; }
+.immersive-versions .versions-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--muted); }
+.immersive-versions .versions-card.is-release .versions-card-top svg { color: var(--accent-ink); }
+.immersive-versions .versions-tag { font-size: .74em; border: 1px solid var(--border); padding: 4px 9px; border-radius: 6px; }
+.immersive-versions .versions-card-id { font-size: 1.35em; overflow-wrap: anywhere; }
+.immersive-versions .versions-card button { justify-content: space-between; font-size: .8em; }
+.immersive-versions .versions-footer { display: flex; justify-content: center; align-items: center; gap: 18px; color: var(--muted); font-size: .83em; padding: 10px; }
+.immersive-versions .versions-message { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); font-size: .85em; overflow-wrap: anywhere; }
+.immersive-versions .versions-message.is-error { border-left: 3px solid #de725f; }
+.immersive-versions .versions-empty { padding: 42px 20px; display: grid; gap: 12px; justify-items: center; text-align: center; background: var(--surface); border-radius: 13px; }
+@media (max-width: 1050px) { .immersive-versions .versions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 650px) { .immersive-versions .versions-grid { grid-template-columns: 1fr; } .immersive-versions .versions-intro { align-items: start; flex-direction: column; padding: 18px; } .immersive-versions .versions-footer { flex-wrap: wrap; } }

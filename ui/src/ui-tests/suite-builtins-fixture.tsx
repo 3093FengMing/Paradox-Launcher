@@ -20,7 +20,7 @@ import { normalizeDraftBundle, materializeSuite, bundleDigest } from '../ui-suit
 import { encodeSuiteArchive, decodeSuiteArchive } from '../ui-suite/archive';
 import { canonicalSuiteJson } from '../ui-suite/canonical';
 import { listOwners, listUiDefinitions } from '../customization/ownership';
-import type { UiSuiteBundle } from '../ui-suite/model';
+import type { UiSuiteBundle, UiSuiteLibrary } from '../ui-suite/model';
 import i18n from '../i18n';
 
 interface Fixture {
@@ -28,6 +28,12 @@ interface Fixture {
   snapshot: DeepReadonly<LauncherSnapshot>;
   actions: LauncherActions;
   ready: boolean;
+  setLanguage(language: string): Promise<unknown>;
+  resolveSource(target: string): string;
+  exportedArchive(): Promise<number[]>;
+  importArchive(bytes: number[]): Promise<boolean>;
+  pristineStartup(order: 'library-first' | 'source-first', condition?: 'ordinary' | 'safe' | 'reset' | 'corrupt'): Promise<{ before: unknown; after: unknown; failures: string[] }>;
+  restart(): Promise<void>;
   initialCommit: { active: string | null; revision: number } | null;
   run(
     id: 'modern' | 'immersive',
@@ -54,7 +60,8 @@ const desktop = () =>
     window as unknown as {
       foundationDesktop: {
         calls: { command: string }[];
-        suiteLibrary: { active_suite_id: string | null; revision: number };
+        suiteLibrary: UiSuiteLibrary | null;
+        suiteRaw: Uint8Array | null;
         config: { settings: { personalization: { startup_page: string } } };
       };
     }
@@ -121,7 +128,8 @@ export async function installSuiteBuiltinsFixture(root: Root) {
     }
     click.call(this);
   };
-  const fallback = await getPreparedBuiltin('modern');
+  const fallbackStyle = new URLSearchParams(location.search).get('shellHome') === 'immersive' ? 'immersive' : 'modern';
+  const fallback = await getPreparedBuiltin(fallbackStyle);
   let sourceGate: Promise<void> | null = null,
     mountId = 0;
   const mount = () =>
@@ -155,6 +163,19 @@ export async function installSuiteBuiltinsFixture(root: Root) {
     snapshot: null as unknown as DeepReadonly<LauncherSnapshot>,
     actions: null as unknown as LauncherActions,
     ready: false,
+    setLanguage: language => i18n.changeLanguage(language),
+    resolveSource(target) {
+      const draft = window.suiteBuiltinsFixture.controller.getSnapshot().draft;
+      const path = draft?.manifest.views[target];
+      if (!path || draft?.files[path]?.encoding !== 'utf8') throw Error('Editable view binding missing: ' + target);
+      return path;
+    },
+    async exportedArchive() {
+      const blob = exports.at(-1);
+      if (!blob) throw Error('No actual editor export captured');
+      return Array.from(new Uint8Array(await blob.arrayBuffer()));
+    },
+    importArchive: bytes => window.suiteBuiltinsFixture.controller.actions.importBundle(new File([new Uint8Array(bytes)], 'redesign-journey.zip', { type: 'application/zip' })),
     initialCommit: null,
     async run(id, theme) {
       const f = window.suiteBuiltinsFixture,
@@ -243,10 +264,31 @@ export async function installSuiteBuiltinsFixture(root: Root) {
           .getLibrary()!
           .suites.find((r) => r.instance_id === c.getSnapshot().selectedSuiteId)!;
         equal(materializeSuite(record).files, builtin.files, 'fixed parent materialization');
-        assert(
-          record.parent_snapshot?.bundle.files['common/assets/world.svg'],
-          'asset bytes in parent snapshot',
+        equal(
+          record.parent_snapshot?.bundle.files[builtin.manifest.views['layout.shell']],
+          builtin.files[builtin.manifest.views['layout.shell']],
+          'actual source bytes are fixed in the parent snapshot',
         );
+      });
+      await check('copied_default_can_add_preview_save_and_export_artwork', async () => {
+        const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="2"><path fill="#6387f5" d="M0 0h2v2H0z"/></svg>';
+        assert(await c.actions.addAsset(new File([svg], 'user-added.svg', { type: 'image/svg+xml' })), 'public artwork importer accepts a user image');
+        const path = c.getSnapshot().files.find((file) => file.kind === 'asset')!.path;
+        const home = builtin.manifest.views['page.home'];
+        const relative = '../' + path;
+        c.actions.patchFile(home, `import image from '${relative}';export default function Home(){return <img data-ui-site="task1-custom-artwork" className="task1-custom-artwork" src={image} alt="User supplied artwork"/>}`);
+        a.navigation.navigate('home');
+        assert(await c.actions.preview(), 'copied source with a user asset previews');
+        await turn();
+        const image = document.querySelector<HTMLImageElement>('.task1-custom-artwork');
+        assert(image && image.src.startsWith('blob:'), 'custom source resolves its local artwork URL');
+        await wait(() => !!image?.complete && !!image.naturalWidth);
+        assert(await c.actions.save(), 'user artwork persists with copied source');
+        const record = c.getLibrary()!.suites.find((row) => row.instance_id === c.getSnapshot().selectedSuiteId)!;
+        equal(materializeSuite(record).files[path], c.getSnapshot().draft!.files[path], 'saved user artwork bytes');
+        await c.actions.exportDraft();
+        const exported = await decodeSuiteArchive(new Uint8Array(await exports.at(-1)!.arrayBuffer()));
+        equal(exported.files[path], c.getSnapshot().draft!.files[path], 'archive keeps user artwork');
       });
       await check('public_catalog_ack_and_readonly', () => {
         const rows = c.getSnapshot().suites;
@@ -287,8 +329,12 @@ export async function installSuiteBuiltinsFixture(root: Root) {
         const input = document.querySelector<HTMLInputElement>('[aria-label="Custom home input"]')!;
         input.value = 'unfinished-local-input';
         input.focus();
+        const homePath = builtin.manifest.views['page.home'], homeFile = builtin.files[homePath];
+        assert(homeFile?.encoding === 'utf8', 'current builtin Home is editable');
+        const cssImport = homeFile.encoding === 'utf8' ? [...homeFile.text.matchAll(/import\s+['"]([^'"]+\.css)['"]/g)][0]?.[1] : null;
+        assert(cssImport, 'current Home imports its own stylesheet');
         const component = c.getActivation()!.primary.prepared.views.get('layout.shell'),
-          style = builtin.manifest.styles.at(-1)!,
+          style = new URL(cssImport!, 'https://fixture.invalid/' + homePath).pathname.slice(1),
           file = c.getSnapshot().draft!.files[style];
         if (file.encoding === 'utf8')
           c.actions.patchFile(
@@ -381,6 +427,15 @@ export async function installSuiteBuiltinsFixture(root: Root) {
           'main notices',
         );
         assert(shadow.textContent?.includes('Task12 dual root lease'), 'editor notices');
+        const secondNotice = a.notifications.publish('warning', 'Task4 distinct notice identity');
+        await turn();
+        const noticeSource = c.getSnapshot().draft!.manifest.views['host.notifications'];
+        for (const identity of [notice, secondNotice]) {
+          for (const renderRoot of ['launcher.main', 'launcher.editor']) {
+            assert(listOwners().some(owner => owner.metadata.sourcePath === noticeSource && owner.locator.renderRoot === renderRoot && owner.locator.business.some(item => item.namespace === 'notice' && item.value === identity)), 'each source notice has its own business identity in each viewport');
+          }
+        }
+        a.notifications.dismiss(secondNotice);
         a.notifications.dismiss(notice);
         c.actions.close();
         await turn();
@@ -402,6 +457,40 @@ export async function installSuiteBuiltinsFixture(root: Root) {
         files: builtin.manifest.files,
         digest: await bundleDigest(builtin),
       };
+    },
+    async restart() {
+      const previous = window.suiteBuiltinsFixture.controller;
+      mount(); await wait(() => window.suiteBuiltinsFixture.controller !== previous);
+      await window.suiteBuiltinsFixture.controller.whenInitialized(); await turn();
+    },
+    async pristineStartup(order, condition = 'ordinary') {
+      const f = window.suiteBuiltinsFixture, previous = f.controller, native = (window as unknown as {
+        __TAURI_INTERNALS__: { invoke: (command: string, args?: unknown) => Promise<unknown> };
+      }).__TAURI_INTERNALS__, original = native.invoke, originalUrl = location.href;
+      desktop().suiteLibrary = condition === 'corrupt' ? null : { kind: 'paradox-ui-suite-library', schema_version: 1, revision: condition === 'reset' ? 1 : 0, active_suite_id: null, suites: [] };
+      desktop().suiteRaw = condition === 'corrupt' ? new Uint8Array([255, 0, 65]) : null;
+      desktop().config.settings.personalization.startup_page = 'home';
+      const beforeWrites = desktop().calls.filter(call => call.command === 'save_ui_suite_library').length;
+      const beforeConfigWrites = desktop().calls.filter(call => call.command === 'save_config').length;
+      let releaseLibrary!: () => void, releaseSource!: () => void;
+      const libraryGate = new Promise<void>(resolve => { releaseLibrary = resolve; });
+      sourceGate = new Promise<void>(resolve => { releaseSource = resolve; });
+      native.invoke = async (command, args) => { if (command === 'get_ui_suite_library') await libraryGate; return original(command, args); };
+      if (condition === 'safe') history.replaceState(null, '', location.pathname + '?ui-safe=1');
+      if (order === 'library-first') releaseLibrary(); else releaseSource();
+      mount(); await wait(() => f.controller !== previous && f.snapshot.config.ready); await turn();
+      const before = { choice: f.controller.getSnapshot().initialSelectionRequired, writes: desktop().calls.filter(call => call.command === 'save_ui_suite_library').length - beforeWrites, workspace: !!document.querySelector('.workspace') };
+      const failures: string[] = [];
+      if (before.choice || before.writes || before.workspace) failures.push('unready startup published choice, ordinary workspace or saved');
+      releaseLibrary(); releaseSource(); sourceGate = null;
+      await f.controller.whenInitialized(); await turn(); native.invoke = original; history.replaceState(null, '', originalUrl);
+      const after = { choice: f.controller.getSnapshot().initialSelectionRequired, writes: desktop().calls.filter(call => call.command === 'save_ui_suite_library').length - beforeWrites, suspended: f.controller.getSnapshot().suspended, revision: f.controller.getLibrary()?.revision ?? null, choices: document.querySelectorAll('[data-style-choice] input[type=radio]').length };
+      if (after.choice !== (condition === 'ordinary')) failures.push('incorrect first-choice eligibility');
+      if (after.writes !== (condition === 'reset' ? 1 : 0)) failures.push('incorrect startup save count');
+      if (condition === 'ordinary' && after.choices !== 2) failures.push('two static source previews are required');
+      if ((condition === 'safe' || condition === 'corrupt') && (!after.suspended || after.choices)) failures.push('Recovery must own safe/corrupt startup');
+      if (desktop().calls.filter(call => call.command === 'save_config').length !== beforeConfigWrites) failures.push('startup wrote configuration');
+      return { before, after, failures };
     },
     async coldStartup(order = 'library-first', safe = false) {
       const f = window.suiteBuiltinsFixture,
@@ -497,8 +586,8 @@ export async function installSuiteBuiltinsFixture(root: Root) {
       !!window.suiteBuiltinsFixture.snapshot?.accounts.ready,
   );
   window.suiteBuiltinsFixture.initialCommit = {
-    active: desktop().suiteLibrary.active_suite_id,
-    revision: desktop().suiteLibrary.revision,
+    active: window.suiteBuiltinsFixture.controller.getLibrary()!.active_suite_id,
+    revision: window.suiteBuiltinsFixture.controller.getLibrary()!.revision,
   };
   window.suiteBuiltinsFixture.ready = true;
 }

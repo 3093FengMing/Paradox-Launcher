@@ -20,6 +20,7 @@ export { Select } from './Select';
 export type { UiSelectOption, UiSelectProps } from './Select';
 export { DragRegion } from './DragRegion';
 export { UiNotifications } from './Notifications';
+export type { UiNotificationsProps, UiNoticePresentation, UiNoticeElementProps } from './Notifications';
 export { UiIdentity, UiCatalogPresentation } from './Identity';
 export { UiView, UiRouteViewport } from '../ui-suite/View';
 export type { UiViewProps } from '../ui-suite/View';

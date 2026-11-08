@@ -30,7 +30,7 @@ async function runBuiltinNoticeLeases(page){
   await page.clock.runFor(60000);assert.equal(await main().count(),1);assert.equal(await editor().count(),1);
   await page.evaluate(()=>window.suiteBuiltinsFixture.controller.actions.close());await page.clock.runFor(3100);assert.equal(await main().count(),0);
   await publish('Task12 replacement leases');await main().dispatchEvent('pointerover',{bubbles:true});await editor().dispatchEvent('pointerover',{bubbles:true});
-  assert.equal(await page.evaluate(async()=>{const c=window.suiteBuiltinsFixture.controller,file=c.getSnapshot().draft.files['common/Notifications.tsx'];c.actions.patchFile('common/Notifications.tsx',file.text+'\n// Task12 changed notification source');return c.actions.preview()}),true);
+  assert.equal(await page.evaluate(async()=>{const c=window.suiteBuiltinsFixture.controller,path=c.getSnapshot().draft.manifest.views['host.notifications'],file=c.getSnapshot().draft.files[path];c.actions.patchFile(path,file.text+'\n// Task12 changed notification source');return c.actions.preview()}),true);
   await page.clock.runFor(3100);assert.equal(await main().count(),0);assert.equal(await editor().count(),0);
   await page.evaluate(()=>{window.suiteBuiltinsFixture.controller.actions.close();window.suiteBuiltinsFixture.controller.actions.open()});await page.clock.runFor(100);assert.equal(await editor().count(),0);await page.evaluate(()=>window.suiteBuiltinsFixture.controller.actions.close());
   return ['same_pointer_lease_survives_other_root_leave','pointer_focus_cleanup_on_editor_unmount','same_focus_lease_survives_other_root_blur','notification_source_replacement_releases_both_old_views','expired_notice_never_revives'];
@@ -38,31 +38,45 @@ async function runBuiltinNoticeLeases(page){
 async function runBuiltinSourceStylesAndEditor(page, id, theme) {
   await page.evaluate(async ({id,theme}) => {
     const f=window.suiteBuiltinsFixture;
-    if(theme==='light'){
-      window.foundationDesktop.config.settings.appearance.theme=theme;
-      await f.actions.config.reload();
-    }
     assertSelection(await f.controller.actions.selectSuite('builtin.'+id));
     f.actions.settings.patchAppearance('theme',theme);
+    if(!await f.actions.settings.save())throw new Error('Actual settings theme commit failed');
     f.actions.navigation.navigate('home');
     function assertSelection(value){if(!value)throw new Error('Original builtin selection failed');}
   }, {id,theme});
   await page.locator('.'+id+'-shell[data-theme="'+theme+'"]').waitFor();
+  assert.equal(await page.evaluate(() => window.foundationDesktop.config.settings.appearance.theme), theme, 'native config stores committed theme');
+  assert.equal(await page.evaluate(() => window.suiteBuiltinsFixture.snapshot.appearance.theme), theme, 'public owner resolves committed theme');
   const computed=await page.locator('.app-shell').evaluate(e=>{
     const before=getComputedStyle(e,'::before'),banner=document.querySelector('.banner-illustration');
     const appearance=window.suiteBuiltinsFixture.snapshot.appearance;
-    return {theme:e.getAttribute('data-theme'),classes:e.className,backgroundArt:appearance.value?.background_art,hasCustomBackground:appearance.background?.startsWith('data:image/png;base64,')??false,before:{content:before.content,background:before.backgroundImage,color:before.backgroundColor,position:before.position},windowBackground:getComputedStyle(document.querySelector('.window-bar')).backgroundImage,heading:getComputedStyle(document.querySelector('.page-heading')).display,banner:banner?getComputedStyle(banner).backgroundImage:null};
+    return {theme:e.getAttribute('data-theme'),classes:e.className,backgroundArt:appearance.value?.background_art,hasCustomBackground:appearance.background?.startsWith('data:image/png;base64,')??false,shellBackground:getComputedStyle(e).backgroundImage,before:{content:before.content,background:before.backgroundImage,color:before.backgroundColor,position:before.position},windowBackground:getComputedStyle(document.querySelector('.window-bar')).backgroundImage,heading:document.querySelector('.page-heading') ? getComputedStyle(document.querySelector('.page-heading')).display : null,banner:banner?getComputedStyle(banner).backgroundImage:null};
   });
   assert.equal(computed.theme,theme,'actual saved source theme');
-  if(id==='immersive'){
-    assert.equal(computed.before.content,'""','original immersive background pseudo-element');
-    assert.equal(computed.before.position,'fixed','original immersive background positioning');
-    assert.notEqual(computed.before.color,'rgba(0, 0, 0, 0)','original immersive solid background');
-    if(computed.backgroundArt&&computed.hasCustomBackground)assert.notEqual(computed.before.background,'none','custom immersive background image');
-    else assert.equal(computed.before.background,'none','canonical immersive background has no packaged image fallback');
-    assert.notEqual(computed.windowBackground,'none','original immersive window visuals');
-    assert.equal(computed.heading,'none','original immersive landing heading');
-  } else assert.ok(computed.banner&&computed.banner!=='none','original modern package artwork');
+  assert.equal(computed.shellBackground,'none','default shell has a solid surface');
+  assert.equal(computed.before.background,'none','default shell has no image layer');
+  assert.equal(computed.windowBackground,'none','default titlebar has a solid surface');
+  assert.equal(computed.banner,null,'default artwork node was removed');
+  assert.ok(await page.locator('.home-page, .immersive-home').isVisible(), 'current default landing is rendered');
+  await page.screenshot({path:resolve(out,`original-${id}-${theme}-${page.viewportSize().width}.png`)});
+  const savedImage='data:image/png;base64,'+(await readFile(new URL('./fixtures/ui-suite/pixel.png',import.meta.url))).toString('base64');
+  await page.evaluate(async image=>{
+    const f=window.suiteBuiltinsFixture, native=window.__TAURI_INTERNALS__, original=native.invoke;
+    native.invoke=async(command,args)=>command==='read_background'?image:original(command,args);
+    window.foundationDesktop.config.settings.appearance.background_art=true;
+    window.foundationDesktop.config.settings.personalization.background_file='a'.repeat(64)+'.png';
+    await f.actions.config.reload();
+  },savedImage);
+  await page.waitForFunction(()=>window.suiteBuiltinsFixture.snapshot.appearance.background?.startsWith('data:image/png;base64,'));
+  const ignored=await page.locator('.app-shell').evaluate(e=>{
+    const appearance=window.suiteBuiltinsFixture.snapshot.appearance;
+    const elements=[e,e.querySelector('.window-bar'),e.querySelector('.home-page, .immersive-home'),e.querySelector('.launch-banner')].filter(Boolean);
+    return {art:appearance.value.background_art,file:window.foundationDesktop.config.settings.personalization.background_file,variables:[e.style.getPropertyValue('--background-image'),e.style.getPropertyValue('--banner-image')],images:elements.flatMap(element=>['', '::before', '::after'].map(pseudo=>getComputedStyle(element,pseudo||null).backgroundImage))};
+  });
+  assert.equal(ignored.art,true,'saved artwork preference is retained');
+  assert.equal(ignored.file,'a'.repeat(64)+'.png','saved artwork file is retained');
+  assert.ok(ignored.variables.every(value=>value.includes('data:image/png;base64,')),'public image variables remain available for custom suites');
+  assert.ok(ignored.images.every(value=>value==='none'),'default_suite_ignores_saved_background');
   await page.evaluate(()=>window.suiteBuiltinsFixture.controller.actions.open());
   const editor=page.locator('#paradox-suite-editor');
   await editor.getByRole('dialog',{name:/^(?:UI Suite Editor|UI 套件编辑器)$/}).waitFor();
@@ -72,23 +86,43 @@ async function runBuiltinSourceStylesAndEditor(page, id, theme) {
   assert.equal(await editor.getByRole('option').count(),2);
   await page.keyboard.press('Escape');
   const assetPaths=(await editor.locator('.suite-assets button:not([aria-label^="Remove "])').allTextContents()).sort();
-  assert.ok(assetPaths.length>0,'actual artwork entries are present');
+  assert.deepEqual(assetPaths,[],'default builtin asset directory may be empty');
   for(const path of assetPaths)assert.equal(await editor.locator('.suite-assets').getByRole('button',{name:path,exact:true}).count(),1,`actual artwork accessible name ${path}`);
+  const editorStyle=await editor.locator('.suite-editor').evaluate(e=>({display:getComputedStyle(e).display,background:getComputedStyle(e).backgroundColor,button:getComputedStyle(e.querySelector('button')).display,body:getComputedStyle(e.querySelector('.ui-editor-body')).overflowY}));
+  assert.equal(editorStyle.display,'flex','ordinary editor keeps its layout');
+  assert.notEqual(editorStyle.background,'rgba(0, 0, 0, 0)','ordinary editor has its own surface');
+  assert.ok(['inline-flex','flex'].includes(editorStyle.button),'ordinary editor buttons keep their flex appearance');
+  assert.equal(editorStyle.body,'auto','ordinary editor remains scrollable');
+  assert.equal(await editor.evaluate(e=>[...e.shadowRoot.querySelectorAll('style[data-ui-suite]')].some(style=>/\.launch-banner|\.immersive-home/.test(style.textContent))),false,'player stylesheet rules never install into the ordinary editor');
+  await page.screenshot({path:resolve(out,`editor-${id}-${theme}-${page.viewportSize().width}.png`)});
   await page.evaluate(()=>window.suiteBuiltinsFixture.controller.actions.close());
-  return {computed,assetPaths,checks:['canonical_original_shell_styles','actual_editor_select_portal_shadowroot','actual_asset_directory']};
+  return {computed,ignored,assetPaths,editorStyle,checks:['canonical_original_shell_styles','default_suite_ignores_saved_background','actual_editor_select_portal_shadowroot','actual_empty_asset_directory','ordinary_editor_independent_styles']};
 }
 if (process.env.PARADOX_SUITE_BUILTINS === '1') {
   try {
     const onlyCold=process.env.PARADOX_SUITE_COLD_RED==='1';
-    for (const id of (onlyCold?['modern']:['modern','immersive'])) for(const theme of (onlyCold?['dark']:process.env.PARADOX_SUITE_LIGHT_ONLY==='1'?['light']:['dark','light'])) for(const viewport of (onlyCold?[{width:1240,height:720}]:[{width:1240,height:720},{width:320,height:240}])) {
+    for (const id of (onlyCold?['modern']:['modern','immersive'])) for(const theme of (onlyCold?['dark']:process.env.PARADOX_SUITE_LIGHT_ONLY==='1'?['light']:['dark','light'])) for(const viewport of (onlyCold?[{width:1240,height:780}]:[{width:1240,height:780},{width:320,height:240}])) {
       await fixture.page.setViewportSize(viewport); await fixture.page.reload();
       await fixture.page.waitForFunction(() => window.suiteBuiltinsFixture?.ready);
       const initial=await fixture.page.evaluate(()=>window.suiteBuiltinsFixture.initialCommit);
-      assert.deepEqual(initial,{active:'builtin.'+initialConfig.settings.appearance.interface_style,revision:1});
+      assert.deepEqual(initial,{active:null,revision:0});
+      const choice=fixture.page.locator('[data-style-choice]');
+      await choice.waitFor();
+      assert.equal(await choice.getByRole('radio').count(),2);
+      assert.equal(await choice.getByRole('radio',{name:/Immersive|沉浸式/}).isChecked(),true);
+      assert.equal(await fixture.page.evaluate(()=>window.foundationDesktop.calls.filter(x=>x.command==='save_ui_suite_library').length),0);
+      await choice.getByRole('radio',{name:/Modern|现代式/}).click();
+      await fixture.page.keyboard.press('ArrowRight');
+      assert.equal(await choice.getByRole('radio',{name:/Immersive|沉浸式/}).isChecked(),true);
+      await fixture.page.keyboard.press('Tab');
+      assert.equal(await choice.getByRole('button',{name:/Use this interface|使用此界面/}).evaluate(e=>e===document.activeElement),true);
+      await choice.getByRole('button',{name:/Use this interface|使用此界面/}).click();
+      await fixture.page.waitForFunction(()=>!window.suiteBuiltinsFixture.controller.getSnapshot().initialSelectionRequired);
+      assert.deepEqual(await fixture.page.evaluate(()=>({active:window.foundationDesktop.suiteLibrary.active_suite_id,revision:window.foundationDesktop.suiteLibrary.revision})),{active:'builtin.immersive',revision:1});
       const original=await runBuiltinSourceStylesAndEditor(fixture.page,id,theme);
       const result=await fixture.page.evaluate(({id,theme})=>window.suiteBuiltinsFixture.run(id,theme),{id,theme});
       const canonicalAssetPaths=result.files.filter(file=>file.kind==='asset').map(file=>file.path).sort();
-      assert.ok(canonicalAssetPaths.length>0,'canonical builtin artwork entries are present');
+      assert.deepEqual(canonicalAssetPaths,[],'canonical builtins have no packaged artwork');
       assert.deepEqual(original.assetPaths,canonicalAssetPaths,'actual editor artwork paths match the canonical builtin bundle');
       for(const file of result.files){const bytes=await readFile(resolve('src/ui-suite/builtins',file.path));assert.equal(createHash('sha256').update(bytes).digest('hex'),file.sha256,`actual canonical bytes ${file.path}`)}
       report.rows.push({id,theme,viewport,initial,original,...result});console.log(JSON.stringify({id,theme,viewport,original:original.checks,checks:result.checks,failures:result.failures}));
@@ -98,6 +132,22 @@ if (process.env.PARADOX_SUITE_BUILTINS === '1') {
       for(const order of ['library-first','source-first']){const entry=await fixture.page.evaluate(order=>window.suiteBuiltinsFixture.coldStartup(order),order);cold.push({order,...entry});console.log(JSON.stringify({cold:entry,order}));assert.deepEqual(entry.failures,[])}
       const safe=await fixture.page.evaluate(()=>window.suiteBuiltinsFixture.coldStartup('source-first',true));cold.push({safe:true,...safe});console.log(JSON.stringify({safe}));assert.deepEqual(safe.failures,[]);report.rows.at(-1).cold=cold;
       assert.deepEqual(result.failures,[]);
+      const pristine=[];
+      for (const order of ['library-first','source-first']) {
+        const entry=await fixture.page.evaluate(order=>window.suiteBuiltinsFixture.pristineStartup(order),order);
+        assert.deepEqual(entry.failures,[]); pristine.push({order,...entry});
+        await fixture.page.locator('[data-style-choice]').getByRole('radio',{name:/Modern|现代式/}).click();
+        await fixture.page.locator('[data-style-choice]').getByRole('button',{name:/Use this interface|使用此界面/}).click();
+        await fixture.page.waitForFunction(()=>!window.suiteBuiltinsFixture.controller.getSnapshot().initialSelectionRequired);
+        assert.deepEqual(await fixture.page.evaluate(()=>({revision:window.foundationDesktop.suiteLibrary.revision,active:window.foundationDesktop.suiteLibrary.active_suite_id})),{revision:1,active:'builtin.modern'});
+        await fixture.page.evaluate(()=>window.suiteBuiltinsFixture.restart());
+        assert.equal(await fixture.page.locator('[data-style-choice]').count(),0);
+      }
+      for (const condition of ['reset','corrupt','safe']) {
+        const entry=await fixture.page.evaluate(condition=>window.suiteBuiltinsFixture.pristineStartup('source-first',condition),condition);
+        assert.deepEqual(entry.failures,[]); pristine.push({condition,...entry});
+      }
+      report.rows.at(-1).pristine=pristine; console.log(JSON.stringify({pristine}));
       const disposed=await fixture.page.evaluate(()=>window.suiteBuiltinsFixture.dispose());assert.deepEqual(disposed,{styles:0,owners:0,liveUrls:0});
     }
     assert.deepEqual(report.errors,[]);assert.deepEqual(report.cspViolations,[]);
@@ -118,7 +168,7 @@ async function runPublicViews(page, report, out) {
   assert.ok(instrumented.source.includes('data-ui-site'));
   for (const theme of ['dark', 'light'])
     for (const viewport of [
-      { width: 1240, height: 720 },
+      { width: 1240, height: 780 },
       { width: 320, height: 240 },
     ]) {
       await page.setViewportSize(viewport);
@@ -136,7 +186,7 @@ async function runPublicViews(page, report, out) {
       const compilation = await page.evaluate(() => ({
         count: window.suiteViewsFixture.sourceCount,
         files: Object.entries(window.suiteViewsFixture.bundle.files).filter(([p]) =>
-          p.startsWith('common/'),
+          /\.(?:tsx?|jsx?|css)$/.test(p),
         ),
         defs: window.suiteViewsFixture.definitions(),
       }));
@@ -175,7 +225,7 @@ async function runPublicViews(page, report, out) {
       assert.deepEqual(privateImports, []);
       assert.ok(
         compilation.defs
-          .filter((d) => d.sourcePath?.startsWith('common/'))
+          .filter((d) => d.sourcePath)
           .every((d) => !d.site?.startsWith('auto:')),
       );
       pass('shared_views_have_no_private_imports');
@@ -229,7 +279,7 @@ async function runPublicViews(page, report, out) {
       const replacement = `import {useLauncherSnapshot,useLauncherActions} from '@paradox/launcher';import {Button} from '@paradox/ui';export default function Content(){const s=useLauncherSnapshot(),a=useLauncherActions();return <section data-ui-site="replacement" data-complete-content><input data-ui-site="query" aria-label="Replacement query" value={s.content.query} onChange={e=>a.content.patchSearch({query:e.currentTarget.value})}/><Button data-ui-site="search" onClick={()=>a.content.search()}>Shared content search</Button></section>}`;
       assert.equal(
         await page.evaluate(
-          (source) => window.suiteViewsFixture.replacement('common/pages/ContentPage.tsx', source),
+          (source) => window.suiteViewsFixture.replacement(window.suiteViewsFixture.bundle.manifest.views['page.content'], source),
           replacement,
         ),
         true,
@@ -256,7 +306,7 @@ async function runPublicViews(page, report, out) {
       assert.equal(
         await page.evaluate(
           (source) =>
-            window.suiteViewsFixture.replacement('common/dialogs/ProfileDialog.tsx', source),
+            window.suiteViewsFixture.replacement(window.suiteViewsFixture.bundle.manifest.views['dialog.profile'], source),
           dialogSource,
         ),
         true,
@@ -299,7 +349,7 @@ async function runPublicViews(page, report, out) {
       const accountSource = `import {useLauncherSnapshot,useLauncherActions} from '@paradox/launcher';import {Button} from '@paradox/ui';export default()=>{const s=useLauncherSnapshot(),a=useLauncherActions();return <section data-ui-site="account"><p data-ui-site="client">{s.accounts.clientIdDraft}</p><Button data-ui-site="offline" onClick={()=>a.accounts.select(null)}>Shared offline identity</Button></section>}`;
       assert.equal(
         await page.evaluate(
-          (source) => window.suiteViewsFixture.replacement('common/pages/AccountsPage.tsx', source),
+          (source) => window.suiteViewsFixture.replacement(window.suiteViewsFixture.bundle.manifest.views['page.accounts'], source),
           accountSource,
         ),
         true,
@@ -323,7 +373,7 @@ async function runPublicViews(page, report, out) {
       assert.equal(
         await page.evaluate(
           (source) =>
-            window.suiteViewsFixture.replacement('common/dialogs/AccountLoginDialog.tsx', source),
+            window.suiteViewsFixture.replacement(window.suiteViewsFixture.bundle.manifest.views['dialog.login'], source),
           login,
         ),
         true,
@@ -475,7 +525,7 @@ async function runPublicViews(page, report, out) {
         'export default function Fail(){throw new Error("Expected task11 primary failure")}';
       assert.equal(
         await page.evaluate(
-          (source) => window.suiteViewsFixture.replacement('common/pages/ContentPage.tsx', source),
+          (source) => window.suiteViewsFixture.replacement(window.suiteViewsFixture.bundle.manifest.views['page.content'], source),
           fail,
         ),
         true,
@@ -567,7 +617,7 @@ async function runAutomaticBindings(page, report) {
   const source = `import {Fragment} from 'react';import {useLauncherActions} from '@paradox/launcher';function Marked({onClick}){return <button data-ui-site="marked-inner" onClick={onClick}>Marked callback</button>}export default function Subjects(){const a=useLauncherActions();return <Fragment data-ui-site="subjects"><button data-ui-site="native" ref={node=>node?.setAttribute('data-ref-seen','yes')} onClick={()=>a.settings.patch('memory_mb',7168)}>Native callback</button><Marked data-ui-site="marked" data-ui-target="component.marked" onClick={()=>a.settings.patch('memory_mb',8192)}/></Fragment>}`;
   assert.equal(
     await page.evaluate(
-      (source) => window.suiteViewsFixture.replacement('common/pages/ContentPage.tsx', source),
+      (source) => window.suiteViewsFixture.replacement(window.suiteViewsFixture.bundle.manifest.views['page.content'], source),
       source,
     ),
     true,
@@ -637,7 +687,7 @@ async function runTargetRoutes(page, pass) {
   const source = `import {Fragment} from 'react';import {UiIdentity} from '@paradox/ui';export default()=> <Fragment data-ui-site="subjects"><UiIdentity data-ui-site="business" namespace="fixture" value="bound"><button data-ui-site="bound">Bound subject</button></UiIdentity>{['a','b'].map(value=><button data-ui-site="repeat">{value}</button>)}</Fragment>`;
   assert.equal(
     await page.evaluate(
-      (source) => window.suiteViewsFixture.replacement('common/pages/ContentPage.tsx', source),
+      (source) => window.suiteViewsFixture.replacement(window.suiteViewsFixture.bundle.manifest.views['page.content'], source),
       source,
     ),
     true,
@@ -800,11 +850,11 @@ async function runPublicViewResources(page, pass) {
     await page.evaluate(
       async ({ content, editor, css }) => {
         const f = window.suiteViewsFixture;
-        await f.replacement('common/pages/ContentPage.tsx', content);
+        await f.replacement(window.suiteViewsFixture.bundle.manifest.views['page.content'], content);
         await f.replacement('Editor.tsx', editor);
         await f.replacement('Layer.css', css);
         f.controller.actions.patchFile(
-          'common/components/ProfileCard.tsx',
+          window.suiteViewsFixture.bundle.manifest.views['component.profile-card'],
           `export default function Nest({props}){const Origin=props.origin;return <Origin data-ui-site="nested-original"/>}`,
         );
         f.controller.actions.patchFile(
@@ -822,7 +872,7 @@ async function runPublicViewResources(page, pass) {
     await page.evaluate(
       ({ parentCSS }) =>
         window.suiteViewsFixture.parentFiles({
-          'common/pages/ContentPage.tsx':
+          [window.suiteViewsFixture.bundle.manifest.views['page.content']]:
             'export default()=> <p data-ui-site="parent" data-layer-parent className="layer-probe">Parent through nested Original</p>',
           'Editor.tsx':
             'export default()=> <p data-ui-site="parent" data-layer-parent className="layer-probe">Parent editor Original</p>',
@@ -1026,7 +1076,7 @@ try {
       await page.evaluate(() => window.suiteViewsFixture.actions.navigation.navigate('content'));
       await page.evaluate(() =>
         window.suiteViewsFixture.replacement(
-          'common/pages/ContentPage.tsx',
+          window.suiteViewsFixture.bundle.manifest.views['page.content'],
           'export default function Fail(){throw new Error("Expected primary view failure")}',
         ),
       );

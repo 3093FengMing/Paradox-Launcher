@@ -31,6 +31,9 @@ export async function fixture({
   holdAccounts = false,
   holdSelect = false,
   holdDomainWrites = false,
+  holdScans = false,
+  holdLaunch = false,
+  installedInstances = null,
   desktop = true,
   initialRouteRegistry = 'builtin',
   config = initialConfig,
@@ -78,6 +81,8 @@ export async function fixture({
     array.push({ ...response, ...args });
     return response.promise;
   };
+  const scans = [],
+    launches = [];
   const installKeys = [],
     launchKeys = [];
   const domainWrite = (kind) => {
@@ -151,9 +156,9 @@ export async function fixture({
       if (!holdWrites) write.finish();
       return response.promise;
     },
-    inspectInstances: async () => {
+    inspectInstances: () => {
       counts.scan++;
-      return [
+      const instances = installedInstances ?? [
         {
           instance_key: 'original-instance',
           game_version: '1.21.1',
@@ -162,6 +167,10 @@ export async function fixture({
           root: `${server.config.settings.game_directory}/versions/original-instance`,
         },
       ];
+      const response = deferred();
+      scans.push({ ...response, instances });
+      if (!holdScans) response.resolve(instances);
+      return response.promise;
     },
     subscribe: (...callbacks) => subscribe('launcher', callbacks),
     subscribeDownloads: (...callbacks) => subscribe('downloads', callbacks),
@@ -185,9 +194,13 @@ export async function fixture({
       if (!holdSelect) response.resolve({ ...accounts, active: id });
       return response.promise;
     },
-    launchInstance: async (key) => {
+    launchInstance: (key) => {
       counts.launch++;
       launchKeys.push(key);
+      const response = deferred();
+      launches.push({ ...response, key });
+      if (!holdLaunch) response.resolve();
+      return response.promise;
     },
     enqueueInstall: async (key) => {
       counts.install++;
@@ -389,6 +402,8 @@ export async function fixture({
     domainWrites,
     installKeys,
     launchKeys,
+    launches,
+    scans,
     snapshotHistory,
     contentLists,
     contentSearches,

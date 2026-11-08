@@ -16,6 +16,7 @@ import { UiFoundationProvider } from '../ui-foundation/environment';
 import { SuiteProvider } from '../ui-suite/SuiteProvider';
 import { UiView } from '../ui-suite/View';
 import { normalizeDraftBundle } from '../ui-suite/bundle';
+import { getBuiltinBundle } from '../ui-suite/builtins';
 import { compileSuiteInScope } from '../ui-suite/compiler';
 import { createSuiteRuntimeScope } from '../ui-suite/prepared';
 import type { PreparedUiSuite } from '../ui-suite/prepared';
@@ -29,57 +30,16 @@ import {
 import vectors from '../../scripts/fixtures/ui-suite/format-vectors.json';
 import i18n from '../i18n';
 
-const raw = import.meta.glob('../ui-suite/builtins/common/**/*', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-});
-const commonFiles = Object.fromEntries(
-  Object.entries(raw).map(([path, text]) => [
-    'common/' + path.split('/common/')[1],
-    { encoding: 'utf8' as const, text },
-  ]),
-);
-const pages = {
-  instances: 'InstancesPage',
-  downloads: 'DownloadsPage',
-  accounts: 'AccountsPage',
-  content: 'ContentPage',
-  logs: 'LogsPage',
-  settings: 'SettingsPage',
-};
-const components = {
-  'app-sidebar': 'AppSidebar',
-  'activity-bar': 'ActivityBar',
-  'profile-card': 'ProfileCard',
-  'download-queue': 'DownloadQueue',
-  'account-avatar': 'AccountAvatar',
-  'java-settings': 'JavaSettings',
-  'argument-templates': 'ArgumentTemplates',
-  'appearance-settings': 'AppearanceSettings',
-  'personalization-settings': 'PersonalizationSettings',
-  'appearance-presets': 'AppearancePresets',
-  'window-bar': 'WindowBar',
-  'launcher-dialog': 'LauncherDialog',
-};
-const dialogs = {
-  profile: 'ProfileDialog',
-  'instance-settings': 'InstanceSettingsDialog',
-  'import-instances': 'ImportInstancesDialog',
-  'remove-profile': 'RemoveProfileDialog',
-  'close-request': 'CloseRequestDialog',
-  'launch-account': 'LaunchAccountDialog',
-  login: 'AccountLoginDialog',
-  preset: 'AppearancePresetDialog',
-  'argument-template': 'ArgumentTemplateDialog',
-};
 const editorSource = `import {useUiEditorSnapshot,useUiEditorActions} from '@paradox/launcher';import {Button,TextArea,UiCatalogPresentation} from '@paradox/ui';
 export default function Editor(){const s=useUiEditorSnapshot(),a=useUiEditorActions();return <section data-ui-site="editor" role="dialog" aria-label="Public suite editor" className="suite-editor-fixture" style={{pointerEvents:'auto',position:'fixed',inset:8,padding:12,overflow:'auto',background:'#202431',color:'white'}}><h1 data-ui-site="title">Trusted fixture editor</h1><input data-ui-site="local" aria-label="Local editor input" defaultValue=""/><UiCatalogPresentation><nav data-ui-site="catalog">{s.files.map(f=><Button data-ui-site="file" key={f.path} onClick={()=>a.selectFile(f.path)}>{f.path}</Button>)}</nav></UiCatalogPresentation><TextArea data-ui-site="source" aria-label="Suite source" value={s.selectedFile&&s.draft?.files[s.selectedFile]?.encoding==='utf8'?s.draft.files[s.selectedFile].text:''} onChange={e=>s.selectedFile&&a.patchFile(s.selectedFile,e.currentTarget.value)}/><Button data-ui-site="preview" onClick={()=>a.preview()}>Preview suite</Button><Button data-ui-site="close" onClick={()=>a.close()}>Close editor</Button></section>}`;
 const shell = `import {UiView,UiRouteViewport} from '@paradox/ui';import {useLauncherSnapshot} from '@paradox/launcher';export default function Shell(){const s=useLauncherSnapshot();return <div data-ui-site="shell" className="app-shell" data-theme={s.appearance.theme} style={s.appearance.variables}><UiView data-ui-site="window" id="component.window-bar"/><UiView data-ui-site="sidebar" id="component.app-sidebar"/><main data-ui-site="main" style={{overflow:'auto',padding:12,minWidth:0}}><UiView data-ui-site="activity" id="component.activity-bar"/><UiRouteViewport data-ui-site="route"/></main><UiView data-ui-site="profile" id="dialog.profile"/><UiView data-ui-site="instance" id="dialog.instance-settings"/><UiView data-ui-site="import" id="dialog.import-instances"/><UiView data-ui-site="remove" id="dialog.remove-profile"/><UiView data-ui-site="close" id="dialog.close-request"/><UiView data-ui-site="launch-account" id="dialog.launch-account"/></div>}`;
 async function fixtureBundle(): Promise<UiSuiteBundle> {
+  // Use the accepted builtin's complete source graph, including its imported
+  // styles. Only the explicit fixture probes below replace ordinary sources.
+  const builtin = await getBuiltinBundle('modern');
   const bundle = structuredClone(vectors.fix1.non_bmp.bundle) as UiSuiteBundle;
   bundle.files = {
-    ...commonFiles,
+    ...builtin.files,
     'Shell.tsx': { encoding: 'utf8', text: shell },
     'Home.tsx': {
       encoding: 'utf8',
@@ -96,22 +56,16 @@ async function fixtureBundle(): Promise<UiSuiteBundle> {
     encoding: 'utf8',
     text: 'export default()=> <p data-ui-site="trusted" data-layer-trusted className="layer-probe">Trusted probe</p>',
   };
+  bundle.manifest.views = { ...builtin.manifest.views };
+  bundle.manifest.views['page.home'] = 'Home.tsx';
   bundle.manifest.views['component.probe'] = 'Probe.tsx';
   bundle.manifest.views['layout.shell'] = 'Shell.tsx';
   bundle.manifest.views['tool.editor'] = 'Editor.tsx';
-  for (const [id, name] of Object.entries(pages))
-    bundle.manifest.views['page.' + id] = 'common/pages/' + name + '.tsx';
-  for (const [id, name] of Object.entries(components))
-    bundle.manifest.views['component.' + id] =
-      'common/' + (name === 'LauncherDialog' ? 'dialogs' : 'components') + '/' + name + '.tsx';
-  for (const [id, name] of Object.entries(dialogs))
-    bundle.manifest.views['dialog.' + id] = 'common/dialogs/' + name + '.tsx';
   for (const id of ['loading', 'error', 'notifications'])
     bundle.manifest.views['host.' + id] = 'Host.tsx';
-  bundle.manifest.routes = bundle.manifest.routes.map((route) => ({
+  bundle.manifest.routes = builtin.manifest.routes.map((route) => ({
     ...route,
     entry: bundle.manifest.views['page.' + route.id],
-    title: route.id === 'content' ? 'content.title' : `pages.${route.id}.title`,
   }));
   bundle.manifest.styles = ['Layer.css'];
   return normalizeDraftBundle(bundle);
@@ -241,7 +195,7 @@ export async function installSuiteViewsFixture(root: Root) {
     controller: null as unknown as UiEditorController,
     snapshot: null as unknown as DeepReadonly<LauncherSnapshot>,
     actions: null as unknown as LauncherActions,
-    sourceCount: Object.keys(commonFiles).length,
+    sourceCount: Object.keys(bundle.files).length,
     disposals: 0,
     disposalObservations: [],
     ready: true,
@@ -258,7 +212,10 @@ export async function installSuiteViewsFixture(root: Root) {
     async parent(source) {
       const f = window.suiteViewsFixture,
         parent = structuredClone(bundle);
-      parent.files['common/pages/ContentPage.tsx'] = { encoding: 'utf8', text: source };
+      const path = parent.manifest.views['page.content'];
+      if (!path || parent.files[path]?.encoding !== 'utf8')
+        throw Error('page.content must resolve to an editable source');
+      parent.files[path] = { encoding: 'utf8', text: source };
       if (!(await f.controller.replaceParent(await normalizeDraftBundle(parent)))) return false;
       return f.controller.actions.preview();
     },

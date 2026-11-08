@@ -442,12 +442,6 @@ main {
   border: 1px solid #2d3c2e;
   border-radius: var(--radius);
 }
-.hero-art {
-  position: absolute;
-  z-index: -2;
-  inset: 0;
-  background: url('./ui-suite/builtins/common/assets/landscape.svg') center right / cover;
-}
 .hero::after {
   content: '';
   position: absolute;
@@ -487,9 +481,6 @@ main {
   font-size: 0.58em;
   color: #93a18a;
   margin-top: 13px;
-}
-.hero.no-art .hero-art {
-  display: none;
 }
 .identity-card {
   text-align: center;
