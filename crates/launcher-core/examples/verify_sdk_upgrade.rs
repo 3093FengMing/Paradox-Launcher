@@ -157,7 +157,18 @@ async fn main() -> Result<()> {
             "Native state must already use version 1"
         );
     }
-    let output = workspace.join(".test-data/2026-11-07-quintelement-upstream");
+    let output = std::env::var_os("PARADOX_SDK_UPGRADE_REPORT")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| workspace.join(".test-data/2026-11-07-quintelement-upstream"));
+    ensure!(
+        output.is_absolute()
+            && !output
+                .components()
+                .any(|part| matches!(part, Component::ParentDir))
+            && output.starts_with(workspace.join(".test-data"))
+            && output != root,
+        "Choose an absolute task-local report directory within workspace .test-data"
+    );
     reject_link_ancestors(output.parent().context("Missing report parent")?)?;
     fs::create_dir_all(&output)?;
     reject_link_ancestors(&output)?;
@@ -523,7 +534,7 @@ async fn observe(
     let stop = if already_exited {
         Ok(())
     } else {
-        game.child.start_kill()
+        paradox_core::process::kill_process_tree(&mut game.child).await
     };
     let status = tokio::time::timeout(Duration::from_secs(15), game.child.wait())
         .await

@@ -2,35 +2,39 @@ use crate::{GameProfile, Settings};
 use anyhow::{Result, bail, ensure};
 use elemental::driver::families::version_json::VersionJsonGameStorageExt;
 use elemental::{
-    core::storage::Storage,
+    core::{runtime::RuntimeResolver, storage::Storage},
     driver::{
-        catalog::{LoaderRelease, LoaderVersionCatalog, ResourceLimits},
+        driver::{Driver, PrepareRequest},
         drivers::{
             fabric::{
-                catalog::FabricCatalog,
-                driver::{FabricDriver, FabricDriverFamily},
+                driver::FabricDriverFamily,
                 source::{FabricEndpoints, FabricFlavor, FabricSource},
             },
-            forge::{ForgeCatalog, ForgeDriver, ForgeEndpoints, ForgeSource},
-            neoforge::{NeoForgeCatalog, NeoForgeDriver, NeoForgeEndpoints, NeoForgeSource},
+            forge::{ForgeDriver, ForgeEndpoints, ForgeSource},
+            neoforge::{NeoForgeDriver, NeoForgeEndpoints, NeoForgeSource},
             quilt::{
-                catalog::QuiltCatalog,
-                driver::{QuiltDriver, QuiltDriverFamily},
+                driver::QuiltDriverFamily,
                 source::{QuiltEndpoints, QuiltSource},
             },
             vanilla::source::VanillaSource,
         },
-        families::version_json::{BaseInstanceLayout, BaseRootLayout},
+        families::version_json::{BaseInstanceLayout, BaseRootLayout, ProfiledVersionJsonDriver},
     },
     infra::downloader::{
         DownloadSession, ElementalDownloader, ElementalDownloaderConfig, FailurePolicy, RetryPolicy,
     },
 };
+use profile::BoundedProfileFamily;
 use serde::{Deserialize, Serialize};
 use std::{
     path::{Path, PathBuf},
     time::Duration,
 };
+
+mod catalog;
+mod profile;
+
+pub(crate) use catalog::fetch_resource as fetch_metadata_resource;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct LoaderVersion {
@@ -74,90 +78,17 @@ pub async fn versions(settings: &Settings, loader: &str, game: &str) -> Result<V
         return Ok(Vec::new());
     }
     let client = settings.network.build_client()?;
-    let limits = ResourceLimits {
-        max_response_bytes: Some(8 * 1024 * 1024),
-        request_timeout: Some(Duration::from_secs(settings.network.timeout_seconds.into())),
-    };
-    match loader {
-        "fabric" => {
-            versions_from_catalog(
-                loader,
-                game,
-                &FabricCatalog::new(
-                    FabricSource::with_client(FabricEndpoints::official(), client)
-                        .with_resource_limits(limits),
-                ),
-            )
-            .await
-        }
-        "quilt" => {
-            versions_from_catalog(
-                loader,
-                game,
-                &QuiltCatalog::new(
-                    QuiltSource::with_client(QuiltEndpoints::official(), client)
-                        .with_resource_limits(limits),
-                ),
-            )
-            .await
-        }
-        "forge" => {
-            versions_from_catalog(
-                loader,
-                game,
-                &ForgeCatalog::new(
-                    ForgeSource::with_client(ForgeEndpoints::official(), client)
-                        .with_resource_limits(limits),
-                ),
-            )
-            .await
-        }
-        _ => {
-            versions_from_catalog(
-                loader,
-                game,
-                &NeoForgeCatalog::new(
-                    NeoForgeSource::with_client(NeoForgeEndpoints::official(), client)
-                        .with_resource_limits(limits),
-                ),
-            )
-            .await
-        }
-    }
+    catalog::versions_from_url(
+        &client,
+        loader,
+        game,
+        &catalog::catalog_url(loader, game)?,
+        Duration::from_secs(settings.network.timeout_seconds.into()),
+    )
+    .await
 }
 
-async fn versions_from_catalog(
-    loader: &str,
-    game: &str,
-    catalog: &impl LoaderVersionCatalog,
-) -> Result<Vec<LoaderVersion>> {
-    let releases = catalog
-        .loader_versions(&game.into())
-        .await
-        .map_err(|error| {
-            use elemental::driver::error::Error;
-            match error {
-                Error::Json(_)
-                | Error::Xml(_)
-                | Error::DecodeMavenMetadata { .. }
-                | Error::ResourceTooLarge { .. } => anyhow::anyhow!("loaders.errors.response"),
-                Error::Io(ref source) if source.kind() == std::io::ErrorKind::InvalidData => {
-                    anyhow::anyhow!("loaders.errors.response")
-                }
-                _ => anyhow::anyhow!("loaders.errors.network"),
-            }
-        })?;
-    Ok(normalize_releases(loader, releases))
-}
-
-fn normalize_releases(loader: &str, releases: Vec<LoaderRelease>) -> Vec<LoaderVersion> {
-    let mut result = releases
-        .into_iter()
-        .map(|release| LoaderVersion {
-            version: release.loader_version.to_string(),
-            stable: release.prerelease.is_some_and(|prerelease| !prerelease),
-        })
-        .collect::<Vec<_>>();
+fn normalize_versions(loader: &str, mut result: Vec<LoaderVersion>) -> Vec<LoaderVersion> {
     result.retain(|v| validate_loader(loader, &v.version).is_ok());
     result.sort_by(|a, b| {
         numeric_parts(&b.version)
@@ -242,40 +173,61 @@ pub async fn prepare(
         .failure_policy(FailurePolicy::CancelAll)
         .open()
         .await?;
-    let vanilla = VanillaSource::with_client(settings.network.endpoints()?, client.clone());
+    let vanilla_endpoints = settings.network.endpoints()?;
+    let vanilla = VanillaSource::with_client(vanilla_endpoints.clone(), client.clone());
     let game = profile.game_version.clone().into();
     let loader = profile.loader_version.clone().into();
+    let timeout = Duration::from_secs(settings.network.timeout_seconds.into());
+    let runtime_options = elemental::launcher::RuntimeOptions::new();
+    // Profile-only drivers ignore the runtime resolver; installer drivers use
+    // the explicitly selected distribution below, without discovery fallback.
+    let runtime_resolver = RuntimeResolver::new(Vec::new());
+    let request = PrepareRequest {
+        session: &session,
+        instance: &instance,
+        game_version: &game,
+        loader_version: Some(&loader),
+        runtime_options: &runtime_options,
+        runtime_resolver: &runtime_resolver,
+    };
     let preparation = async {
         match profile.loader.as_str() {
             "fabric" => {
-                FabricDriver::new(
-                    FabricDriverFamily::new(FabricFlavor::Fabric),
+                ProfiledVersionJsonDriver::new(
+                    BoundedProfileFamily::new(
+                        FabricDriverFamily::new(FabricFlavor::Fabric),
+                        client.clone(),
+                        timeout,
+                    ),
                     FabricSource::with_client(FabricEndpoints::official(), client),
                 )
                 .with_vanilla_source(vanilla)
-                .prepare(&session, &instance, game, loader)
+                .prepare(&request)
                 .await?;
             }
             "quilt" => {
-                QuiltDriver::new(
-                    QuiltDriverFamily,
+                ProfiledVersionJsonDriver::new(
+                    BoundedProfileFamily::new(QuiltDriverFamily, client.clone(), timeout),
                     QuiltSource::with_client(QuiltEndpoints::official(), client),
                 )
                 .with_vanilla_source(vanilla)
-                .prepare(&session, &instance, game, loader)
+                .prepare(&request)
                 .await?;
             }
             "forge" | "neoforge" => {
-                let base = elemental::driver::drivers::vanilla::source::resolve_vanilla_metadata(
-                    &vanilla,
-                    &profile.game_version,
+                let base = tokio::time::timeout(
+                    timeout,
+                    crate::sdk::resolve_bounded_vanilla_metadata(
+                        &vanilla_endpoints,
+                        &client,
+                        &profile.game_version,
+                        timeout,
+                    ),
                 )
-                .await?;
-                let metadata = serde_json::to_value(base.metadata)?;
-                let required = metadata
-                    .pointer("/javaVersion/majorVersion")
-                    .and_then(serde_json::Value::as_u64)
-                    .unwrap_or(8) as u32;
+                .await
+                .map_err(|_| anyhow::anyhow!("loaders.errors.network"))??;
+                let required = u32::try_from(base.metadata.java_version.major_version)
+                    .map_err(|_| anyhow::anyhow!("loaders.errors.compatibility"))?;
                 let runtime = crate::java::select_runtime(
                     required,
                     (!settings.java_executable.is_empty())
@@ -283,12 +235,16 @@ pub async fn prepare(
                     &managed_root,
                 )
                 .await?;
-                let config = elemental::launcher::LaunchOptions::default()
-                    .set_runtime_executable_path(runtime.executable);
+                let runtime_options =
+                    crate::runtime::elemental_runtime_options(&runtime, required).await?;
+                let request = PrepareRequest {
+                    runtime_options: &runtime_options,
+                    ..request
+                };
                 if profile.loader == "forge" {
                     ForgeDriver::new(ForgeSource::with_client(ForgeEndpoints::official(), client))
                         .with_vanilla_source(vanilla)
-                        .prepare_with_config(&session, &instance, game, loader, &config)
+                        .prepare(&request)
                         .await?;
                 } else {
                     NeoForgeDriver::new(NeoForgeSource::with_client(
@@ -296,7 +252,7 @@ pub async fn prepare(
                         client,
                     ))
                     .with_vanilla_source(vanilla)
-                    .prepare_with_config(&session, &instance, game, loader, &config)
+                    .prepare(&request)
                     .await?;
                 }
             }
@@ -408,75 +364,30 @@ mod tests {
             connection.write_all(&body).await.unwrap();
         });
         let client = reqwest::Client::builder().no_proxy().build().unwrap();
-        let limits = ResourceLimits {
-            max_response_bytes: Some(8 * 1024 * 1024),
-            request_timeout: Some(Duration::from_secs(5)),
-        };
-        let result = match loader {
-            "fabric" => {
-                versions_from_catalog(
-                    loader,
-                    game,
-                    &FabricCatalog::new(
-                        FabricSource::with_client(
-                            FabricEndpoints::with_overrides([(FabricOrigin::Meta, origin)])
-                                .unwrap(),
-                            client,
-                        )
-                        .with_resource_limits(limits),
-                    ),
-                )
-                .await
-            }
-            "quilt" => {
-                versions_from_catalog(
-                    loader,
-                    game,
-                    &QuiltCatalog::new(
-                        QuiltSource::with_client(
-                            QuiltEndpoints::with_overrides([(QuiltOrigin::Meta, origin)]).unwrap(),
-                            client,
-                        )
-                        .with_resource_limits(limits),
-                    ),
-                )
-                .await
-            }
-            "forge" => {
-                versions_from_catalog(
-                    loader,
-                    game,
-                    &ForgeCatalog::new(
-                        ForgeSource::with_client(
-                            ForgeEndpoints::new(
-                                OriginEndpoints::with_overrides([(ForgeOrigin, origin)]).unwrap(),
-                            ),
-                            client,
-                        )
-                        .with_resource_limits(limits),
-                    ),
-                )
-                .await
-            }
-            "neoforge" => {
-                versions_from_catalog(
-                    loader,
-                    game,
-                    &NeoForgeCatalog::new(
-                        NeoForgeSource::with_client(
-                            NeoForgeEndpoints::new(
-                                OriginEndpoints::with_overrides([(NeoForgeOrigin, origin)])
-                                    .unwrap(),
-                            ),
-                            client,
-                        )
-                        .with_resource_limits(limits),
-                    ),
-                )
-                .await
-            }
+        use elemental::driver::families::installer::InstallerMavenEndpoints;
+        let url = match loader {
+            "fabric" => FabricEndpoints::with_overrides([(FabricOrigin::Meta, origin)])
+                .unwrap()
+                .loader_versions_url(game)
+                .unwrap(),
+            "quilt" => QuiltEndpoints::with_overrides([(QuiltOrigin::Meta, origin)])
+                .unwrap()
+                .loader_versions_url(game)
+                .unwrap(),
+            "forge" => ForgeEndpoints::new(
+                OriginEndpoints::with_overrides([(ForgeOrigin, origin)]).unwrap(),
+            )
+            .maven_metadata_url()
+            .unwrap(),
+            "neoforge" => NeoForgeEndpoints::new(
+                OriginEndpoints::with_overrides([(NeoForgeOrigin, origin)]).unwrap(),
+            )
+            .maven_metadata_url()
+            .unwrap(),
             _ => unreachable!(),
         };
+        let result =
+            catalog::versions_from_url(&client, loader, game, &url, Duration::from_secs(5)).await;
         tokio::time::timeout(Duration::from_secs(5), server)
             .await
             .unwrap()

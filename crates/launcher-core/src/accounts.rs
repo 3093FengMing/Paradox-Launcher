@@ -4,6 +4,7 @@ use crate::auth::{
 };
 use crate::network::NetworkOptions;
 use anyhow::{Result, ensure};
+use elemental::core::auth::credential::{Credential, CredentialKind};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
@@ -748,7 +749,7 @@ impl AccountsManager {
         &self,
         network: &NetworkOptions,
         cancellation: &CancellationToken,
-    ) -> Result<Option<elemental::core::auth::credential::UserCredential>> {
+    ) -> Result<Option<Credential>> {
         let _guard = tokio::select! {
             biased;
             () = cancellation.cancelled() => return Err(anyhow::anyhow!("auth.errors.cancelled")),
@@ -774,10 +775,15 @@ impl AccountsManager {
         let session = sessions
             .get(&id)
             .ok_or_else(|| anyhow::anyhow!("auth.errors.loginRequired"))?;
-        let credential = elemental::core::auth::credential::UserCredential {
+        // Only the per-launch credential crosses into the SDK. The account
+        // metadata and refresh-token transaction remain owned by this service.
+        let credential = Credential {
             username: session.account.name.clone(),
             uuid: session.account.id.clone(),
             access_token: session.access_token.clone(),
+            kind: CredentialKind::Msa,
+            xuid: None,
+            client_id: None,
         };
         ensure!(!cancellation.is_cancelled(), "auth.errors.cancelled");
         Ok(Some(credential))
@@ -1477,6 +1483,32 @@ mod tests {
             .err()
             .unwrap();
         assert_eq!(error.to_string(), "auth.errors.cancelled");
+    }
+
+    #[tokio::test]
+    async fn cached_microsoft_selection_keeps_launch_identity_out_of_metadata() {
+        let vault = Arc::new(ControlledVault {
+            fail_read: true,
+            ..Default::default()
+        });
+        let (_temp, manager, _grant, cancellation, before) = login_fixture(vault);
+        let credential = manager
+            .selected_credential(&NetworkOptions::default(), &cancellation)
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(credential.kind, CredentialKind::Msa);
+        assert_eq!(credential.username, "PreviousPlayer");
+        assert_eq!(credential.uuid, ACCOUNT_ID);
+        assert_eq!(credential.access_token, "PreviousPlayer-access-secret");
+        assert!(credential.xuid.is_none());
+        assert!(credential.client_id.is_none());
+        assert_eq!(fs::read(&manager.path).unwrap(), before);
+        assert!(
+            !String::from_utf8(before)
+                .unwrap()
+                .contains(&credential.access_token)
+        );
     }
 
     #[tokio::test]

@@ -1,5 +1,6 @@
 //! Run with an explicit isolated directory. Close each ready Minecraft window
 //! normally to verify shutdown; an unattended timeout tests forced stop instead.
+//! Set PARADOX_TEST_CONTROLLED_STOP=1 explicitly for readiness/tree-stop checks.
 use std::{
     fs::{self, File},
     io::Write,
@@ -27,6 +28,7 @@ struct LaunchReport {
     readiness_evidence: Vec<String>,
     exit_code: Option<i32>,
     close_mode: String,
+    process_reaped: bool,
     elapsed_seconds: u64,
     log: PathBuf,
 }
@@ -50,6 +52,7 @@ struct MvpReport {
     test_root: PathBuf,
     fresh_game_directory: bool,
     latest_release: String,
+    controlled_stop_requested: bool,
     managed_java: Option<serde_json::Value>,
     cases: Vec<CaseReport>,
     passed: bool,
@@ -74,7 +77,8 @@ async fn main() -> Result<()> {
     fs::create_dir_all(&test_root)?;
     fs::create_dir_all(test_root.join("logs"))?;
     fs::create_dir_all(test_root.join("results"))?;
-    let settings = Settings {
+    let controlled_stop = std::env::var("PARADOX_TEST_CONTROLLED_STOP").as_deref() == Ok("1");
+    let mut settings = Settings {
         game_directory: test_root.join("minecraft"),
         offline_username: "ParadoxTest".into(),
         memory_mb: 4096,
@@ -83,6 +87,9 @@ async fn main() -> Result<()> {
         resolution_height: 540,
         ..Settings::default()
     };
+    if let Ok(proxy) = std::env::var("PARADOX_TEST_PROXY") {
+        settings.network.proxy_url = proxy;
+    }
     settings.validate()?;
     let latest_release = latest_release(&settings).await?;
     let versions: Vec<String> = arguments.next().map_or_else(
@@ -101,6 +108,7 @@ async fn main() -> Result<()> {
         test_root: test_root.clone(),
         fresh_game_directory: !settings.game_directory.exists(),
         latest_release,
+        controlled_stop_requested: controlled_stop,
         managed_java: None,
         cases: Vec::new(),
         passed: false,
@@ -141,6 +149,7 @@ async fn main() -> Result<()> {
             &mut profile,
             managed_java.as_ref(),
             &mut case,
+            controlled_stop,
         )
         .await
         {
@@ -253,6 +262,7 @@ async fn verify_case(
     profile: &mut GameProfile,
     managed_java: Option<&JavaInstallation>,
     case: &mut CaseReport,
+    controlled_stop: bool,
 ) -> Result<()> {
     let settings = profile.effective_settings(global)?;
     let service = ElementalService::new(&settings)?;
@@ -302,8 +312,14 @@ async fn verify_case(
     )?;
     let settings = profile.effective_settings(global)?;
     for attempt in 1..=2 {
-        let launch = launch_and_observe(test_root, &settings, profile, attempt).await?;
-        let passed = launch.ready && launch.exit_code == Some(0) && launch.close_mode == "natural";
+        let launch =
+            launch_and_observe(test_root, &settings, profile, attempt, controlled_stop).await?;
+        let accepted_close = if controlled_stop {
+            launch.close_mode == "controlled_stop"
+        } else {
+            launch.exit_code == Some(0) && launch.close_mode == "natural"
+        };
+        let passed = launch.ready && launch.process_reaped && accepted_close;
         case.launches.push(launch);
         write_json(
             &test_root
@@ -313,7 +329,7 @@ async fn verify_case(
         )?;
         ensure!(
             passed,
-            "Launch attempt {attempt} did not complete a ready, natural shutdown"
+            "Launch attempt {attempt} did not complete readiness and the requested shutdown policy"
         );
     }
     Ok(())
@@ -360,6 +376,7 @@ async fn launch_and_observe(
     settings: &Settings,
     profile: &GameProfile,
     attempt: u32,
+    controlled_stop: bool,
 ) -> Result<LaunchReport> {
     println!("LAUNCH {} attempt {attempt}", profile.game_version);
     let mut process = ElementalService::new(settings)?
@@ -407,6 +424,12 @@ async fn launch_and_observe(
                         report.ready = true;
                         close_deadline = Some(Instant::now() + Duration::from_secs(300));
                         write_json(&test_root.join("current-game.json"), &serde_json::json!({"version":profile.game_version,"attempt":attempt,"pid":report.pid,"ready":true}))?;
+                        if controlled_stop {
+                            println!("READY {} attempt {attempt}, PID {:?}: stopping the owned process tree", profile.game_version, report.pid);
+                            report.close_mode = "controlled_stop".into();
+                            paradox_core::process::kill_process_tree(&mut process.child).await.context("Could not stop ready test game")?;
+                            break process.child.wait().await?;
+                        }
                         println!("READY {} attempt {attempt}, PID {:?}: close this Minecraft window normally", profile.game_version, report.pid);
                     }
                 } else { lines_open = false; }
@@ -415,7 +438,7 @@ async fn launch_and_observe(
                 let timeout = close_deadline.is_some_and(|deadline| Instant::now() >= deadline) || (!report.ready && started.elapsed() > Duration::from_secs(180));
                 if timeout {
                     report.close_mode = if report.ready { "forced_stop" } else { "startup_timeout" }.into();
-                    process.child.kill().await.context("Could not stop test game")?;
+                    paradox_core::process::kill_process_tree(&mut process.child).await.context("Could not stop test game")?;
                     break process.child.wait().await?;
                 }
             }
@@ -426,6 +449,7 @@ async fn launch_and_observe(
     }
     log.sync_all()?;
     report.exit_code = status.code();
+    report.process_reaped = process.child.try_wait()?.is_some();
     report.elapsed_seconds = started.elapsed().as_secs();
     write_json(
         &test_root.join("current-game.json"),

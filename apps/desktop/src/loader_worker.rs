@@ -102,9 +102,18 @@ pub async fn install(
         () = cancellation.cancelled() => {
             // Closing the job/process group terminates all installation descendants.
             drop(job);
-            child.kill().await.context("loaders.errors.worker")?;
-            child.wait().await.context("loaders.errors.worker")?;
-            reader.await.context("loaders.errors.worker")?.context("loaders.errors.worker")?;
+            // Always reap the worker and stderr reader, even when it exits
+            // concurrently with the kill request or that request fails.
+            let killed = child.kill().await;
+            let reaped = child.wait().await;
+            let drained = reader.await;
+            reaped.context("loaders.errors.worker")?;
+            drained.context("loaders.errors.worker")?.context("loaders.errors.worker")?;
+            if let Err(error) = killed
+                && error.kind() != std::io::ErrorKind::InvalidInput
+            {
+                return Err(error).context("loaders.errors.worker");
+            }
             return Err(paradox_core::download::DownloadError::Cancelled.into());
         }
         result = child.wait() => result?,

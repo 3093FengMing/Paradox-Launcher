@@ -4,6 +4,8 @@
 
 当前开发工作区版本为 `0.4.0-dev`，直接依赖 `vendor/QuintElement/` 子模块源码，修改 fork 后重新编译启动器即可生效。已补齐 v0.3 账户体验与 v0.4 四种主要加载器；下方 v0.2 产物继续保留，实际范围见 v0.3 / v0.4 测试指南。
 
+2026-11-12 的 SDK 同步合入 Elemental `62bb657`，按[上游 0.2 迁移文档](vendor/QuintElement/docs/migration/0.2.md) 接入公共 `Credential`、Launcher builder、Driver 准备入口及拆分的 Runtime / Launch 选项。启动器保留网络策略、DownloadEngine、所选 Java 路径与实际 natives 搜索目录；Windows 游戏和 Java 探测使用完整进程树所有权，停止或取消返回前完成回收。SDK 34 项、启动器 275 项测试通过（2 项既有忽略），四种 loader 的缓存和全新安装各完成两次就绪与受控停止，原版 Java 8 / 17 / 21 / 25 也各完成两次就绪与受控停止。具体提交、保留的 fork 扩展及复现方式见 [SDK 接入说明](vendor/README.md)。
+
 开发工作区已接入 Microsoft 设备代码登录、账户刷新、OS 凭据库和启动 / 登录取消恢复。项目默认 Client ID 为 `7fd2b4de-f119-4ab8-8d8e-906af5efe6f3`，账户页可改用自定义 ID。已用真实账户通过浏览器授权、完整后台认证链、Windows 凭据持久化、独立进程刷新与登出清理；真实游戏启动、在线服务器认证和完整原生 GUI 流程仍需独立验收。现有发行版的账户能力以下方记录为准。
 
 ## 当前能力

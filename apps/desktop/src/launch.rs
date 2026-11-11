@@ -396,12 +396,21 @@ trait GameProcess {
     fn kill(&mut self) -> impl Future<Output = std::io::Result<()>>;
 }
 
-impl GameProcess for tokio::process::Child {
+impl GameProcess for paradox_core::process::OwnedChild {
     async fn wait(&mut self) -> std::io::Result<ExitStatus> {
         self.wait().await
     }
     async fn kill(&mut self) -> std::io::Result<()> {
         self.kill().await
+    }
+}
+
+impl GameProcess for tokio::process::Child {
+    async fn wait(&mut self) -> std::io::Result<ExitStatus> {
+        self.wait().await
+    }
+    async fn kill(&mut self) -> std::io::Result<()> {
+        paradox_core::process::kill_process_tree(self).await
     }
 }
 

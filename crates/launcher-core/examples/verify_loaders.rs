@@ -9,13 +9,16 @@ use std::{
 };
 
 use anyhow::{Context, Result, ensure};
-use paradox_core::{ElementalService, GameProfile, Settings, java, loaders};
-use serde::Serialize;
+use paradox_core::{
+    ElementalService, GameProfile, Settings, java, loaders, process::kill_process_tree,
+};
+use serde::{Deserialize, Serialize};
 use tokio_util::sync::CancellationToken;
 
 #[derive(Default, Serialize)]
 struct LaunchReport {
     ready: bool,
+    process_reaped: bool,
     exit_code: Option<i32>,
     close_mode: String,
     log: PathBuf,
@@ -33,11 +36,20 @@ struct LoaderReport {
     error: Option<String>,
 }
 
+#[derive(Deserialize)]
+struct CachedLoader {
+    loader: String,
+    game_version: String,
+    loader_version: String,
+    installed: bool,
+    passed: bool,
+}
+
 #[tokio::main(flavor = "multi_thread", worker_threads = 4)]
 async fn main() -> Result<()> {
     let mut arguments = std::env::args().skip(1);
     let root = PathBuf::from(arguments.next().context(
-        "Usage: cargo run -p paradox-core --example verify_loaders -- <absolute-.test-data-root> [fabric,quilt,forge,neoforge] [--canonical-root]",
+        "Usage: cargo run -p paradox-core --example verify_loaders -- <absolute-.test-data-root> [fabric,quilt,forge,neoforge] [--canonical-root] [--cached]",
     )?);
     ensure!(
         root.is_absolute()
@@ -60,13 +72,24 @@ async fn main() -> Result<()> {
     let selected = arguments
         .next()
         .unwrap_or_else(|| "fabric,quilt,forge,neoforge".into());
-    let canonical_root = match arguments.next().as_deref() {
-        None => false,
-        Some("--canonical-root") => true,
-        Some(_) => anyhow::bail!("The optional argument must be --canonical-root"),
-    };
+    let mut canonical_root = false;
+    let mut cached = false;
+    for argument in arguments {
+        match argument.as_str() {
+            "--canonical-root" => canonical_root = true,
+            "--cached" => cached = true,
+            _ => anyhow::bail!("Optional arguments are --canonical-root and --cached"),
+        }
+    }
     let root = if canonical_root { resolved_root } else { root };
-    let report_name = if canonical_root {
+    let cached_loaders: Vec<CachedLoader> = if cached {
+        serde_json::from_reader(File::open(root.join("report.json"))?)?
+    } else {
+        Vec::new()
+    };
+    let report_name = if cached {
+        "report-cached-launches.json"
+    } else if canonical_root {
         "report-canonical.json"
     } else {
         "report.json"
@@ -89,7 +112,24 @@ async fn main() -> Result<()> {
             passed: false,
             error: None,
         };
-        match verify(&root, loader, game, &mut report).await {
+        let cached_release = if cached {
+            Some(
+                cached_loaders
+                    .iter()
+                    .find(|entry| {
+                        entry.loader == loader
+                            && entry.game_version == game
+                            && entry.installed
+                            && entry.passed
+                    })
+                    .context("The cache report has no accepted matching loader")?
+                    .loader_version
+                    .as_str(),
+            )
+        } else {
+            None
+        };
+        match verify(&root, loader, game, cached_release, &mut report).await {
             Ok(()) => report.passed = true,
             Err(error) => {
                 eprintln!("{loader}: {error:#}");
@@ -106,7 +146,13 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn verify(root: &Path, loader: &str, game: &str, report: &mut LoaderReport) -> Result<()> {
+async fn verify(
+    root: &Path,
+    loader: &str,
+    game: &str,
+    cached_release: Option<&str>,
+    report: &mut LoaderReport,
+) -> Result<()> {
     let mut settings = Settings {
         game_directory: root.join("minecraft"),
         offline_username: "LoaderTest".into(),
@@ -116,22 +162,34 @@ async fn verify(root: &Path, loader: &str, game: &str, report: &mut LoaderReport
         ..Settings::default()
     };
     settings.network.timeout_seconds = 60;
-    let release = loaders::versions(&settings, loader, game)
-        .await?
-        .into_iter()
-        .find(|version| version.stable)
-        .context("The official catalog contained no stable loader release")?;
-    report.loader_version = Some(release.version.clone());
+    if let Ok(proxy) = std::env::var("PARADOX_TEST_PROXY") {
+        settings.network.proxy_url = proxy;
+    }
+    let loader_version = match cached_release {
+        Some(version) => version.to_owned(),
+        None => {
+            loaders::versions(&settings, loader, game)
+                .await?
+                .into_iter()
+                .find(|version| version.stable)
+                .context("The official catalog contained no stable loader release")?
+                .version
+        }
+    };
+    report.loader_version = Some(loader_version.clone());
     let mut profile = GameProfile::new(&format!("{loader} smoke test"), game)?;
     profile.instance_key = format!("smoke-{loader}-{game}");
     profile.loader = loader.into();
-    profile.loader_version = release.version;
+    profile.loader_version = loader_version;
     profile.validate()?;
 
     let runtime_root = root.join("runtimes");
     let required = if game == "1.20.1" { 17 } else { 21 };
     let runtime = match java::select_runtime(required, None, &runtime_root).await {
         Ok(runtime) => runtime,
+        Err(error) if cached_release.is_some() => {
+            return Err(error.context("Cached launch requires an existing suitable Java runtime"));
+        }
         Err(_) => {
             println!("Downloading isolated Java {required}");
             let package = java::resolve_package(required, &settings.network).await?;
@@ -146,8 +204,10 @@ async fn verify(root: &Path, loader: &str, game: &str, report: &mut LoaderReport
         }
     };
     settings.java_executable = runtime.executable.to_string_lossy().into_owned();
-    println!("Installing {loader} {} for {game}", profile.loader_version);
-    loaders::prepare(&profile, &settings, &runtime_root).await?;
+    if cached_release.is_none() {
+        println!("Installing {loader} {} for {game}", profile.loader_version);
+        loaders::prepare(&profile, &settings, &runtime_root).await?;
+    }
     let service = ElementalService::new(&settings)?;
     let installed = service.inspect().await?;
     ensure!(
@@ -249,13 +309,13 @@ async fn observe(
                 if textures && sound {
                     report.ready = true;
                     report.close_mode = "controlled_stop".into();
-                    game.child.kill().await?;
+                    kill_process_tree(&mut game.child).await?;
                     break game.child.wait().await?;
                 }
             }
             () = tokio::time::sleep(Duration::from_secs(180).saturating_sub(started.elapsed())) => {
                 report.close_mode = "startup_timeout".into();
-                game.child.kill().await?;
+                kill_process_tree(&mut game.child).await?;
                 break game.child.wait().await?;
             }
         }
@@ -265,6 +325,7 @@ async fn observe(
     }
     log.sync_all()?;
     report.exit_code = status.code();
+    report.process_reaped = game.child.try_wait()?.is_some();
     println!(
         "{} launch {attempt}: ready={}, exit={:?}, {}",
         profile.loader, report.ready, report.exit_code, report.close_mode

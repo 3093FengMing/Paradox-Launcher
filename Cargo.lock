@@ -577,27 +577,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6ef517f0926dd24a1582492c791b6a4818a4d94e789a334894aa15b0d12f55c"
 
 [[package]]
-name = "const_format"
-version = "0.2.37"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3decb4d6965448659923544a634a0571ba44cede4e11ef15a5a317126840454"
-dependencies = [
- "const_format_proc_macros",
- "konst",
-]
-
-[[package]]
-name = "const_format_proc_macros"
-version = "0.2.37"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "941b570269a642506f08cb5b688c04bfa6cfd41a26f8bcdc49db8fd00c0ab659"
-dependencies = [
- "proc-macro2",
- "quote",
- "unicode-xid",
-]
-
-[[package]]
 name = "convert_case"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1028,15 +1007,14 @@ name = "elemental-core"
 version = "0.2.0"
 dependencies = [
  "async-trait",
- "const_format",
  "dirs",
  "elemental-schema",
+ "erased-serde",
  "futures",
  "md-5",
  "minecraft-msa-auth",
  "oauth2",
  "oauth2-reqwest",
- "regex",
  "reqwest",
  "serde",
  "serde_json",
@@ -1060,7 +1038,6 @@ dependencies = [
  "elemental-shared",
  "futures",
  "quick-xml",
- "regex",
  "reqwest",
  "serde",
  "serde_json",
@@ -1092,6 +1069,8 @@ dependencies = [
  "elemental-driver",
  "elemental-infra",
  "elemental-launcher",
+ "elemental-schema",
+ "elemental-shared",
 ]
 
 [[package]]
@@ -1101,6 +1080,10 @@ dependencies = [
  "elemental-core",
  "elemental-driver",
  "elemental-infra",
+ "elemental-shared",
+ "erased-serde",
+ "serde",
+ "serde_json",
  "thiserror 2.0.21",
  "tokio",
 ]
@@ -2404,21 +2387,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "konst"
-version = "0.2.20"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "128133ed7824fcd73d6e7b17957c5eb7bacb885649bd8c69708b2331a10bcefb"
-dependencies = [
- "konst_macro_rules",
-]
-
-[[package]]
-name = "konst_macro_rules"
-version = "0.2.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4933f3f57a8e9d9da04db23fb153356ecaf00cbd14aee46279c33dc80925c37"
-
-[[package]]
 name = "lazy_static"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2570,6 +2538,16 @@ name = "mime"
 version = "0.3.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d5848f5a9e8117cf94f2f90faac24a87ff81600ff8628c1e3deaab572e76bfa1"
+
+[[package]]
+name = "mime_guess"
+version = "2.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7c44f8e672c00fe5308fa235f821cb4198414e1c77935c1ab6948d3fd78550e"
+dependencies = [
+ "mime",
+ "unicase",
+]
 
 [[package]]
 name = "minecraft-msa-auth"
@@ -3185,6 +3163,7 @@ name = "paradox-core"
 version = "0.4.0-dev"
 dependencies = [
  "anyhow",
+ "async-trait",
  "base64 0.23.1",
  "dirs",
  "elemental-kit",
@@ -3192,6 +3171,7 @@ dependencies = [
  "hex",
  "image",
  "keyring",
+ "quick-xml",
  "reqwest",
  "serde",
  "serde_json",
@@ -3202,6 +3182,7 @@ dependencies = [
  "tokio-util",
  "unicode-normalization",
  "uuid",
+ "windows-sys 0.61.2",
  "zip",
 ]
 
@@ -3656,6 +3637,7 @@ dependencies = [
  "js-sys",
  "log",
  "mime",
+ "mime_guess",
  "native-tls",
  "percent-encoding",
  "pin-project-lite",
@@ -4154,6 +4136,12 @@ dependencies = [
  "cpufeatures 0.3.1",
  "digest 0.11.3",
 ]
+
+[[package]]
+name = "sha1_smol"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbfa15b3dddfee50a0fff136974b3e1bde555604ba463834a7eb7deb6417705d"
 
 [[package]]
 name = "sha2"
@@ -5219,6 +5207,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "unicase"
+version = "2.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "357cc3acc6a036009fd6c973ed009037c732d60d0b4f6c673e9041497482a28f"
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5238,12 +5232,6 @@ name = "unicode-segmentation"
 version = "1.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c6f5d3c3b1bf09027a88a6bc961fc00497d651009560b5463668dc81b0fa87a8"
-
-[[package]]
-name = "unicode-xid"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
 name = "untrusted"
@@ -5306,6 +5294,7 @@ dependencies = [
  "getrandom 0.4.3",
  "js-sys",
  "serde_core",
+ "sha1_smol",
  "wasm-bindgen",
 ]
 

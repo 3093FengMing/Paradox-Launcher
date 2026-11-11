@@ -7,32 +7,33 @@ use anyhow::{Context, Result, ensure};
 use elemental::{
     core::{
         auth::{
-            authorizer::Authorizer, authorizers::offline::OfflineAuthorizer,
-            credential::UserCredential,
+            accounts::{Account, offline::OfflineAccount},
+            credential::Credential,
         },
         launcher::command::LaunchCommand,
-        launcher::process,
         storage::Storage,
     },
     driver::{
-        catalog::GameVersionCatalog,
         driver::InstalledDriver,
         drivers::vanilla::{
-            catalog::VanillaCatalog,
             prepared::{ResolvedVanillaMetadata, ResolvedVanillaVersion},
-            source::{VanillaSource, resolve_vanilla_metadata},
+            source::VanillaEndpoints,
         },
         families::version_json::{
-            launch::{LaunchResolution, parse_argument_string},
             layout::{BaseInstanceLayout, BaseRootLayout},
+            parse_argument_string,
             storage::VersionJsonGameStorageExt,
         },
     },
-    launcher::{LaunchOptions, Launcher},
+    launcher::{LaunchOptions, LaunchResolution, Launcher},
+    schema::mojang::{
+        launcher::LaunchMetaData,
+        piston::{PistonMetaAssetIndexObjects, PistonMetaData},
+    },
 };
 use tokio_util::sync::CancellationToken;
 
-pub use elemental::core::launcher::process::LoggedChild;
+pub use crate::process::{LoggedChild, ProcessLogLine, ProcessLogSource};
 
 use crate::{
     GameProfile, GameVersion, InstalledInstance, Settings,
@@ -40,7 +41,7 @@ use crate::{
     java,
 };
 
-/// The only module that knows Elemental types. UI state stays application-owned.
+/// Application launch policy over Elemental's public prepared-instance API.
 pub struct ElementalService {
     launcher: Launcher,
     settings: Settings,
@@ -50,29 +51,29 @@ pub struct ElementalService {
 /// The command can contain credentials, so it deliberately does not expose Debug.
 pub struct PreparedGameLaunch {
     command: LaunchCommand,
+    executable: PathBuf,
 }
 
 impl PreparedGameLaunch {
     /// Create the game process after the caller has resolved its cancellation boundary.
     pub fn spawn(self) -> Result<LoggedChild> {
-        process::spawn_command_logged(self.command).context("无法启动 Java 进程")
+        crate::process::spawn_command_logged(self.command, &self.executable)
+            .context("无法启动 Java 进程")
     }
 }
 
 struct LaunchIdentity {
-    credential: Option<UserCredential>,
+    credential: Option<Credential>,
     username: String,
 }
-impl Authorizer for LaunchIdentity {
-    async fn authorize(&self) -> elemental::core::auth::error::Result<UserCredential> {
+impl LaunchIdentity {
+    async fn authorize(&self) -> elemental::core::auth::error::Result<Credential> {
         match &self.credential {
             Some(credential) => Ok(credential.clone()),
             None => {
-                OfflineAuthorizer {
-                    username: self.username.clone(),
-                }
-                .authorize()
-                .await
+                OfflineAccount::new(self.username.clone())
+                    .credential()
+                    .await
             }
         }
     }
@@ -92,19 +93,19 @@ impl ElementalService {
     }
 
     pub async fn catalog(&self) -> Result<Vec<GameVersion>> {
-        let source = VanillaSource::with_client(
-            self.settings.network.endpoints()?,
-            self.settings.network.build_client()?,
-        );
-        let releases = VanillaCatalog::new(source)
-            .game_versions()
-            .await
-            .context("无法获取 Mojang 版本目录，请检查网络后重试")?;
-        let mut versions: Vec<_> = releases
+        let endpoints = self.settings.network.endpoints()?;
+        let client = self.settings.network.build_client()?;
+        let timeout = std::time::Duration::from_secs(self.settings.network.timeout_seconds.into());
+        let manifest: LaunchMetaData =
+            fetch_vanilla_json(&client, &endpoints.version_manifest_url()?, timeout)
+                .await
+                .context("无法获取 Mojang 版本目录，请检查网络后重试")?;
+        let mut versions: Vec<_> = manifest
+            .versions
             .into_iter()
             .map(|release| GameVersion {
-                id: release.id.to_string(),
-                kind: release.stream.unwrap_or_else(|| "unknown".into()),
+                id: release.id,
+                kind: release.release_type,
             })
             .collect();
         versions.sort_by(|left, right| {
@@ -157,14 +158,13 @@ impl ElementalService {
             &profile.instance_key,
         )?;
         let endpoints = self.settings.network.endpoints()?;
-        let source =
-            VanillaSource::with_client(endpoints.clone(), self.settings.network.build_client()?);
+        let client = self.settings.network.build_client()?;
         let storage = Storage::new(&self.settings.game_directory, BaseRootLayout);
         let instance = storage
             .ensure_instance(profile.instance_key.clone(), BaseInstanceLayout)
             .await
             .context("无法创建实例目录")?;
-        let resolved = match ResolvedVanillaVersion::load(endpoints, instance.clone()) {
+        let resolved = match ResolvedVanillaVersion::load(endpoints.clone(), instance.clone()) {
             Ok(local) => local,
             Err(_) => {
                 let metadata = tokio::select! {
@@ -172,7 +172,8 @@ impl ElementalService {
                     () = cancellation.cancelled() => return Err(DownloadError::Cancelled),
                     result = tokio::time::timeout(
                         std::time::Duration::from_secs(self.settings.network.timeout_seconds.into()),
-                        resolve_vanilla_metadata(&source, &profile.game_version),
+                        resolve_bounded_vanilla_metadata(&endpoints, &client, &profile.game_version,
+                            std::time::Duration::from_secs(self.settings.network.timeout_seconds.into())),
                     ) => result
                         .map_err(|_| anyhow::anyhow!("获取游戏元数据超时"))?
                         .context("无法获取游戏元数据")?,
@@ -259,7 +260,7 @@ impl ElementalService {
         profile: &GameProfile,
         settings: &Settings,
         managed_runtime_root: &Path,
-        credential: Option<UserCredential>,
+        credential: Option<Credential>,
     ) -> Result<LoggedChild> {
         self.prepare_authenticated_launch(profile, settings, managed_runtime_root, credential)
             .await?
@@ -273,7 +274,7 @@ impl ElementalService {
         profile: &GameProfile,
         settings: &Settings,
         managed_runtime_root: &Path,
-        credential: Option<UserCredential>,
+        credential: Option<Credential>,
     ) -> Result<PreparedGameLaunch> {
         profile.validate()?;
         settings.validate()?;
@@ -341,7 +342,8 @@ impl ElementalService {
         options = options.set_extra_game_arguments(
             parse_argument_string(&settings.extra_game_arguments).context("游戏参数引号不匹配")?,
         );
-        options.runtime_executable_path = Some(runtime.executable);
+        let runtime_options =
+            crate::runtime::elemental_runtime_options(&runtime, required_java).await?;
         let credential = LaunchIdentity {
             credential,
             username: settings.offline_username.clone(),
@@ -351,20 +353,68 @@ impl ElementalService {
         .context("无法获取启动身份凭据")?;
         let mut command = self
             .launcher
-            .build_launch_command(&prepared, &credential, &options)
+            .build_launch_command(&prepared, &credential, &runtime_options, &options)
             .await
             .context("无法构建启动命令，请检查 Java 版本和实例文件")?;
+        let prepared_info = prepared.info().context("无法读取实例原生库布局")?;
         include_extracted_natives(
             &mut command,
-            &settings
-                .game_directory
-                .join("versions")
-                .join(&profile.instance_key)
-                .join("natives"),
+            &prepared_info.natives_directory,
+            &prepared_info.natives_files,
         )?;
         include_profile_environment(&mut command, settings, profile);
-        Ok(PreparedGameLaunch { command })
+        Ok(PreparedGameLaunch {
+            command,
+            executable: runtime.executable,
+        })
     }
+}
+
+// Upstream catalogs use their default metadata client. Keep application proxy,
+// mirror, decoded response bounds and a total deadline at this fetch boundary,
+// then hand the public SDK schema to its normal prepared-instance planner.
+async fn fetch_vanilla_json<T: serde::de::DeserializeOwned>(
+    client: &reqwest::Client,
+    url: &str,
+    timeout: std::time::Duration,
+) -> Result<T> {
+    let bytes = crate::loaders::fetch_metadata_resource(client, url, timeout)
+        .await
+        .context("原版元数据请求失败或超过网络限制")?;
+    serde_json::from_slice(&bytes).context("原版元数据格式无效")
+}
+
+pub(crate) async fn resolve_bounded_vanilla_metadata(
+    endpoints: &VanillaEndpoints,
+    client: &reqwest::Client,
+    game_version: &str,
+    timeout: std::time::Duration,
+) -> Result<ResolvedVanillaMetadata> {
+    tokio::time::timeout(timeout, async {
+        let manifest: LaunchMetaData =
+            fetch_vanilla_json(client, &endpoints.version_manifest_url()?, timeout).await?;
+        let version = manifest
+            .versions
+            .iter()
+            .find(|version| version.id == game_version)
+            .context("Mojang 目录中没有所选游戏版本")?;
+        let metadata: PistonMetaData =
+            fetch_vanilla_json(client, &endpoints.rewrite_upstream(&version.url)?, timeout).await?;
+        validate_metadata_paths(&serde_json::to_value(&metadata)?)?;
+        let assets: PistonMetaAssetIndexObjects = fetch_vanilla_json(
+            client,
+            &endpoints.rewrite_upstream(&metadata.asset_index.url)?,
+            timeout,
+        )
+        .await?;
+        Ok(ResolvedVanillaMetadata::new(
+            endpoints.clone(),
+            metadata,
+            assets,
+        ))
+    })
+    .await
+    .context("获取游戏元数据超时")?
 }
 
 /// Java's classpath/JAR readers do not accept Windows verbatim prefixes.
@@ -416,22 +466,40 @@ fn include_profile_environment(
     crate::preferences::merge_environment(&mut command.env, &profile.overrides.environment);
 }
 
-fn include_extracted_natives(command: &mut LaunchCommand, natives: &Path) -> Result<()> {
+fn include_extracted_natives(
+    command: &mut LaunchCommand,
+    natives: &Path,
+    native_files: &[PathBuf],
+) -> Result<()> {
     let natives = java_compatible_path(natives);
-    // New Mojang metadata uses natives/java, while this pinned Elemental version
-    // extracts the JNI libraries at natives/. Preserve the metadata search path
-    // and add the actual extraction directory instead of changing saved metadata.
+    // Metadata can select a nested directory while another JNI library lives at
+    // the extraction root. Use the prepared instance's public layout and files
+    // so both upstream compatibility copies and original nested entries work.
     if let Some(argument) = command
         .jvm_arguments
         .iter_mut()
+        .rev()
         .find(|argument| argument.starts_with("-Djava.library.path="))
     {
         let mut paths: Vec<_> =
             std::env::split_paths(argument.trim_start_matches("-Djava.library.path="))
                 .map(|path| java_compatible_path(&path))
                 .collect();
-        if !paths.iter().any(|path| path == &natives) {
-            paths.push(natives);
+        let mut extracted_roots = vec![natives.clone()];
+        for file in native_files {
+            let file = java_compatible_path(file);
+            if file.starts_with(&natives)
+                && let Some(parent) = file.parent()
+            {
+                extracted_roots.push(parent.to_owned());
+            }
+        }
+        extracted_roots.sort();
+        extracted_roots.dedup();
+        for root in extracted_roots {
+            if !paths.contains(&root) {
+                paths.push(root);
+            }
         }
         let paths = std::env::join_paths(paths).context("原生库搜索路径无效")?;
         *argument = format!(
@@ -549,10 +617,13 @@ mod tests {
 
     #[tokio::test]
     async fn launch_identity_preserves_supplied_online_credentials() {
-        let credential = UserCredential {
+        let credential = Credential {
             username: "OnlinePlayer".into(),
             uuid: "12345678-1234-1234-1234-123456789abc".into(),
             access_token: "fixture-access-token".into(),
+            kind: elemental::core::auth::credential::CredentialKind::Msa,
+            xuid: Some("fixture-xuid".into()),
+            client_id: Some("fixture-client-id".into()),
         };
         let authorized = LaunchIdentity {
             credential: Some(credential.clone()),
@@ -561,9 +632,7 @@ mod tests {
         .authorize()
         .await
         .unwrap();
-        assert_eq!(authorized.username, credential.username);
-        assert_eq!(authorized.uuid, credential.uuid);
-        assert_eq!(authorized.access_token, credential.access_token);
+        assert_eq!(authorized, credential);
     }
 
     #[tokio::test]
@@ -580,22 +649,37 @@ mod tests {
         assert!(authorized.access_token.is_empty());
     }
 
-    fn launch_command(jvm_arguments: Vec<String>, game_arguments: Vec<String>) -> LaunchCommand {
+    async fn launch_command(
+        jvm_arguments: Vec<String>,
+        game_arguments: Vec<String>,
+    ) -> LaunchCommand {
+        let temporary = tempfile::tempdir().unwrap();
+        let home = temporary.path().join("fixture-java");
+        std::fs::create_dir_all(home.join("bin")).unwrap();
+        std::fs::write(
+            home.join("bin")
+                .join(format!("java{}", std::env::consts::EXE_SUFFIX)),
+            b"fixture",
+        )
+        .unwrap();
+        std::fs::write(home.join("release"), b"JAVA_VERSION=\"21.0.1\"\n").unwrap();
+        let provider =
+            elemental::core::runtime::providers::custom::CustomProvider::new(vec![home]).unwrap();
+        let distribution =
+            elemental::core::runtime::RuntimeResolver::new(vec![std::sync::Arc::new(provider)])
+                .resolve(21)
+                .await
+                .unwrap();
         LaunchCommand::new(
-            elemental::core::runtime::distribution::Distribution {
-                release: None,
-                path: PathBuf::from("fixture-java"),
-                executable_override: None,
-                provider: "sdk test",
-            },
+            distribution,
             jvm_arguments,
             "example.Main".into(),
             game_arguments,
         )
     }
 
-    #[test]
-    fn extracted_natives_preserve_jvm_argument_order_and_game_arguments() {
+    #[tokio::test]
+    async fn extracted_natives_preserve_jvm_argument_order_and_game_arguments() {
         let metadata_natives = PathBuf::from("metadata-natives");
         let extracted_natives = PathBuf::from("extracted-natives");
         let metadata_path = std::env::join_paths([&metadata_natives]).unwrap();
@@ -610,11 +694,12 @@ mod tests {
                 "Player".into(),
             ],
         )
+        .await
         .with_cwd(PathBuf::from("fixture-instance"))
         .with_env("SDK_ENV".into(), "retained".into());
         let program = command.program();
-        include_extracted_natives(&mut command, &extracted_natives).unwrap();
-        include_extracted_natives(&mut command, &extracted_natives).unwrap();
+        include_extracted_natives(&mut command, &extracted_natives, &[]).unwrap();
+        include_extracted_natives(&mut command, &extracted_natives, &[]).unwrap();
         let expected_path = std::env::join_paths([&metadata_natives, &extracted_natives]).unwrap();
         assert_eq!(
             command.arguments(),
@@ -635,13 +720,14 @@ mod tests {
         );
     }
 
-    #[test]
-    fn extracted_natives_do_not_reinterpret_game_arguments_as_jvm_arguments() {
+    #[tokio::test]
+    async fn extracted_natives_do_not_reinterpret_game_arguments_as_jvm_arguments() {
         let mut command = launch_command(
             vec!["-Xmx1024M".into()],
             vec!["-Djava.library.path=game-option".into()],
-        );
-        include_extracted_natives(&mut command, Path::new("extracted-natives")).unwrap();
+        )
+        .await;
+        include_extracted_natives(&mut command, Path::new("extracted-natives"), &[]).unwrap();
         assert_eq!(
             command.arguments(),
             vec![
@@ -650,6 +736,51 @@ mod tests {
                 "-Djava.library.path=game-option".to_owned(),
             ]
         );
+    }
+
+    #[tokio::test]
+    async fn natives_search_path_uses_actual_root_and_nested_files_in_last_jvm_property() {
+        let temporary = tempfile::tempdir().unwrap();
+        let natives = temporary.path().join("upstream natives");
+        let java = natives.join("java");
+        let nested = natives.join("platform/vendor");
+        std::fs::create_dir_all(&java).unwrap();
+        std::fs::create_dir_all(&nested).unwrap();
+        let files = vec![
+            natives.join("jtracy.dll"),
+            java.join("lwjgl.dll"),
+            nested.join("audio.dll"),
+        ];
+        for file in &files {
+            std::fs::write(file, b"native fixture").unwrap();
+        }
+        let initial = std::env::join_paths([&java]).unwrap();
+        let mut command = launch_command(
+            vec![
+                "-Djava.library.path=earlier-option".into(),
+                format!("-Djava.library.path={}", initial.to_string_lossy()),
+                "-Xmx2048M".into(),
+            ],
+            vec!["--version".into(), "26.3".into()],
+        )
+        .await;
+        include_extracted_natives(&mut command, &natives, &files).unwrap();
+        include_extracted_natives(&mut command, &natives, &files).unwrap();
+        let roots: Vec<_> = std::env::split_paths(
+            command.jvm_arguments[1].trim_start_matches("-Djava.library.path="),
+        )
+        .collect();
+        assert_eq!(roots[0], java);
+        for file in files {
+            assert!(roots.contains(&file.parent().unwrap().to_owned()));
+        }
+        assert_eq!(roots.len(), 3);
+        assert_eq!(
+            command.jvm_arguments[0],
+            "-Djava.library.path=earlier-option"
+        );
+        assert_eq!(command.jvm_arguments[2], "-Xmx2048M");
+        assert_eq!(command.game_arguments, ["--version", "26.3"]);
     }
 
     #[tokio::test]
@@ -845,6 +976,10 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn vanilla_prepare_accepts_valid_local_files_and_creates_natives_inside_instance() {
+        use elemental::core::storage::layout::Layoutable;
+        use sha1::{Digest, Sha1};
+        use std::io::Write;
+
         let temporary = tempfile::tempdir().unwrap();
         let root = temporary.path().canonicalize().unwrap().join("minecraft");
         let profile = GameProfile::new("Vanilla", "1.21.1").unwrap();
@@ -856,6 +991,29 @@ mod tests {
         );
         let mut metadata = vanilla_metadata(&profile);
         metadata.metadata.downloads.client.sha1 = "da39a3ee5e6b4b0d3255bfef95601890afd80709".into();
+        let mut archive = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+        for name in ["jtracy.dll", "java/lwjgl.dll", "platform/vendor/audio.dll"] {
+            archive
+                .start_file(name, zip::write::SimpleFileOptions::default())
+                .unwrap();
+            archive.write_all(name.as_bytes()).unwrap();
+        }
+        let archive = archive.finish().unwrap().into_inner();
+        let platform = elemental::driver::families::version_json::VersionJsonPlatform::current();
+        let artifact_path = format!(
+            "org/example/native/1/native-1-natives-{}.jar",
+            platform.native_os_names()[0]
+        );
+        let library = root.join("libraries").join(&artifact_path);
+        std::fs::create_dir_all(library.parent().unwrap()).unwrap();
+        std::fs::write(&library, &archive).unwrap();
+        metadata.metadata.libraries = serde_json::from_value(serde_json::json!([{
+            "name": format!("org.example:native:1:natives-{}", platform.native_os_names()[0]),
+            "downloads": {"artifact": {"path": artifact_path,
+                "sha1": hex::encode(Sha1::digest(&archive)), "size": archive.len(),
+                "url": format!("https://libraries.minecraft.net/{artifact_path}")}}
+        }]))
+        .unwrap();
         persist_vanilla_metadata(metadata, &profile, &paths, &instance)
             .await
             .unwrap();
@@ -870,11 +1028,10 @@ mod tests {
         };
         settings.network.proxy_url = "http://127.0.0.1:1".into();
         settings.network.timeout_seconds = 1;
+        let service = ElementalService::new(&settings).unwrap();
         let prepared = tokio::time::timeout(
             std::time::Duration::from_secs(5),
-            ElementalService::new(&settings)
-                .unwrap()
-                .prepare_with_progress(&profile, CancellationToken::new(), |_| {}),
+            service.prepare_with_progress(&profile, CancellationToken::new(), |_| {}),
         )
         .await
         .unwrap()
@@ -883,7 +1040,44 @@ mod tests {
             prepared.canonicalize().unwrap(),
             paths.instance.canonicalize().unwrap()
         );
-        assert!(prepared.join("natives").is_dir());
+        let natives = java_compatible_path(
+            &instance
+                .try_get_resource(
+                    elemental::driver::families::version_json::VersionJsonInstanceResource::Natives,
+                )
+                .unwrap(),
+        );
+        assert!(natives.is_dir());
+        assert!(natives.starts_with(&prepared));
+        for name in ["jtracy.dll", "java/lwjgl.dll", "platform/vendor/audio.dll"] {
+            assert_eq!(std::fs::read(natives.join(name)).unwrap(), name.as_bytes());
+        }
+        let inspected = service
+            .launcher
+            .inspect_instance(profile.instance_key.clone())
+            .await
+            .unwrap()
+            .unwrap();
+        let loaded = service.launcher.load_instance(inspected).await.unwrap();
+        let info = loaded.info().unwrap();
+        assert_eq!(info.natives_directory, natives);
+        let mut command = launch_command(
+            vec![format!(
+                "-Djava.library.path={}",
+                natives.join("java").display()
+            )],
+            vec![],
+        )
+        .await;
+        include_extracted_natives(&mut command, &info.natives_directory, &info.natives_files)
+            .unwrap();
+        let roots: Vec<_> = std::env::split_paths(
+            command.jvm_arguments[0].trim_start_matches("-Djava.library.path="),
+        )
+        .collect();
+        assert!(roots.contains(&natives));
+        assert!(roots.contains(&natives.join("java")));
+        assert!(roots.contains(&natives.join("platform/vendor")));
         assert!(prepared.join(".elemental").is_dir());
     }
 
@@ -921,11 +1115,15 @@ mod tests {
     #[cfg(any(unix, windows))]
     #[tokio::test]
     async fn vanilla_install_rejects_existing_sdk_links_before_creating_instance() {
+        let platform_natives =
+            elemental::driver::families::version_json::VersionJsonPlatform::current()
+                .natives_dir_name();
         for target in [
-            "assets/indexes",
-            "natives/nested",
-            ".elemental/state",
-            "metadata",
+            "assets/indexes".to_owned(),
+            "natives/nested".to_owned(),
+            ".elemental/state".to_owned(),
+            "metadata".to_owned(),
+            format!("{platform_natives}/nested"),
         ] {
             let temp = tempfile::tempdir().unwrap();
             let root = temp.path().canonicalize().unwrap().join("minecraft");
@@ -936,9 +1134,9 @@ mod tests {
             let linked = if target == "metadata" {
                 instance.join(format!("{}.json", profile.instance_key))
             } else if target.starts_with("assets/") {
-                root.join(target)
+                root.join(&target)
             } else {
-                instance.join(target)
+                instance.join(&target)
             };
             std::fs::create_dir_all(linked.parent().unwrap()).unwrap();
             directory_link(&outside, &linked);
