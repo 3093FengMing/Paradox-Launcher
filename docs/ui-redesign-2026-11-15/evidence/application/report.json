@@ -1,0 +1,12 @@
+[
+  {
+    "suite": "immersive",
+    "pageErrors": [],
+    "csp": []
+  },
+  {
+    "suite": "modern",
+    "pageErrors": [],
+    "csp": []
+  }
+]

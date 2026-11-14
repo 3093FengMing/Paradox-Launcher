@@ -1,29 +1,33 @@
-/* immersive: tokens. Retained page rules are owned here during the source redesign. */
-[data-theme="dark"] {
-  --shadow: 0 1px 3px #00000016, 0 0 0 1px #ffffff06;
-  --bg: #263247;
-  --sidebar: #354259;
-  --surface: #151923;
-  --input: #151923;
-  --hover: #2a3a50;
-  --border: #465671;
-  --text: #dce3f0;
-  --muted: #bac7dd;
-  --faint: #9eadc4;
-  --titlebar: #606dcc;
-  --titlebar-height: 2.75em;
+/* Primitive → semantic → component layers. Public appearance variables keep user preferences. */
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal, .ui-select-positioner) {
+  --p-graphite: #24272d; --p-panel: #30353d; --p-paper: #edf1f7; --p-white: #fff;
+  --p-primary: #6676dc; --p-action-ink: #0d1022;
+  --p-dark-muted: #bac5d4; --p-light-muted: #586476;
+  --p-dark-selected: #3d465c; --p-light-selected: #e5e9fa;
+  --p-dark-line: #556170; --p-light-line: #cbd3de;
+  --p-dark-control-line: #8997ab; --p-light-control-line: #7a879b;
+  --s-canvas: var(--p-graphite); --s-panel: var(--p-panel); --s-text: var(--p-paper);
+  --s-muted: var(--p-dark-muted); --s-selected: var(--p-dark-selected);
+  --s-line: var(--p-dark-line); --s-control-line: var(--p-dark-control-line);
+  --s-danger: #ffb1b8; --s-warning: #f0c997;
+  --s-overlay: #16181dcc; --s-danger-fill: #943342; --s-danger-on-fill: #fff;
+  --c-control-height: 2.43em; --c-row-height: 3.86em;
+  --c-radius: var(--radius, 6px); --c-focus: var(--accent-ink, #b0bcff);
+  --c-launch-background: var(--accent, var(--p-primary)); --c-launch-text: var(--accent-fg, var(--p-action-ink));
+  --c-navigation-active: var(--s-selected); --c-inspector-background: var(--s-panel);
+  --bg: var(--s-canvas); --panel: var(--s-panel); --surface: var(--s-panel); --input: var(--s-panel);
+  --sidebar: var(--s-panel); --hover: var(--s-selected); --text: var(--s-text); --muted: var(--s-muted);
+  --faint: var(--s-muted); --border: var(--s-line); --control-border: var(--s-control-line);
+  --titlebar: var(--s-panel); --titlebar-height: 4.8em;
+  --danger: var(--s-danger); --warning: var(--s-warning); --ready: var(--c-focus);
+  --shadow: none; --overlay-shadow: 0 12px 40px #1114192f; --overlay-backdrop: var(--s-overlay);
+  --ease-out: cubic-bezier(.2,.7,.2,1); color-scheme: dark;
 }
-[data-theme="light"] {
-  --shadow: 0 1px 3px #16162f05, 0 0 0 1px #16162f08;
-  --bg: #edf1f8;
-  --sidebar: #e2e8f2;
-  --surface: #ffffff;
-  --input: #ffffff;
-  --hover: #e8edf5;
-  --border: #cbd5e5;
-  --text: #17253a;
-  --muted: #52627a;
-  --faint: #63728a;
-  --titlebar: #606dcc;
-  --titlebar-height: 2.75em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal)[data-theme="light"],
+.ui-select-positioner[data-ui-theme="light"] {
+  --s-canvas: var(--p-paper); --s-panel: var(--p-white); --s-text: var(--p-graphite);
+  --s-muted: var(--p-light-muted); --s-selected: var(--p-light-selected);
+  --s-line: var(--p-light-line); --s-control-line: var(--p-light-control-line);
+  --s-danger: #943342; --s-warning: #7b4b17; --c-focus: var(--accent-ink, #4357b4);
+  color-scheme: light;
 }

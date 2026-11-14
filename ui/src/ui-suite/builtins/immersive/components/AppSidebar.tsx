@@ -38,24 +38,24 @@ export default function AppSidebar(input?: SidebarProps & { props?: Readonly<Rec
     <Menu.Root data-ui-site="ImmersiveSidebarMenu-root">
       <Menu.Trigger className="secondary mobile-navigation-trigger" aria-label={t('responsiveUi.navigation')} data-ui-site="ImmersiveSidebarMenu-trigger"><MenuIcon size={16} aria-hidden="true" data-ui-site="ImmersiveSidebarMenu-icon"/>{t('responsiveUi.navigation')}</Menu.Trigger>
       <Menu.Portal data-ui-site="ImmersiveSidebarMenu-portal">
-        <Menu.Positioner side="bottom" align="start" sideOffset={4} className="immersive-navigation-positioner" data-ui-site="ImmersiveSidebarMenu-positioner">
-          <Menu.Popup className="immersive-navigation-menu" data-ui-site="ImmersiveSidebarMenu-popup">
+        <Menu.Positioner side="bottom" align="start" sideOffset={4} className="immersive-navigation-positioner immersive-portal" data-ui-site="ImmersiveSidebarMenu-positioner" style={{ fontSize: Math.max(13, 14 * (s.appearance.value?.ui_scale ?? 100) / 100) }}>
+          <Menu.Popup className="immersive-navigation-menu immersive-portal" data-ui-site="ImmersiveSidebarMenu-popup" style={{ fontSize: 'inherit' }}>
             {visible.map(route => { const Icon = routeIcon(route.icon), label = t(route.title, { defaultValue: route.title }); return <UiIdentity key={route.id} namespace="route" value={route.id}>
-              <Menu.Item label={label} onClick={() => { if (route.id === 'settings') a.settings.setTab('appearance'); a.navigation.navigate(route.id); }} data-ui-site="ImmersiveSidebarMenu-route">
+              <Menu.Item label={label} onClick={() => { if (route.id === 'settings') a.settings.setTab('appearance'); a.navigation.navigate(route.id); }} data-ui-site="ImmersiveSidebarMenu-route" style={{ fontSize: 'inherit' }}>
                 {Icon && <Icon size={16} aria-hidden="true" data-ui-site="ImmersiveSidebarMenu-route-icon"/>}<span data-ui-site="ImmersiveSidebarMenu-route-label">{label}</span>
               </Menu.Item>
             </UiIdentity>; })}
             {contextual && entry && <UiIdentity namespace="profile" value={entry.profile.instance_key}>
               <Menu.Separator className="mobile-navigation-separator" data-ui-site="ImmersiveSidebarMenu-separator"/>
               {['overview', 'settings', 'mods', 'resourcepacks', 'shaderpacks', 'saves'].map(section => <UiIdentity key={section} namespace="section" value={section}>
-                <Menu.Item label={t(`shellHome.sections.${section}`)} onClick={() => props.onDetailSectionChange?.(section)} data-ui-site="ImmersiveSidebarMenu-section">{t(`shellHome.sections.${section}`)}</Menu.Item>
+                <Menu.Item label={t(`shellHome.sections.${section}`)} onClick={() => props.onDetailSectionChange?.(section)} data-ui-site="ImmersiveSidebarMenu-section" style={{ fontSize: 'inherit' }}>{t(`shellHome.sections.${section}`)}</Menu.Item>
               </UiIdentity>)}
               <Menu.CheckboxItem checked={s.content.includeSaves} disabled={s.content.pending} onCheckedChange={value => a.content.setIncludeSaves(value)} label={t('content.includeSaves')} data-ui-site="ImmersiveSidebarMenu-include-saves">
                 {s.content.includeSaves && <Check size={14} aria-hidden="true" data-ui-site="ImmersiveSidebarMenu-include-check"/>}{t('content.includeSaves')}
               </Menu.CheckboxItem>
-              <Menu.Item label={t('content.exportInstance')} disabled={operationDisabled || s.content.selectedProfileKey !== entry.profile.instance_key} onClick={() => void a.content.exportInstance()} data-ui-site="ImmersiveSidebarMenu-export">{t('content.exportInstance')}</Menu.Item>
-              {['mods', 'resourcepacks', 'shaderpacks', 'saves'].includes(props.detailSection ?? '') && <Menu.Item label={t('instancePages.openCategory', { category: t(`content.categories.${props.detailSection}`) })} disabled={!s.window.desktop || s.content.pending || s.content.selectedProfileKey !== entry.profile.instance_key || s.content.category !== props.detailSection} onClick={() => void a.content.openDirectory()} data-ui-site="ImmersiveSidebarMenu-folder">{t('instancePages.openCategory', { category: t(`content.categories.${props.detailSection}`) })}</Menu.Item>}
-              <Menu.Item label={t('instancePages.relatedTasks')} onClick={() => props.onDetailSectionChange?.('overview')} data-ui-site="ImmersiveSidebarMenu-related">{t('instancePages.relatedTasks')}</Menu.Item>
+              <Menu.Item label={t('content.exportInstance')} disabled={operationDisabled || s.content.selectedProfileKey !== entry.profile.instance_key} onClick={() => void a.content.exportInstance()} data-ui-site="ImmersiveSidebarMenu-export" style={{ fontSize: 'inherit' }}>{t('content.exportInstance')}</Menu.Item>
+              {['mods', 'resourcepacks', 'shaderpacks', 'saves'].includes(props.detailSection ?? '') && <Menu.Item label={t('instancePages.openCategory', { category: t(`content.categories.${props.detailSection}`) })} disabled={!s.window.desktop || s.content.pending || s.content.selectedProfileKey !== entry.profile.instance_key || s.content.category !== props.detailSection} onClick={() => void a.content.openDirectory()} data-ui-site="ImmersiveSidebarMenu-folder" style={{ fontSize: 'inherit' }}>{t('instancePages.openCategory', { category: t(`content.categories.${props.detailSection}`) })}</Menu.Item>}
+              <Menu.Item label={t('instancePages.relatedTasks')} onClick={() => props.onDetailSectionChange?.('overview')} data-ui-site="ImmersiveSidebarMenu-related" style={{ fontSize: 'inherit' }}>{t('instancePages.relatedTasks')}</Menu.Item>
             </UiIdentity>}
           </Menu.Popup>
         </Menu.Positioner>
@@ -64,6 +64,7 @@ export default function AppSidebar(input?: SidebarProps & { props?: Readonly<Rec
     <span className="mobile-navigation-label" data-ui-site="ImmersiveSidebarMenu-current">{currentRoute ? t(currentRoute.title, { defaultValue: currentRoute.title }) : t('nav.workspace')}</span>
   </div>;
 
+  if (!contextual && s.navigation.routeId !== 'instances') return null;
   if (contextual) return <Fragment>{mobileNavigation}<aside data-ui-site="AppSidebar-context" className="sidebar instance-context-sidebar" aria-label={t('shellHome.instanceSections')}>
     <button data-ui-site="AppSidebar-back" className="text-button" onClick={() => a.navigation.navigate('instances')}>{t('instancePages.back')}</button>
     {entry ? <UiIdentity namespace="profile" value={entry.profile.instance_key}>
@@ -78,7 +79,7 @@ export default function AppSidebar(input?: SidebarProps & { props?: Readonly<Rec
       </div>
     </UiIdentity> : <p data-ui-site="AppSidebar-missing" className="instance-note">{t('instancePages.missing')}</p>}
   </aside></Fragment>;
-  return <Fragment>{mobileNavigation}<aside data-ui-site="AppSidebar-6" className="sidebar" aria-label={t('nav.workspace')}>
+  return <Fragment>{mobileNavigation}<aside data-ui-site="AppSidebar-6" className="sidebar instance-directory-sidebar" aria-label={t('instancePages.sidebarTools')}>
 
     {accounts && <button data-ui-site="AppSidebar-account" className={`sidebar-account ${s.navigation.routeId === 'accounts' ? 'active' : ''}`} aria-label={t('app.openAccount')} title={`${account.name} · ${t(account.kind === 'microsoft' ? 'auth.microsoftIdentity' : 'common.offlineAccount')}`}
       onClick={() => a.navigation.navigate(accounts.id)}>

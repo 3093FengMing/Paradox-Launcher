@@ -42,7 +42,7 @@
   margin: 12px 0 7px;
 }
 .identity-card p {
-  font-size: 0.63em;
+  font-size: max(12px, 0.63em);
   margin: 17px 0 19px;
 }
 .metrics {
@@ -56,23 +56,23 @@
   align-items: center;
   gap: 14px;
   padding: 18px 20px;
-  border-radius: min(12px, var(--radius));
+  border-radius: var(--radius, 12px);
 }
 .metrics strong {
   font-size: 1.2em;
   font-weight: 550;
 }
 .metrics strong small {
-  font-size: 0.52em;
+  font-size: max(12px, 0.52em);
   color: var(--faint);
   font-weight: 400;
 }
 .metrics p {
-  font-size: 0.61em;
+  font-size: max(12px, 0.61em);
   margin-top: 4px;
 }
 .metrics .metric-word {
-  font-size: 0.9em;
+  font-size: max(12px, 0.9em);
 }
 .metrics .icon-button {
   margin-left: auto;
@@ -131,7 +131,7 @@
   font-size: 1.2em;
 }
 .account-title p {
-  font-size: 0.7em;
+  font-size: max(12px, 0.7em);
   margin-top: 5px;
 }
 .settings-tabs {
@@ -161,7 +161,7 @@
   gap: 12px;
 }
 .theme-options button {
-  border-radius: min(12px, var(--radius));
+  border-radius: var(--radius, 12px);
   background: var(--input);
   color: var(--muted);
   padding: 20px 17px;
@@ -201,7 +201,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.72em;
+  font-size: max(12px, 0.72em);
   color: var(--muted);
 }
 .log-status small {
@@ -223,7 +223,7 @@
 }
 .log-line b {
   color: var(--accent-ink);
-  font-size: 0.88em;
+  font-size: max(12px, 0.88em);
 }
 .log-line span {
   color: var(--muted);
@@ -315,7 +315,7 @@
 }
 
 .library-empty {
-  border-radius: min(10px, var(--radius));
+  border-radius: var(--radius, 10px);
   box-shadow: inset 0 0 0 1px var(--border);
   min-height: 173px;
   display: flex;
@@ -326,20 +326,20 @@
   padding: 21px 18px;
 }
 .library-empty h3 {
-  font-size: 0.82em;
+  font-size: max(12px, 0.82em);
   font-weight: 500;
 }
 .library-empty p {
-  font-size: 0.7em;
+  font-size: max(12px, 0.7em);
   margin: 7px 0 13px;
 }
 .library-empty .text-button {
   color: var(--accent-ink);
-  font-size: 0.72em;
+  font-size: max(12px, 0.72em);
 }
 
 .profile-card {
-  border-radius: min(10px, var(--radius));
+  border-radius: var(--radius, 10px);
   padding: 17px;
 }
 .profile-card.selected {
@@ -351,14 +351,14 @@
   color: #a3cba8;
   background: #364b3a;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius, 6px);
 }
 .profile-info h3 {
-  font-size: 0.83em;
+  font-size: max(12px, 0.83em);
   font-weight: 500;
 }
 .profile-info p {
-  font-size: 0.67em;
+  font-size: max(12px, 0.67em);
 }
 .profile-actions {
   gap: 6px;
@@ -379,15 +379,15 @@
   border: 0;
   gap: 4px;
   padding: 4px;
-  border-radius: 9px;
+  border-radius: var(--radius, 6px);
   background: var(--hover);
   margin-bottom: 23px;
 }
 .settings-tabs button {
   padding: 9px 14px;
   border: 0;
-  border-radius: 6px;
-  font-size: 0.78em;
+  border-radius: var(--radius, 6px);
+  font-size: max(12px, 0.78em);
 }
 .settings-tabs button.active {
   background: var(--surface);
@@ -398,7 +398,7 @@
   padding: 27px 29px;
 }
 .settings-intro p {
-  font-size: 0.76em;
+  font-size: max(12px, 0.76em);
 }
 .theme-options button {
   border: 0;
@@ -408,17 +408,17 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent);
 }
 .theme-options button span {
-  font-size: 0.8em;
+  font-size: max(12px, 0.8em);
 }
 .range-control output,
 .log-line time  {
   font-variant-numeric: tabular-nums;
 }
 .save-bar > span {
-  font-size: 0.76em;
+  font-size: max(12px, 0.76em);
 }
 .log-line {
-  font-size: 0.72em;
+  font-size: max(12px, 0.72em);
 }
 
 @media (max-width: 850px) {
@@ -441,7 +441,7 @@
   }
   .settings-tabs button {
     padding: 9px;
-    font-size: 0.7em;
+    font-size: max(12px, 0.7em);
     gap: 5px;
   }
   .theme-options button {
@@ -449,12 +449,12 @@
     flex-direction: column;
   }
   .save-bar > span {
-    font-size: 0.66em;
+    font-size: max(12px, 0.66em);
   }
   .save-bar .primary,
   .save-bar .secondary {
     padding: 9px 10px;
-    font-size: 0.7em;
+    font-size: max(12px, 0.7em);
   }
 }
 @media (max-width: 640px) {
@@ -541,7 +541,7 @@
   align-items: stretch;
   color: var(--muted);
   background: var(--input);
-  border-radius: 10px;
+  border-radius: var(--radius, 6px);
   overflow: hidden;
   box-shadow: inset 0 0 0 1px var(--border);
   border: 1px solid transparent;
@@ -621,12 +621,12 @@
 .style-option-label strong {
   display: block;
   color: var(--text);
-  font-size: 0.82em;
+  font-size: max(12px, 0.82em);
   font-weight: 500;
 }
 .style-option-label small {
   display: block;
-  font-size: 0.7em;
+  font-size: max(12px, 0.7em);
   color: var(--faint);
   margin-top: 5px;
 }
@@ -644,6 +644,6 @@
     padding: 6px 10px 11px;
   }
   .style-option-label small {
-    font-size: 0.63em;
+    font-size: max(12px, 0.63em);
   }
 }

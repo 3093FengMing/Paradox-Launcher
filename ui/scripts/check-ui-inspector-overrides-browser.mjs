@@ -38,7 +38,7 @@ const download = async action => {
 const check = async (name, fn) => {
   if (onlyCases && !onlyCases.test(name)) return;
   try { report.rows.push({ name, detail: await fn() }); console.log('PASS ' + name); }
-  catch (error) { report.rows.push({ name, failure: String(error), snapshot: await state(), dom: await page.evaluate(() => { const host=document.getElementById('paradox-suite-editor'), avatar=document.querySelector('.sidebar .account-avatar'), rect=avatar?.getBoundingClientRect(); return {host:host?.style.cssText, hostPointers:host&&getComputedStyle(host).pointerEvents, shadow:host?.shadowRoot.innerHTML, avatar:rect?.toJSON(), hit:rect&&document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2)?.outerHTML};}) }); await page.screenshot({path:resolve(out,'failure.png')}); console.error('FAIL ' + name + ' ' + error); process.exitCode = 1; throw error; }
+  catch (error) { report.rows.push({ name, failure: String(error), snapshot: await state(), dom: await page.evaluate(() => { const host=document.getElementById('paradox-suite-editor'), avatar=document.querySelector('.accounts-page .account-avatar'), rect=avatar?.getBoundingClientRect(); return {host:host?.style.cssText, hostPointers:host&&getComputedStyle(host).pointerEvents, shadow:host?.shadowRoot.innerHTML, avatar:rect?.toJSON(), hit:rect&&document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2)?.outerHTML};}) }); await page.screenshot({path:resolve(out,'failure.png')}); console.error('FAIL ' + name + ' ' + error); process.exitCode = 1; throw error; }
 };
 
 async function journey(customEditor) {
@@ -62,8 +62,8 @@ async function journey(customEditor) {
     await page.waitForFunction(() => window.suiteFinalFixture.snapshot.accounts.ready && !window.suiteFinalFixture.snapshot.accounts.loading);
     await page.evaluate(async () => {
       const f = window.suiteFinalFixture, c = f.controller;
-      const owner = f.owners().find(owner => owner.target === 'component.account-avatar' && [...owner.roots].some(root => root.closest('.sidebar')));
-      if (!owner) throw Error('Existing sidebar account target missing before editor replacement');
+      const owner = f.owners().find(owner => owner.target === 'component.account-avatar' && [...owner.roots].some(root => root.closest('.accounts-page')));
+      if (!owner) throw Error('Existing accounts page account target missing before editor replacement');
       c.actions.selectTarget({ kind: 'position', target: owner.target, locator: owner.locator });
       c.actions.createFile('R1-retained.css', 'css');
       c.actions.patchFile('R1-retained.css', '/* unfinished draft before editor layout replacement */\n');
@@ -183,16 +183,16 @@ async function journey(customEditor) {
     await editor().waitFor();
     await captureCustomLayout('business_callback_reopen');
   }
-  // Pick the real sidebar account position through the actual capture service.
+  // Pick the real accounts page account position through the actual capture service.
   await page.evaluate(() => window.suiteFinalFixture.controller.actions.beginPick());
   await page.waitForTimeout(350);
-  await page.locator('.sidebar .account-avatar').first().hover();
+  await page.locator('.accounts-page .account-avatar').first().hover();
   await page.mouse.down(); await page.mouse.up();
   await page.waitForFunction(() => !window.suiteFinalFixture.controller.getSnapshot().picking);
   const selected = await page.evaluate(() => {
     const c = window.suiteFinalFixture.controller, s = c.getSnapshot();
     const target = [s.currentTarget, ...s.targetAncestors].find(t => t?.selector.target === 'component.account-avatar');
-    if (!target) throw Error('Real sidebar account avatar owner missing');
+    if (!target) throw Error('Real accounts page account avatar owner missing');
     c.actions.selectTarget(target.selector); return target.selector;
   });
   assert.equal(selected.kind, 'position');
@@ -261,7 +261,7 @@ async function journey(customEditor) {
     await editor().locator('.ui-target-preview').scrollIntoViewIfNeeded();
     await page.screenshot({ path: resolve('../docs/screenshots/ui-framework-inspector.png') });
     await page.evaluate(() => window.suiteFinalFixture.controller.actions.beginPick());
-    await page.locator('.sidebar .account-avatar').first().hover();
+    await page.locator('.accounts-page .account-avatar').first().hover();
     await page.screenshot({ path: resolve('../docs/screenshots/ui-framework-picker.png') });
     await page.keyboard.press('Escape');
   }

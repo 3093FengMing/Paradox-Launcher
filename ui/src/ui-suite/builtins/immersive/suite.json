@@ -213,8 +213,8 @@
     {
       "path": "common/lib/colors.ts",
       "kind": "ts",
-      "bytes": 513,
-      "sha256": "d8e4e4645f655115db5a7fa22748cb71568260b79a098a1437af3cdc9f50dbf9"
+      "bytes": 674,
+      "sha256": "0d97acd9d989727b3e04718ff98a7927272b503732791b4402c64b35095bddd3"
     },
     {
       "path": "common/lib/dialog-display.ts",
@@ -291,8 +291,8 @@
     {
       "path": "immersive/Home.tsx",
       "kind": "tsx",
-      "bytes": 10682,
-      "sha256": "11d932678ab700d88cecf6e3d92375553ac3374e8e1633238e4879292155ae41"
+      "bytes": 17738,
+      "sha256": "95ecf141c14bc56a7ada83ce85077e07c6851050d949c36f9ac5dcbcd491c2de"
     },
     {
       "path": "immersive/Loading.tsx",
@@ -303,14 +303,14 @@
     {
       "path": "immersive/Notifications.tsx",
       "kind": "tsx",
-      "bytes": 1055,
-      "sha256": "d559033c74321c50b7a9cd5b7d845d5d52d10bae22483e494d42b4efe4ad6616"
+      "bytes": 1293,
+      "sha256": "d704cab2f0b4acd931a207364e741885305b51df1c5d80fe66264211caf97158"
     },
     {
       "path": "immersive/Shell.tsx",
       "kind": "tsx",
-      "bytes": 3914,
-      "sha256": "0a4c0ea9dc816efd179eecea1786d17cc7cb18880b0f93e527bf69ee54617971"
+      "bytes": 4002,
+      "sha256": "c038f51356fa106194182265e0c87ce282b3d097b41aa2810aeae4372a919d01"
     },
     {
       "path": "immersive/components/AccountAvatar.tsx",
@@ -327,8 +327,8 @@
     {
       "path": "immersive/components/AppSidebar.tsx",
       "kind": "tsx",
-      "bytes": 12764,
-      "sha256": "d702f5238b2f8ea0e20fbdbaa2d9538050f88a980743e84a6dd53c1e1b3c8007"
+      "bytes": 13187,
+      "sha256": "a0dfef9722f3c6e888f80497a82cb1c52b84b8886dfa94678d1aaf2bbf7edca6"
     },
     {
       "path": "immersive/components/AppearancePresets.tsx",
@@ -340,7 +340,7 @@
       "path": "immersive/components/AppearanceSettings.tsx",
       "kind": "tsx",
       "bytes": 10471,
-      "sha256": "df7788fa58c25cb6e664cfa693d2779e771903b68d42f3e1b5cde931bf192c8f"
+      "sha256": "c471807dc5393338d8fb0d63e720b1b09d8464af4eb3d9723970cdab0bb8e3ba"
     },
     {
       "path": "immersive/components/ArgumentTemplates.tsx",
@@ -363,8 +363,8 @@
     {
       "path": "immersive/components/InstanceDetail.tsx",
       "kind": "tsx",
-      "bytes": 12832,
-      "sha256": "5c7832763002e90297d39245adf974a4816b79df9ef89296984905bdad86e31d"
+      "bytes": 13175,
+      "sha256": "52631c79f9534ac06727d70dfb6c75268b6e3031918869c754a30076a0014edb"
     },
     {
       "path": "immersive/components/JavaSettings.tsx",
@@ -387,14 +387,14 @@
     {
       "path": "immersive/components/ProfileCard.tsx",
       "kind": "tsx",
-      "bytes": 6123,
-      "sha256": "13a3c2a8a11b8e42343bcb3b45735e86c49b8a4600df1cc458a1ffda94da330b"
+      "bytes": 6457,
+      "sha256": "c248e11d828ad4244063bb541e3d15a6267b16bf41a93e8facf8c61e1a36d63a"
     },
     {
       "path": "immersive/components/WindowBar.tsx",
       "kind": "tsx",
-      "bytes": 2083,
-      "sha256": "00f1ed564f395d903c100270b2357760d12c5ec47ea9502251e4e433705fb2c3"
+      "bytes": 3075,
+      "sha256": "125cd2dd440a43571b409d14d9f5d19a90f29465b53e724d85cfa884fd56a7a3"
     },
     {
       "path": "immersive/dialogs/AccountLoginDialog.tsx",
@@ -441,8 +441,8 @@
     {
       "path": "immersive/dialogs/LauncherDialog.tsx",
       "kind": "tsx",
-      "bytes": 3478,
-      "sha256": "05190b737dceff321974a7584d957ac3760bab8af1cb4d61890a3e3cadf6d35a"
+      "bytes": 4010,
+      "sha256": "dde53d29d5ad015443c8e76c7cf4519aa2ba46e0b5a21a4c953894ecd1657fb0"
     },
     {
       "path": "immersive/dialogs/ProfileDialog.tsx",
@@ -465,14 +465,14 @@
     {
       "path": "immersive/onboarding/StylePreview.tsx",
       "kind": "tsx",
-      "bytes": 837,
-      "sha256": "23cc4982fd73a9bc2000b34c053401b841dbce5f4141c35bbae43e4129c41a36"
+      "bytes": 1330,
+      "sha256": "0556f3cae8283b26df72eb8a24111bdc123ec36c47bf29fe993e0a108234f5c2"
     },
     {
       "path": "immersive/onboarding/style.css",
       "kind": "css",
-      "bytes": 4447,
-      "sha256": "3b87b736e30ca471b441c7105d8c6bbbde728df7488e74e5355044412ddadc9a"
+      "bytes": 5781,
+      "sha256": "5b2b6df1717fb4df60f5dbe5b55190f71d70e95d424b1cb67ddea2233608149e"
     },
     {
       "path": "immersive/pages/AccountsPage.tsx",
@@ -531,128 +531,128 @@
     {
       "path": "immersive/styles/account-login.css",
       "kind": "css",
-      "bytes": 1500,
-      "sha256": "5aa866d0a8caa9d60b0002b7e35857e2820545c916712b27a1f693517b2dc797"
+      "bytes": 2865,
+      "sha256": "0eedf8bad6fc1fb906e9564dc502c4a117d6a15e82159bc7c09d4fa823d65f57"
     },
     {
       "path": "immersive/styles/accounts.css",
       "kind": "css",
-      "bytes": 4622,
-      "sha256": "841ec64af8e8f26f8b94fefae7b182b43000fd45a0b4fae3928e672a0c244c4e"
+      "bytes": 8161,
+      "sha256": "c6a282581f47780891a277b00944335ca7ee32f87ca872115c84698aa8212983"
     },
     {
       "path": "immersive/styles/appearance-presets.css",
       "kind": "css",
-      "bytes": 1978,
-      "sha256": "9c5d74ae02359e9148130cb6a9dc33ad937d6865c2f1244e6cfb95623a280032"
+      "bytes": 3909,
+      "sha256": "aba64c75e5f982892c69a40dd16b077609bc3ce0035f9ad77bcca5941352f2f7"
     },
     {
       "path": "immersive/styles/business-dialogs.css",
       "kind": "css",
-      "bytes": 7678,
-      "sha256": "af9a8fc36b23b8ed4fa1cee62a013bd44082274a37f2962362f1e48213df5aad"
+      "bytes": 12950,
+      "sha256": "09e0d5608b80336a3fd63e7616e6e80f592d7a4280d06cd987d70c089f45b6b9"
     },
     {
       "path": "immersive/styles/components.css",
       "kind": "css",
-      "bytes": 18668,
-      "sha256": "a50c89cb3b1cbc0b2934466d37b0ead7da50ec1cd25102c3444b1c50468f34a9"
+      "bytes": 11544,
+      "sha256": "4f9f13748c9327d821d092275c377bd1e07dc91fa9ca89853381be523663fc4d"
     },
     {
       "path": "immersive/styles/discover.css",
       "kind": "css",
-      "bytes": 5045,
-      "sha256": "2f16e5a698d4d5a6dc7b9f5f76906454be8310069b979e033a0077a20b4bd1df"
+      "bytes": 9083,
+      "sha256": "6b1dd30642665ac0c518a0a1a88efbc8268d4f74b77ec30ffb5699ec3f7f955d"
     },
     {
       "path": "immersive/styles/downloads.css",
       "kind": "css",
-      "bytes": 6236,
-      "sha256": "85c9ef674db70fa16d4feed8511602259fb511a125a662817fb574d4b62b580f"
+      "bytes": 10786,
+      "sha256": "30ab1a0deac2fe7b685954a883281b2d69d2c55f8d290ffc36e001efc41bae96"
     },
     {
       "path": "immersive/styles/home.css",
       "kind": "css",
-      "bytes": 5461,
-      "sha256": "d2aac94c1f7807f49415816f1facb3c8ca5f7b128b40ca52f270efeb70bf5c8d"
+      "bytes": 10012,
+      "sha256": "9832ef46d752b5fc937e772e166a6c62baf619aba79fb4a56d416c37c9655db4"
     },
     {
       "path": "immersive/styles/host-components.css",
       "kind": "css",
-      "bytes": 1459,
-      "sha256": "9e3a262d1e5635d649872d50f4948bbed3a47ff8158b7810baaee62c9b9094f3"
+      "bytes": 2321,
+      "sha256": "0929fd57aa7b659da3242280c92edd1075151081840e649f6073bfd8f77b00be"
     },
     {
       "path": "immersive/styles/instance-detail.css",
       "kind": "css",
-      "bytes": 9902,
-      "sha256": "fa311436e13d7c43dc67e2e69bdc2fcbe5baa067f2b1c8feeb22e8aa5fdf05f2"
+      "bytes": 17780,
+      "sha256": "9238993780f747f483d95bfcd941af3b0474840089d1996906c2fad939040206"
     },
     {
       "path": "immersive/styles/instances.css",
       "kind": "css",
-      "bytes": 6216,
-      "sha256": "fc7c5f022f9df6c770bc779d84fbd23f4f0aa32cd6f6db26f9b3a0fa329db6a1"
+      "bytes": 11536,
+      "sha256": "e348f79f6cba12c53a6a1aeb860e810f9ee40358d5ccc622f3acd65c6b9f241d"
     },
     {
       "path": "immersive/styles/java-settings.css",
       "kind": "css",
-      "bytes": 2914,
-      "sha256": "b3eda81d06b3af8a9ba825e73d626aea398b70092269326d3c46174108dc2643"
+      "bytes": 6034,
+      "sha256": "cac26dbb03a9af65c1674e67c405ecfa2f1b9138de4835fb39c80a1eca29e00d"
     },
     {
       "path": "immersive/styles/layout.css",
       "kind": "css",
-      "bytes": 6499,
-      "sha256": "c0e4f9685ab3f6ae77d231a4d36942e7ac40699f534976559c96cf58d831d973"
+      "bytes": 7031,
+      "sha256": "7da29ef23f1c0c46593545a57466e08ef38a2b20d2b6a0485f3062a39f1a12bf"
     },
     {
       "path": "immersive/styles/logs.css",
       "kind": "css",
-      "bytes": 4654,
-      "sha256": "4c3a5cc726ad80fe07fe26e36dfbf4080de214b3e969b15910dfc8ecb388de2c"
+      "bytes": 7890,
+      "sha256": "fbcc75d071f6fa39e1f3c92768aeb0d13f77daa97c5972e97116b0e6b5b1129d"
     },
     {
       "path": "immersive/styles/notifications.css",
       "kind": "css",
-      "bytes": 1304,
-      "sha256": "80c1ae39a468dc5cea735edbd37d94673990d8d3bfd46edff0a88bffe7bd2a2a"
+      "bytes": 1887,
+      "sha256": "ef356d48a23da187043c03b1f03142c59cd3898db9ff5615aec1b2c4fdfd56e6"
     },
     {
       "path": "immersive/styles/pages.css",
       "kind": "css",
-      "bytes": 11591,
-      "sha256": "867712dd85615fa260184b976471b23e2add13101a139db0fce8682ac6900228"
+      "bytes": 21757,
+      "sha256": "cdf739017f798aeae1b699aeb4e92ab7d1103ef6b63d08cc9ae4cd0d58305ace"
     },
     {
       "path": "immersive/styles/profile-dialog.css",
       "kind": "css",
-      "bytes": 2209,
-      "sha256": "99ca85dfa799f7ea8b74e660b65a87558965a122393bfa0893e0590a8dd7cb7e"
+      "bytes": 3587,
+      "sha256": "e05fa5e5796c46b07722b2dc711e96ed3838127cb09fcd83b97d9a39d54f75b4"
     },
     {
       "path": "immersive/styles/responsive.css",
       "kind": "css",
-      "bytes": 5067,
-      "sha256": "43397a76df939e1b8a0085bff73104afa97a02ed5cfbdb010c4ec85b2238ff73"
+      "bytes": 4096,
+      "sha256": "97cd1ada4c9a77451c0be6ed338a15df9fc3d0a00df2c9c44ca1fa8816e92a9a"
     },
     {
       "path": "immersive/styles/settings.css",
       "kind": "css",
-      "bytes": 9015,
-      "sha256": "26b1aa48bd2edf655afb62d09ab6f492d46fe54b7d737eed3609ab7598469942"
+      "bytes": 17366,
+      "sha256": "95768be088768cc973851eafffebe9c7b6bb378311b68ac986f9f188679951cf"
     },
     {
       "path": "immersive/styles/tokens.css",
       "kind": "css",
-      "bytes": 711,
-      "sha256": "4d3fbddd5361aaf05542f461f383ff14239153e2ffd575b7b4aab6d213c52432"
+      "bytes": 2327,
+      "sha256": "19b72ba0991004d127b85f60ea66c6f421e53241b4316a8d48e5e8ddefb1971b"
     },
     {
       "path": "immersive/styles/versions.css",
       "kind": "css",
-      "bytes": 3775,
-      "sha256": "877d1a5b6ea4635e98122176e13b3020a3bbd9165172fb8d31dd6ec28c26c08d"
+      "bytes": 6119,
+      "sha256": "22105f16732441046f72b24b1d8e783bf7e373190c33d4b592c81eb60aa1e389"
     }
   ],
   "overrides": []

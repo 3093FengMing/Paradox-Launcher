@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createBrowserFixture } from './lib/ui-browser-fixture.mjs';
 import { initialConfig } from './lib/hook-test-host.mjs';
+import { globalRouteControl } from './lib/ui-redesign-navigation.mjs';
 
 const out = resolve('.test-data/default-ui-task4', process.env.PARADOX_HOME_EVIDENCE || 'focused');
 await mkdir(out, { recursive: true });
@@ -17,6 +18,7 @@ for (const suite of ['immersive', 'modern']) {
   const checks = [];
   const pass = name => { checks.push(name); console.log(`PASS ${suite}: ${name}`); };
   const primary = () => page.locator(suite === 'immersive' ? '.immersive-launch-primary' : '.launch-button');
+  const navigation = () => page.locator(suite === 'immersive' ? '.window-navigation' : '.sidebar');
   const selectedState = () => page.locator('.home-instance-state');
   const act = (fn, arg) => page.evaluate(fn, arg);
   const wait = fn => page.waitForFunction(fn);
@@ -51,17 +53,17 @@ for (const suite of ['immersive', 'modern']) {
       await page.waitForFunction(theme => window.suiteBuiltinsFixture.snapshot.appearance.theme === theme && document.querySelector('.app-shell').dataset.theme === theme, theme);
       await settled();
       const canvas = await page.locator('.app-shell').evaluate(e => getComputedStyle(e).backgroundColor);
-      assert.equal(canvas, suite === 'immersive' ? (theme === 'light' ? 'rgb(237, 241, 248)' : 'rgb(38, 50, 71)') : (theme === 'light' ? 'rgb(243, 246, 250)' : 'rgb(16, 21, 30)'));
+      assert.equal(canvas, theme === 'light' ? 'rgb(237, 241, 247)' : 'rgb(36, 39, 45)');
       for (const viewport of [{ width: 1240, height: 720 }, { width: 640, height: 480 }, { width: 320, height: 240 }]) {
         await page.setViewportSize(viewport);
         await page.locator('.workspace > main').evaluate(e => { e.scrollTop = 0; });
-        await page.locator('.sidebar').evaluate(e => { e.scrollTop = 0; });
+        await navigation().evaluate(e => { e.scrollTop = 0; e.scrollLeft = 0; });
         await primary().scrollIntoViewIfNeeded();
         const box = await primary().boundingBox();
         assert.ok(box.x >= 0 && box.x + box.width <= viewport.width + 1, 'primary horizontal reachability');
-        assert.ok(await page.locator('.sidebar').evaluate(e => e.clientWidth < innerWidth / 2));
+        assert.ok(await navigation().evaluate((e, suite) => suite === 'modern' ? e.clientWidth < innerWidth / 2 : e.getBoundingClientRect().left >= -1 && e.getBoundingClientRect().right <= innerWidth + 1, suite));
         assert.equal(await page.locator('body').evaluate(e => e.scrollWidth <= innerWidth), true);
-        if (suite === 'immersive' && viewport.width <= 640) assert.equal(await page.locator('.immersive-launch-area').evaluate(e => getComputedStyle(e).position), 'static');
+        if (suite === 'immersive' && viewport.width <= 640) assert.equal(await page.locator('.immersive-launch-split').evaluate(e => getComputedStyle(e).position), 'fixed');
         await page.screenshot({ path: resolve(out, `current-default-${suite}-${theme}-${viewport.width}.png`) });
       }
     }
@@ -76,7 +78,7 @@ for (const suite of ['immersive', 'modern']) {
       await window.suiteBuiltinsFixture.actions.accounts.reload();
     });
     await wait(() => !!window.suiteBuiltinsFixture.snapshot.avatars['account-a']);
-    assert.ok(await page.locator('.account-avatar img').count() >= 2);
+    assert.ok(await page.locator('.account-avatar img').count() >= (suite === 'immersive' ? 1 : 2));
     assert.equal(await page.locator('.account-avatar img').first().getAttribute('src').then(s => s.startsWith('data:image/png')), true);
     assert.ok(!(await page.locator('.app-shell').innerHTML()).includes('https://textures.minecraft.net'));
     await act(async () => window.suiteBuiltinsFixture.actions.accounts.select(null));
@@ -87,7 +89,7 @@ for (const suite of ['immersive', 'modern']) {
     await page.locator(suite === 'immersive' ? '.immersive-hint-copy button' : '.home-personalize').click();
     await wait(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'settings');
     assert.equal(await act(() => window.suiteBuiltinsFixture.snapshot.settings.tab), 'appearance');
-    await page.locator('.sidebar').getByRole('button', { name: 'Play', exact: true }).click();
+    await globalRouteControl(page, suite, 'home', 'Play').click();
     await wait(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'home');
     pass('appearance_deep_link_and_registry_home_return');
     // Each window action uses the existing public owner.
@@ -96,7 +98,7 @@ for (const suite of ['immersive', 'modern']) {
       await button.focus(); await page.keyboard.press('Enter');
     }
     assert.ok((await act(() => window.foundationDesktop.calls.filter(c => c.command.startsWith('plugin:window|')))).length >= 1);
-    await page.locator('.sidebar-account').focus(); await page.keyboard.press('Enter');
+    await globalRouteControl(page, suite, 'accounts', 'Accounts').focus(); await page.keyboard.press('Enter');
     await wait(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'accounts');
     await act(() => window.suiteBuiltinsFixture.actions.navigation.navigate('home'));
     pass('keyboard_account_and_window_actions');
@@ -222,19 +224,25 @@ for (const suite of ['immersive', 'modern']) {
       if (!await c.actions.preview()) throw Error('registry fixture preview failed');
       c.actions.close();
     }, suite);
-    assert.equal(await page.locator('.sidebar-account').count(), 0);
+    assert.equal(await globalRouteControl(page, suite, 'accounts', 'Accounts').count(), 0);
     assert.ok(await page.locator('[data-task4-component="component.window-bar"]').count());
-    assert.ok(await page.locator('[data-task4-component="component.app-sidebar"]').count());
     assert.ok(await page.locator('[data-task4-component="component.account-avatar"]').count());
+    if (suite === 'immersive') {
+      await globalRouteControl(page, suite, 'instances', 'Library renamed').click();
+      await wait(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'instances');
+      assert.ok(await page.locator('[data-task4-component="component.app-sidebar"]').count());
+      await globalRouteControl(page, suite, 'home', 'Play').click();
+      await primary().waitFor();
+    } else assert.ok(await page.locator('[data-task4-component="component.app-sidebar"]').count());
     await act(() => window.foundationDesktop.emit('launcher://activity', { action: 'launch', status: 'running', message: 'Source component probe' }));
     await page.locator('[data-task4-component="component.activity-bar"]').waitFor();
     await act(() => window.foundationDesktop.emit('launcher://activity', { action: 'launch', status: 'finished', message: 'Done' }));
     assert.equal(await page.locator('.home-personalize, .immersive-customize-hint').count(), 0);
     assert.equal(await page.locator('.window-controls').getByRole('button', { name: 'Help and settings' }).count(), 0);
-    await page.locator('.sidebar').getByRole('button', { name: 'Library renamed', exact: true }).waitFor();
-    await page.locator('.sidebar').getByRole('button', { name: 'Registry probe', exact: true }).click();
+    await globalRouteControl(page, suite, 'instances', 'Library renamed').waitFor();
+    await globalRouteControl(page, suite, 'custom.probe', 'Registry probe').click();
     await page.getByRole('heading', { name: 'Registered route probe' }).waitFor();
-    await page.locator('.sidebar').getByRole('button', { name: 'Play', exact: true }).click();
+    await globalRouteControl(page, suite, 'home', 'Play').click();
     await primary().waitFor();
     await page.screenshot({ path: resolve(out, `source-customized-fixture-${suite}-registry.png`) });
     pass('source_components_individually_editable_primary_CSS_identity_hidden_registry_custom_routes');

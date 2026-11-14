@@ -110,7 +110,14 @@ try {
     const active = await page.evaluate(() => window.suiteFinalFixture.snapshot.profiles.activeKey);
     const editor = await openEditor();
     await editor.getByRole('button', { name: 'Pick target', exact: true }).click();
-    await firstButton.click();
+    const buttonPoint = await firstButton.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      for (const point of [{x:rect.width/2,y:3},{x:3,y:rect.height/2},{x:rect.width-3,y:rect.height/2}]) {
+        if (document.elementFromPoint(rect.x+point.x,rect.y+point.y) === element) return point;
+      }
+      throw Error('Native details button has no reachable uncovered surface');
+    });
+    await firstButton.click({ position: buttonPoint });
     await editorLocator().waitFor({ state: 'visible' });
     const picked = (await snapshot()).selection.selector;
     assert.equal(picked.kind, 'position');
@@ -167,15 +174,15 @@ try {
     await page.getByRole('button', { name: 'UI rename Original world', exact: true }).click();
     await page.getByRole('dialog').getByRole('textbox', { name: 'Instance name', exact: true }).fill('Renamed through TSX'); await page.locator('.profile-dialog form button[type=submit]').click();
     await page.getByRole('button', { name: 'UI rename Renamed through TSX', exact: true }).waitFor();
-    await page.locator('.sidebar-account').click(); await page.waitForFunction(() => window.suiteFinalFixture.snapshot.navigation.routeId === 'accounts');
-    await page.locator('.sidebar').getByRole('button', { name: 'Download tasks', exact: true }).click();
+    await page.locator('.sidebar-account').or(page.locator('.window-navigation').getByRole('button', { name: 'Accounts', exact: true })).filter({ visible: true }).click(); await page.waitForFunction(() => window.suiteFinalFixture.snapshot.navigation.routeId === 'accounts');
+    await page.locator('.sidebar, .window-navigation').getByRole('button', { name: 'Download tasks', exact: true }).click();
     await page.waitForFunction(() => window.suiteFinalFixture.snapshot.navigation.routeId === 'downloads');
     await navigate('instances');
     const active = await page.evaluate(() => window.suiteFinalFixture.snapshot.profiles.activeKey);
     await profiles().filter({ hasText: 'Second world' }).getByRole('button', { name: 'Open details for Second world', exact: true }).click(); await page.locator('.instance-detail-tabs').getByRole('button', { name: 'Mods', exact: true }).click();
     assert.equal(await page.evaluate(() => window.suiteFinalFixture.snapshot.content.selectedProfileKey), 'second-instance');
     assert.equal(await page.evaluate(() => window.suiteFinalFixture.snapshot.profiles.activeKey), active);
-    await page.locator('.sidebar').getByRole('button', { name: 'Logs', exact: true }).click();
+    await page.locator('.sidebar, .window-navigation').getByRole('button', { name: 'Logs', exact: true }).click();
     await page.waitForFunction(() => window.suiteFinalFixture.snapshot.navigation.routeId === 'logs');
     await navigate('instances'); assert.equal(await page.getByTestId('ui-tsx-card').count(), 3);
     await openEditor(); await editorLocator().getByRole('button', { name: 'Save suite', exact: true }).click();

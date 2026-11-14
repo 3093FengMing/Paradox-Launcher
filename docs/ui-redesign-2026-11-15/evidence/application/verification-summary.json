@@ -1,0 +1,3544 @@
+{
+  "stage": "final-v4",
+  "recordedAt": "2026-11-14T23:47:28.916684+00:00",
+  "sourceRecord": "docs/ui-redesign-2026-11-15/evidence/application/provenance.json",
+  "buildRecord": "docs/ui-redesign-2026-11-15/evidence/application/build-provenance.json",
+  "foundation": {
+    "coverage": {
+      "requestedChecksPerLane": 14,
+      "acceptedDevChecks": 14,
+      "acceptedCompiledChecks": 14,
+      "allAcceptedNaturalExitZero": true,
+      "allAcceptedCompleteInputDriftZero": true,
+      "applicationSourceChangedDuringAnyRun": false
+    },
+    "record": {
+      "path": "docs/ui-redesign-2026-11-15/evidence/application/foundation-verification.json",
+      "bytes": 40975,
+      "sha256": "ad276d6e6c30303bc90d606da657a137076a19c043f4fe64abbb026df4a093d2"
+    },
+    "originalCompleteGroupExitCodes": {
+      "dev": 0,
+      "compiled": 1
+    },
+    "knownFirstAttemptEvents": [
+      {
+        "lane": "compiled",
+        "script": "check-ui-foundation-browser.mjs",
+        "nature": "single unreproduced generic Select keyboard assertion",
+        "failure": "line914: hiddenInput '' !== 'b'",
+        "changedForRecheck": false
+      },
+      {
+        "lane": "dev",
+        "script": "check-ui-inspector-browser.mjs --picker-only",
+        "nature": "unrelated test script input drift",
+        "drift": [
+          "ui/scripts/check-ui-logs-responsive-browser.mjs"
+        ],
+        "changedForRecheck": false
+      },
+      {
+        "lane": "compiled",
+        "script": "check-ui-customization-browser.mjs",
+        "nature": "unrelated test script input drift",
+        "drift": [
+          "ui/scripts/check-ui-logs-responsive-browser.mjs"
+        ],
+        "changedForRecheck": false
+      }
+    ]
+  },
+  "lanes": {
+    "dev": {
+      "builtinSuite": {
+        "contexts": 8,
+        "naturalExitCode": 0,
+        "inputDrift": [],
+        "execution": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T230047Z/dev/builtins/suite/execution.json",
+          "bytes": 1407,
+          "sha256": "07e3ff59c21362ca4ee6376204f044b825be142a24e1b542a5bbc4f56261dfaa"
+        },
+        "log": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T230047Z/dev/builtins/suite/execution.log",
+          "bytes": 19404,
+          "sha256": "5e738b116e44ae2c4219fa4349077189445b28e679d3c4bb997434fc0f0890f9"
+        },
+        "report": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T230047Z/dev/builtins/suite/report.json",
+          "bytes": 409214,
+          "sha256": "58a776a51f8a178970d4eb133b5aa75071bcd36de22b1f4343fa198750719085"
+        },
+        "rows": [
+          {
+            "id": "modern",
+            "theme": "dark",
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "ba7258e6b11fb64266bf2fd3aea617a9aba9661a5098e9482f38b20c2f2c3818"
+          },
+          {
+            "id": "modern",
+            "theme": "dark",
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "ba7258e6b11fb64266bf2fd3aea617a9aba9661a5098e9482f38b20c2f2c3818"
+          },
+          {
+            "id": "modern",
+            "theme": "light",
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "ba7258e6b11fb64266bf2fd3aea617a9aba9661a5098e9482f38b20c2f2c3818"
+          },
+          {
+            "id": "modern",
+            "theme": "light",
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "ba7258e6b11fb64266bf2fd3aea617a9aba9661a5098e9482f38b20c2f2c3818"
+          },
+          {
+            "id": "immersive",
+            "theme": "dark",
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "273fe726947b37aef4bdbee067bfa223fec0630c3463f4a457e030f50039c33f"
+          },
+          {
+            "id": "immersive",
+            "theme": "dark",
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "273fe726947b37aef4bdbee067bfa223fec0630c3463f4a457e030f50039c33f"
+          },
+          {
+            "id": "immersive",
+            "theme": "light",
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "273fe726947b37aef4bdbee067bfa223fec0630c3463f4a457e030f50039c33f"
+          },
+          {
+            "id": "immersive",
+            "theme": "light",
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "273fe726947b37aef4bdbee067bfa223fec0630c3463f4a457e030f50039c33f"
+          }
+        ]
+      },
+      "redesign": {
+        "focusedChecks": 7,
+        "matrixContexts": 36,
+        "naturalExitCode": 0,
+        "filters": {},
+        "inputDrift": [],
+        "priorFreezeBaselineDifferences": [
+          "ui/scripts/check-ui-logs-responsive-browser.mjs"
+        ],
+        "priorFreezeBaselineDifferenceScope": "The earlier build freeze predates the Logs browser test navigation update; this run begins and ends with the complete current final input snapshot unchanged.",
+        "execution": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/dev/builtins/redesign/execution.json",
+          "bytes": 1517,
+          "sha256": "2b042c8e4a5df0a05fceda879f6fc2ee9f1208001391006f83865e29ba6db239"
+        },
+        "log": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/dev/builtins/redesign/execution.log",
+          "bytes": 13800,
+          "sha256": "5f57ec09be63cf8858bfb4d631f635a17a9a887c100cba5a8c223bbe95b1aa8d"
+        },
+        "report": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/dev/builtins/redesign/report.json",
+          "bytes": 5377465,
+          "sha256": "da1bf8a95d2db30452f04d2da4ae80a900b8bb54f47115543632631f9af49c4f"
+        },
+        "inputBefore": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/dev/builtins/redesign/inputs-before.json",
+          "bytes": 153388,
+          "sha256": "a94c342da18260cb0c005fff4e4d0a824b2d364c9dfa2e707e3ca00bb191040a"
+        },
+        "inputAfter": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/dev/builtins/redesign/inputs-after.json",
+          "bytes": 153388,
+          "sha256": "a94c342da18260cb0c005fff4e4d0a824b2d364c9dfa2e707e3ca00bb191040a"
+        },
+        "matrix": {
+          "suites": [
+            "modern",
+            "immersive"
+          ],
+          "themes": [
+            "dark",
+            "light"
+          ],
+          "viewports": [
+            {
+              "width": 1240,
+              "height": 780
+            },
+            {
+              "width": 640,
+              "height": 480
+            },
+            {
+              "width": 320,
+              "height": 240
+            }
+          ],
+          "scales": [
+            85,
+            100,
+            120
+          ]
+        },
+        "scenarios": [
+          "home-empty",
+          "home-idle",
+          "home-other-running",
+          "instances-installed-repair",
+          "detail-settings",
+          "detail-local-loading-empty-error",
+          "versions-cache-error",
+          "downloads-all-states",
+          "accounts-login-expired-error",
+          "discover-empty-error",
+          "settings-dirty-saving",
+          "logs",
+          "style-choice-success-failure",
+          "appearance-committed-theme-scale"
+        ],
+        "focused": [
+          {
+            "script": "check-ui-home-browser.mjs",
+            "evidence": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/dev/builtins/redesign/focused/home",
+            "sha256": "d98c45c45cd9f20d86193437d9abb6c2e53db9fda1b2cc49b911b34a3e61eeec",
+            "code": 0,
+            "signal": null
+          },
+          {
+            "script": "check-ui-instances-browser.mjs",
+            "evidence": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/dev/builtins/redesign/focused/instances",
+            "sha256": "3939c101cd8dbe05cffaa67365816ec6ff73d85d3606274edd5480758a4ce92a",
+            "code": 0,
+            "signal": null
+          },
+          {
+            "script": "check-ui-versions-downloads-browser.mjs",
+            "evidence": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/dev/builtins/redesign/focused/versions-downloads",
+            "sha256": "617682e45bf3bb73489f2c46aabc1999b8f39c0f0a4e2ba2843fbaf4e2092da4",
+            "code": 0,
+            "signal": null
+          },
+          {
+            "script": "check-ui-accounts-discovery-browser.mjs",
+            "evidence": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/dev/builtins/redesign/focused/accounts-discovery",
+            "sha256": "e3c8c3d96ddd9b20bd5cfec1986303ad82210710044c5e5c9995fe223d928472",
+            "code": 0,
+            "signal": null
+          },
+          {
+            "script": "check-ui-default-settings-browser.mjs",
+            "evidence": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/dev/builtins/redesign/focused/default-settings",
+            "sha256": "a26361de54ad23abbf15fe7383c9ac0fdab55eac025af4e62bf2cdd8c2803f3d",
+            "code": 0,
+            "signal": null
+          },
+          {
+            "script": "check-ui-dialogs-browser.mjs",
+            "evidence": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/dev/builtins/redesign/focused/dialogs",
+            "sha256": "a8ed00d58baba38b9df1120e6caeca0df10b58ef18de4dfa5141bb6fa1f4835c",
+            "code": 0,
+            "signal": null
+          },
+          {
+            "script": "check-ui-logs-responsive-browser.mjs",
+            "evidence": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/dev/builtins/redesign/focused/logs-responsive",
+            "sha256": "83ace7caff7f7189ec09e89edb39733492bf74842c76a03a9c9fb3c9ace9dd5c",
+            "code": 0,
+            "signal": null
+          }
+        ],
+        "rows": [
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 85,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 85,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 85,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 100,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template",
+              "independent_saved_app_motion_and_OS_motion_actual_player_dialog_Portal",
+              "custom_source_TSX_Original_HTML_Original_CSS_retains_input_actual_editor_save_export_reimport_restart_same_owner_suite_switch_drafts"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 44
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 100,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 100,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 120,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 120,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 120,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 85,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 85,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 85,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 100,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template",
+              "independent_saved_app_motion_and_OS_motion_actual_player_dialog_Portal",
+              "custom_source_TSX_Original_HTML_Original_CSS_retains_input_actual_editor_save_export_reimport_restart_same_owner_suite_switch_drafts"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 44
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 100,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 100,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 120,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 120,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 120,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 85,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 85,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 85,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 100,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template",
+              "independent_saved_app_motion_and_OS_motion_actual_player_dialog_Portal",
+              "custom_source_TSX_Original_HTML_Original_CSS_retains_input_actual_editor_save_export_reimport_restart_same_owner_suite_switch_drafts"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 44
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 100,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 100,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 120,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 120,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 120,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 85,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 85,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 85,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 100,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template",
+              "independent_saved_app_motion_and_OS_motion_actual_player_dialog_Portal",
+              "custom_source_TSX_Original_HTML_Original_CSS_retains_input_actual_editor_save_export_reimport_restart_same_owner_suite_switch_drafts"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 44
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 100,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 100,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 120,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 120,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 120,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          }
+        ],
+        "failures": []
+      }
+    },
+    "compiled": {
+      "builtinSuite": {
+        "contexts": 8,
+        "naturalExitCode": 0,
+        "inputDrift": [],
+        "execution": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T230047Z/compiled/builtins/suite/execution.json",
+          "bytes": 1458,
+          "sha256": "034578a92a9fcd06296fa7dfc396d3b20cdb7b360ac883aec5584718eb480f1c"
+        },
+        "log": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T230047Z/compiled/builtins/suite/execution.log",
+          "bytes": 19404,
+          "sha256": "5e738b116e44ae2c4219fa4349077189445b28e679d3c4bb997434fc0f0890f9"
+        },
+        "report": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T230047Z/compiled/builtins/suite/report.json",
+          "bytes": 192005,
+          "sha256": "16bd1ce40f75a16194d3d2955c70490fa75b1a01a8646ae8938ca252def70182"
+        },
+        "rows": [
+          {
+            "id": "modern",
+            "theme": "dark",
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "ba7258e6b11fb64266bf2fd3aea617a9aba9661a5098e9482f38b20c2f2c3818"
+          },
+          {
+            "id": "modern",
+            "theme": "dark",
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "ba7258e6b11fb64266bf2fd3aea617a9aba9661a5098e9482f38b20c2f2c3818"
+          },
+          {
+            "id": "modern",
+            "theme": "light",
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "ba7258e6b11fb64266bf2fd3aea617a9aba9661a5098e9482f38b20c2f2c3818"
+          },
+          {
+            "id": "modern",
+            "theme": "light",
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "ba7258e6b11fb64266bf2fd3aea617a9aba9661a5098e9482f38b20c2f2c3818"
+          },
+          {
+            "id": "immersive",
+            "theme": "dark",
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "273fe726947b37aef4bdbee067bfa223fec0630c3463f4a457e030f50039c33f"
+          },
+          {
+            "id": "immersive",
+            "theme": "dark",
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "273fe726947b37aef4bdbee067bfa223fec0630c3463f4a457e030f50039c33f"
+          },
+          {
+            "id": "immersive",
+            "theme": "light",
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "273fe726947b37aef4bdbee067bfa223fec0630c3463f4a457e030f50039c33f"
+          },
+          {
+            "id": "immersive",
+            "theme": "light",
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "modern_immersive_same_protocol",
+              "suite_selection_does_not_save_settings",
+              "builtin_source_equals_copied_export",
+              "copied_default_can_add_preview_save_and_export_artwork",
+              "public_catalog_ack_and_readonly",
+              "changed_shell_home_keep_business",
+              "css_only_keeps_input_identity",
+              "custom_help_navigation_startup_registry",
+              "preset_dialog_has_one_source_owner",
+              "editor_sources_shadow_assets_select_and_notifications",
+              "actual_source_and_registry_provenance"
+            ],
+            "failures": [],
+            "digest": "273fe726947b37aef4bdbee067bfa223fec0630c3463f4a457e030f50039c33f"
+          }
+        ]
+      },
+      "redesign": {
+        "focusedChecks": 7,
+        "matrixContexts": 36,
+        "naturalExitCode": 0,
+        "filters": {},
+        "inputDrift": [],
+        "priorFreezeBaselineDifferences": [
+          "ui/scripts/check-ui-logs-responsive-browser.mjs"
+        ],
+        "priorFreezeBaselineDifferenceScope": "The earlier build freeze predates the Logs browser test navigation update; this run begins and ends with the complete current final input snapshot unchanged.",
+        "execution": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/compiled/builtins/redesign/execution.json",
+          "bytes": 1568,
+          "sha256": "141a1e936ff6cdcc28d23bc6f9416f88a132727ba4390f9ebd549d469f36193f"
+        },
+        "log": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/compiled/builtins/redesign/execution.log",
+          "bytes": 13805,
+          "sha256": "bd12e5cb8215b86b102c89444f84c1893848548e7d1d92145350d813349b6825"
+        },
+        "report": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/compiled/builtins/redesign/report.json",
+          "bytes": 4481513,
+          "sha256": "535ccf6597932f1f7971d9ff55c4c22dd3ed78d45f0ad70e9cfff0767664b516"
+        },
+        "inputBefore": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/compiled/builtins/redesign/inputs-before.json",
+          "bytes": 153388,
+          "sha256": "a94c342da18260cb0c005fff4e4d0a824b2d364c9dfa2e707e3ca00bb191040a"
+        },
+        "inputAfter": {
+          "path": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/compiled/builtins/redesign/inputs-after.json",
+          "bytes": 153388,
+          "sha256": "a94c342da18260cb0c005fff4e4d0a824b2d364c9dfa2e707e3ca00bb191040a"
+        },
+        "matrix": {
+          "suites": [
+            "modern",
+            "immersive"
+          ],
+          "themes": [
+            "dark",
+            "light"
+          ],
+          "viewports": [
+            {
+              "width": 1240,
+              "height": 780
+            },
+            {
+              "width": 640,
+              "height": 480
+            },
+            {
+              "width": 320,
+              "height": 240
+            }
+          ],
+          "scales": [
+            85,
+            100,
+            120
+          ]
+        },
+        "scenarios": [
+          "home-empty",
+          "home-idle",
+          "home-other-running",
+          "instances-installed-repair",
+          "detail-settings",
+          "detail-local-loading-empty-error",
+          "versions-cache-error",
+          "downloads-all-states",
+          "accounts-login-expired-error",
+          "discover-empty-error",
+          "settings-dirty-saving",
+          "logs",
+          "style-choice-success-failure",
+          "appearance-committed-theme-scale"
+        ],
+        "focused": [
+          {
+            "script": "check-ui-home-browser.mjs",
+            "evidence": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/compiled/builtins/redesign/focused/home",
+            "sha256": "d98c45c45cd9f20d86193437d9abb6c2e53db9fda1b2cc49b911b34a3e61eeec",
+            "code": 0,
+            "signal": null
+          },
+          {
+            "script": "check-ui-instances-browser.mjs",
+            "evidence": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/compiled/builtins/redesign/focused/instances",
+            "sha256": "3939c101cd8dbe05cffaa67365816ec6ff73d85d3606274edd5480758a4ce92a",
+            "code": 0,
+            "signal": null
+          },
+          {
+            "script": "check-ui-versions-downloads-browser.mjs",
+            "evidence": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/compiled/builtins/redesign/focused/versions-downloads",
+            "sha256": "617682e45bf3bb73489f2c46aabc1999b8f39c0f0a4e2ba2843fbaf4e2092da4",
+            "code": 0,
+            "signal": null
+          },
+          {
+            "script": "check-ui-accounts-discovery-browser.mjs",
+            "evidence": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/compiled/builtins/redesign/focused/accounts-discovery",
+            "sha256": "e3c8c3d96ddd9b20bd5cfec1986303ad82210710044c5e5c9995fe223d928472",
+            "code": 0,
+            "signal": null
+          },
+          {
+            "script": "check-ui-default-settings-browser.mjs",
+            "evidence": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/compiled/builtins/redesign/focused/default-settings",
+            "sha256": "a26361de54ad23abbf15fe7383c9ac0fdab55eac025af4e62bf2cdd8c2803f3d",
+            "code": 0,
+            "signal": null
+          },
+          {
+            "script": "check-ui-dialogs-browser.mjs",
+            "evidence": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/compiled/builtins/redesign/focused/dialogs",
+            "sha256": "a8ed00d58baba38b9df1120e6caeca0df10b58ef18de4dfa5141bb6fa1f4835c",
+            "code": 0,
+            "signal": null
+          },
+          {
+            "script": "check-ui-logs-responsive-browser.mjs",
+            "evidence": ".test-data/ui-redesign/2026-11-15/20261114T232332Z/compiled/builtins/redesign/focused/logs-responsive",
+            "sha256": "83ace7caff7f7189ec09e89edb39733492bf74842c76a03a9c9fb3c9ace9dd5c",
+            "code": 0,
+            "signal": null
+          }
+        ],
+        "rows": [
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 85,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 85,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 85,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 100,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template",
+              "independent_saved_app_motion_and_OS_motion_actual_player_dialog_Portal",
+              "custom_source_TSX_Original_HTML_Original_CSS_retains_input_actual_editor_save_export_reimport_restart_same_owner_suite_switch_drafts"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 44
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 100,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 100,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 120,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 120,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "dark",
+            "scale": 120,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 85,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 85,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 85,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 100,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template",
+              "independent_saved_app_motion_and_OS_motion_actual_player_dialog_Portal",
+              "custom_source_TSX_Original_HTML_Original_CSS_retains_input_actual_editor_save_export_reimport_restart_same_owner_suite_switch_drafts"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 44
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 100,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 100,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 120,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 120,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "modern",
+            "theme": "light",
+            "scale": 120,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 64
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 85,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 85,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 85,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 100,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template",
+              "independent_saved_app_motion_and_OS_motion_actual_player_dialog_Portal",
+              "custom_source_TSX_Original_HTML_Original_CSS_retains_input_actual_editor_save_export_reimport_restart_same_owner_suite_switch_drafts"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 44
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 100,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 100,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 120,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 120,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "dark",
+            "scale": 120,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 85,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 85,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 85,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 100,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template",
+              "independent_saved_app_motion_and_OS_motion_actual_player_dialog_Portal",
+              "custom_source_TSX_Original_HTML_Original_CSS_retains_input_actual_editor_save_export_reimport_restart_same_owner_suite_switch_drafts"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 44
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 100,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 100,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 120,
+            "viewport": {
+              "width": 1240,
+              "height": 780
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 120,
+            "viewport": {
+              "width": 640,
+              "height": 480
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          },
+          {
+            "suite": "immersive",
+            "theme": "light",
+            "scale": 120,
+            "viewport": {
+              "width": 320,
+              "height": 240
+            },
+            "checks": [
+              "pristine_no_write_explicit_failed_CAS_retry_same_input_same_owner",
+              "appearance-committed-theme-scale",
+              "all_nine_default_pages_real_navigation_buttons_and_keyboard",
+              "home-empty",
+              "home-idle",
+              "home-other-running",
+              "instances-installed-repair",
+              "detail-settings",
+              "detail-local-loading-empty-error",
+              "versions-cache-error",
+              "downloads-all-states",
+              "accounts-login-expired-error",
+              "discover-empty-error",
+              "settings-dirty-saving",
+              "logs",
+              "dialog.profile",
+              "dialog.instance-settings",
+              "dialog.import-instances",
+              "dialog.remove-profile",
+              "dialog.close-request",
+              "dialog.launch-account",
+              "dialog.login",
+              "dialog.preset",
+              "dialog.argument-template"
+            ],
+            "screenshots": 39,
+            "reachabilityChecks": 38
+          }
+        ],
+        "failures": []
+      }
+    }
+  },
+  "production": {
+    "execution": {
+      "command": "node",
+      "args": [
+        "ui/scripts/check-ui-performance-browser.mjs"
+      ],
+      "cwd": "F:\\rust-code\\Paradox Launcher",
+      "startedAt": "2026-11-14T23:07:52.3468912Z",
+      "finishedAt": "2026-11-14T23:08:06.7397099Z",
+      "exitCode": 0
+    },
+    "report": {
+      "path": ".test-data/ui-redesign/2026-11-15/20261114T215444Z/production/final-v4/report.json",
+      "bytes": 52800,
+      "sha256": "8f301bc2a58924394597d0a22986a1d491f78c49618cfba25f79e9be888394bb"
+    },
+    "contexts": 3,
+    "numericPerformanceBudgetAsserted": false
+  },
+  "static": [
+    {
+      "command": "npm",
+      "args": [
+        "run",
+        "check:ui"
+      ],
+      "cwd": "F:\\rust-code\\Paradox Launcher",
+      "startedAt": "2026-11-14T22:57:19.8127716Z",
+      "finishedAt": "2026-11-14T22:57:28.0950509Z",
+      "exitCode": 0
+    },
+    {
+      "command": "npm",
+      "args": [
+        "run",
+        "lint:ui"
+      ],
+      "cwd": "F:\\rust-code\\Paradox Launcher",
+      "startedAt": "2026-11-14T22:57:28.1080817Z",
+      "finishedAt": "2026-11-14T22:57:45.9659772Z",
+      "exitCode": 0
+    },
+    {
+      "command": "npm",
+      "args": [
+        "run",
+        "check:i18n"
+      ],
+      "cwd": "F:\\rust-code\\Paradox Launcher",
+      "startedAt": "2026-11-14T22:57:45.9746166Z",
+      "finishedAt": "2026-11-14T22:57:47.3560038Z",
+      "exitCode": 0
+    },
+    {
+      "command": "npm",
+      "args": [
+        "run",
+        "test:ui"
+      ],
+      "cwd": "F:\\rust-code\\Paradox Launcher",
+      "startedAt": "2026-11-14T22:57:47.3598018Z",
+      "finishedAt": "2026-11-14T22:59:09.5412382Z",
+      "exitCode": 0
+    },
+    {
+      "command": "npm",
+      "args": [
+        "--prefix",
+        "ui",
+        "run",
+        "test:suite"
+      ],
+      "cwd": "F:\\rust-code\\Paradox Launcher",
+      "startedAt": "2026-11-14T22:59:09.5766818Z",
+      "finishedAt": "2026-11-14T22:59:40.4028503Z",
+      "exitCode": 0
+    }
+  ],
+  "rust": [
+    {
+      "command": "cargo",
+      "args": [
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "cwd": "F:\\rust-code\\Paradox Launcher",
+      "startedAt": "2026-11-14T22:00:49.2600864Z",
+      "finishedAt": "2026-11-14T22:00:49.9817685Z",
+      "exitCode": 0
+    },
+    {
+      "command": "cargo",
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "paradox-core"
+      ],
+      "cwd": "F:\\rust-code\\Paradox Launcher",
+      "startedAt": "2026-11-14T22:00:50.0033291Z",
+      "finishedAt": "2026-11-14T22:01:39.6343148Z",
+      "exitCode": 0
+    },
+    {
+      "command": "cargo",
+      "args": [
+        "clippy",
+        "--locked",
+        "-p",
+        "paradox-core",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "cwd": "F:\\rust-code\\Paradox Launcher",
+      "startedAt": "2026-11-14T22:01:39.6381018Z",
+      "finishedAt": "2026-11-14T22:02:01.2447177Z",
+      "exitCode": 0
+    }
+  ],
+  "nativeInteractionAcceptance": "Pending; browser fixtures and earlier native-smoke exploration are not native acceptance for final-v4."
+}

@@ -334,8 +334,8 @@ export const initialConfig = {
     appearance: {
       interface_style: 'immersive',
       theme: 'dark',
-      accent_color: '#6387f5',
-      border_radius: 14,
+      accent_color: '#6676dc',
+      border_radius: 6,
       ui_scale: 100,
       compact_sidebar: false,
       reduce_motion: false,

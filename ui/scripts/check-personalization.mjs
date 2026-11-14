@@ -22,11 +22,17 @@ try {
   const previewApi = loadApp(new Map([['@tauri-apps/api/core', { isTauri: () => false }]]))('api.ts');
   const fresh = (await previewApi.getConfig()).config;
   assert.equal(fresh.settings.appearance.background_art, false, 'new browser preview configurations start without artwork');
+  assert.equal(fresh.settings.appearance.accent_color, '#6676dc', 'new preview uses the approved Graphite accent');
+  assert.equal(fresh.settings.appearance.border_radius, 6, 'new preview uses compact corners');
+  fresh.settings.appearance.accent_color = '#6387f5';
+  fresh.settings.appearance.border_radius = 14;
   fresh.settings.appearance.background_art = true;
   fresh.settings.personalization.background_file = savedImageId;
   await previewApi.saveConfig(fresh);
   const serialized = previewStorage.get('paradox-launcher-preview-v1');
   const restored = (await previewApi.getConfig()).config;
+  assert.equal(restored.settings.appearance.accent_color, '#6387f5', 'saved accents retain their exact value');
+  assert.equal(restored.settings.appearance.border_radius, 14, 'saved corner preferences retain their exact value');
   assert.equal(restored.settings.appearance.background_art, true, 'saved artwork preference is preserved');
   assert.equal(restored.settings.personalization.background_file, savedImageId, 'saved artwork file is preserved');
   assert.equal(previewStorage.get('paradox-launcher-preview-v1'), serialized, 'config reads do not migrate saved background data');
@@ -35,6 +41,42 @@ try {
   else globalThis.localStorage = previousStorage;
 }
 assert.equal(initialConfig.settings.appearance.background_art, false, 'new fixture configurations start without artwork');
+assert.equal(initialConfig.settings.appearance.accent_color, '#6676dc');
+assert.equal(initialConfig.settings.appearance.border_radius, 6);
+
+// Validate the public colour output against WCAG, independently of its search algorithm.
+const { accentForeground, readableAccent } = app('colors.ts');
+const suiteAccentForeground = app('ui-suite/builtins/common/lib/colors.ts').accentForeground;
+const contrast = (first, second) => {
+  const light = (hex) => {
+    const packed = Number.parseInt(hex.slice(1), 16);
+    const linear = [packed >> 16, (packed >> 8) & 255, packed & 255].map((channel) => {
+      const srgb = channel / 255;
+      return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
+    });
+    return linear.reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+  };
+  const levels = [light(first), light(second)].sort((a, b) => b - a);
+  return (levels[0] + 0.05) / (levels[1] + 0.05);
+};
+const colors = ['#6676dc', '#6387f5', '#ff0000', '#00ff00', '#0000ff', '#ffa500', '#ff00ff', '#00ffff', '#7733aa'];
+for (let gray = 0; gray <= 255; gray++) colors.push('#' + gray.toString(16).padStart(2, '0').repeat(3));
+for (const color of colors) {
+  for (const foreground of [accentForeground(color), suiteAccentForeground(color)]) {
+    assert.ok(contrast(color, foreground) >= 4.5, `${color}/${foreground}: primary action text must remain readable`);
+  }
+  assert.equal(suiteAccentForeground(color), accentForeground(color), 'suite and editor share the foreground contract');
+  for (const [theme, surfaces] of [
+    ['light', ['#edf1f7', '#ffffff', '#e5e9fa']],
+    ['dark', ['#24272d', '#30353d', '#3d465c']],
+  ]) {
+    const foreground = readableAccent(color, theme);
+    for (const surface of surfaces) {
+      assert.ok(contrast(foreground, surface) >= 4.5, `${theme} ${foreground}/${surface}: accent labels must remain readable`);
+    }
+  }
+}
+assert.equal(accentForeground('#6676dc'), '#0d1022');
 for (const id of ['modern', 'immersive']) {
   const base = resolve(uiRoot, 'src/ui-suite/builtins', id);
   const manifest = JSON.parse(readFileSync(resolve(base, 'suite.json'), 'utf8'));

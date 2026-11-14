@@ -50,7 +50,7 @@ function DefaultToggle(input: ToggleProps) {
 const Range = sourceView<RangeProps>('control.range-setting', DefaultRange), Switch = sourceView<ToggleProps>('control.toggle-setting', DefaultToggle);
 const styles = [{ id: 'modern', title: 'appearance.styles.modern.title', description: 'appearance.styles.modern.description' }, { id: 'immersive', title: 'appearance.styles.immersive.title', description: 'appearance.styles.immersive.description' }] as const;
 const themes = [{ id: 'dark', label: 'appearance.themes.dark', icon: Moon }, { id: 'light', label: 'appearance.themes.light', icon: Sun }, { id: 'system', label: 'appearance.themes.system', icon: Monitor }] as const;
-const accents = [{ color: '#6387f5', name: 'appearance.accents.blue' }, { color: '#a78bfa', name: 'appearance.accents.purple' }, { color: '#4cb99a', name: 'appearance.accents.teal' }, { color: '#eaa55c', name: 'appearance.accents.orange' }, { color: '#e979a7', name: 'appearance.accents.pink' }, { color: '#a3e635', name: 'appearance.accents.lime' }] as const;
+const accents = [{ color: '#6676dc', name: 'appearance.accents.blue' }, { color: '#a78bfa', name: 'appearance.accents.purple' }, { color: '#4cb99a', name: 'appearance.accents.teal' }, { color: '#eaa55c', name: 'appearance.accents.orange' }, { color: '#e979a7', name: 'appearance.accents.pink' }, { color: '#a3e635', name: 'appearance.accents.lime' }] as const;
 export default function AppearanceSettings(input?: {
     props?: Readonly<Record<string, unknown>>;
     section?: 'layout' | 'style';

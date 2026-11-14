@@ -71,9 +71,9 @@ const previewDefaults: AppConfig = {
     appearance: {
       interface_style: 'immersive',
       theme: 'dark',
-      accent_color: '#6387f5',
+      accent_color: '#6676dc',
       ui_scale: 100,
-      border_radius: 14,
+      border_radius: 6,
       compact_sidebar: false,
       reduce_motion: false,
       background_art: false,

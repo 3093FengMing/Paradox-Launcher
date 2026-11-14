@@ -170,13 +170,13 @@ try {
     );
     await page.locator('.page-heading h1').filter({ hasText: help.title }).waitFor();
     assert.equal(
-      await page.locator('.sidebar .nav-item[aria-current="page"]').getAttribute('title'),
+      await page.locator('.sidebar .nav-item[aria-current="page"], .window-navigation .window-route[aria-current="page"]').filter({ visible: true }).getAttribute('title'),
       help.title,
     );
     assert.equal(await page.locator('.page-heading p').innerText(), help.description);
     assert.equal(
       await page
-        .locator('.sidebar')
+        .locator('.sidebar, .window-navigation')
         .getByRole('button', { name: hidden.title, exact: true })
         .count(),
       0,
@@ -369,7 +369,7 @@ try {
       ),
       1,
     );
-    if (width === 320) {
+    if (width === 320 && await page.locator('.mobile-navigation').isVisible()) {
       const trigger = page.locator('.mobile-navigation').getByRole('button', {
         name: text('responsiveUi.navigation'),
         exact: true,
@@ -381,7 +381,7 @@ try {
       await page.getByRole('menu').waitFor({ state: 'hidden' });
       assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
     } else {
-      await page.locator('.sidebar').getByRole('button', { name: help.title, exact: true }).click();
+      await page.locator('.sidebar, .window-navigation').getByRole('button', { name: help.title, exact: true }).click();
     }
     await page.locator('.page-heading h1').filter({ hasText: help.title }).waitFor();
     assert.equal(

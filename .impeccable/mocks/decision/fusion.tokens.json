@@ -1,0 +1,219 @@
+{
+  "candidate": "fusion",
+  "source": "prism structure + graphite semantic palette",
+  "primitive": {
+    "graphite": "#24272D",
+    "panel": "#30353D",
+    "paper": "#EDF1F7",
+    "accent": "#6676DC",
+    "actionInk": "#0D1022",
+    "fontFamily": [
+      "Segoe UI Variable",
+      "Microsoft YaHei UI",
+      "Segoe UI",
+      "sans-serif"
+    ],
+    "bodyPxAt100": 14,
+    "spacePxAt100": [
+      4,
+      8,
+      12,
+      16,
+      24,
+      32
+    ],
+    "radiusPxAt100": 6
+  },
+  "semantic": {
+    "light": {
+      "app": "#EDF1F7",
+      "panel": "#FFFFFF",
+      "text": "#24272D",
+      "muted": "#586476",
+      "line": "#CBD3DE",
+      "controlLine": "#7C899D",
+      "selection": "#E5E9FA",
+      "error": "#B32945",
+      "ready": "#286849",
+      "accentText": "#4357B4",
+      "hover": "#E5E9FA",
+      "input": "#FFFFFF"
+    },
+    "dark": {
+      "app": "#24272D",
+      "panel": "#30353D",
+      "text": "#EDF1F7",
+      "muted": "#BAC5D4",
+      "line": "#556170",
+      "controlLine": "#8997AB",
+      "selection": "#3D465C",
+      "error": "#FFB8C4",
+      "ready": "#A6DBBD",
+      "accentText": "#B0BCFF",
+      "hover": "#3D465C",
+      "input": "#30353D"
+    },
+    "primaryAction": {
+      "background": "#6676DC",
+      "foreground": "#0D1022",
+      "contrast": 4.657327219499114
+    }
+  },
+  "component": {
+    "bodyPxAt100": 14,
+    "controlHeightPxAt100": 34,
+    "instanceRowHeightPxAt100": 54,
+    "radiusRem": 0.42,
+    "immersive": {
+      "composition": "Prism: left consolidated launch summary, right continuous instance rows",
+      "columns": ".82fr 1.38fr"
+    },
+    "modern": {
+      "composition": "Prism: narrow side navigation, wide instance table, collapsible inspector",
+      "navigationWidthRem": 6.1,
+      "inspectorWidthRem": 22,
+      "compactLaunch": "At widths up to 720px, scroll the main content and keep a single-line launch action in a fixed bottom bar"
+    },
+    "titlebar": {
+      "integration": "Window controls integrated into the original topbar / workspace header; no separate titlebar or repeated brand row",
+      "controls": [
+        "window-minimize",
+        "window-maximize",
+        "window-close"
+      ],
+      "buttonHeightRem": 2.43,
+      "buttonWidthRem": 2.7,
+      "narrowButtonWidthRem": 2.1,
+      "narrowNavigation": "Independent horizontally scrollable row inside the viewport"
+    },
+    "readability": {
+      "bodyMinimumPx": 13,
+      "metadataMinimumPx": 12,
+      "actionTextMinimumPx": 13,
+      "method": "font-size:max(minimum px, existing rem size); keeps original default hierarchy above the floor",
+      "scaleRange": [
+        85,
+        100,
+        120
+      ],
+      "layout": "No bar heights, spacing, or palette changed"
+    }
+  },
+  "controls": {
+    "themes": [
+      "dark",
+      "light"
+    ],
+    "scales": [
+      "85",
+      "100",
+      "120"
+    ],
+    "inspector": [
+      "open",
+      "closed"
+    ],
+    "instanceIds": [
+      "survival",
+      "creative",
+      "workshop",
+      "lightweight",
+      "server",
+      "island"
+    ]
+  },
+  "contrastValidation": {
+    "method": "WCAG relative luminance; CSS semantic foregrounds against all applicable solid app, panel, input, and selected surfaces",
+    "minimumRequired": 4.5,
+    "checks": [
+      {
+        "theme": "light",
+        "role": "text",
+        "foreground": "#24272D",
+        "backgrounds": [
+          "#EDF1F7",
+          "#FFFFFF",
+          "#E5E9FA",
+          "#FFFFFF"
+        ],
+        "minimum": 12.378,
+        "passed": true
+      },
+      {
+        "theme": "light",
+        "role": "muted",
+        "foreground": "#586476",
+        "backgrounds": [
+          "#EDF1F7",
+          "#FFFFFF",
+          "#E5E9FA",
+          "#FFFFFF"
+        ],
+        "minimum": 4.963,
+        "passed": true
+      },
+      {
+        "theme": "light",
+        "role": "accentText",
+        "foreground": "#4357B4",
+        "backgrounds": [
+          "#EDF1F7",
+          "#FFFFFF",
+          "#E5E9FA",
+          "#FFFFFF"
+        ],
+        "minimum": 5.326,
+        "passed": true
+      },
+      {
+        "theme": "dark",
+        "role": "text",
+        "foreground": "#EDF1F7",
+        "backgrounds": [
+          "#24272D",
+          "#30353D",
+          "#3D465C",
+          "#30353D"
+        ],
+        "minimum": 8.311,
+        "passed": true
+      },
+      {
+        "theme": "dark",
+        "role": "muted",
+        "foreground": "#BAC5D4",
+        "backgrounds": [
+          "#24272D",
+          "#30353D",
+          "#3D465C",
+          "#30353D"
+        ],
+        "minimum": 5.395,
+        "passed": true
+      },
+      {
+        "theme": "dark",
+        "role": "accentText",
+        "foreground": "#B0BCFF",
+        "backgrounds": [
+          "#24272D",
+          "#30353D",
+          "#3D465C",
+          "#30353D"
+        ],
+        "minimum": 5.152,
+        "passed": true
+      },
+      {
+        "theme": "both",
+        "role": "primaryAction",
+        "foreground": "#0D1022",
+        "backgrounds": [
+          "#6676DC"
+        ],
+        "minimum": 4.657,
+        "passed": true
+      }
+    ]
+  }
+}

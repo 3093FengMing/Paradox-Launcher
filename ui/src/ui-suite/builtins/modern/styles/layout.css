@@ -1,72 +1,67 @@
-/* modern shell: one chrome row, independent navigation and content scrolling. */
-.app-shell { display: flex; height: 100dvh; min-height: 0; padding-top: var(--titlebar-height); overflow: hidden; background: var(--bg); color: var(--text); }
-.window-bar { position: fixed; inset: 0 0 auto; height: var(--titlebar-height); z-index: 40; display: flex; align-items: center; justify-content: space-between; background: var(--titlebar); color: var(--text); user-select: none; border-bottom: 1px solid var(--border); }
-.window-title { min-width: 0; display: flex; gap: .6em; align-items: center; padding-left: .9em; font-size: .8125em; font-weight: 600; }
-.window-title > svg { flex-shrink: 0; }
-.window-title > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.window-title small { font-weight: 400; opacity: .85; margin-left: .5em; }
-.window-controls { display: flex; align-self: stretch; flex-shrink: 0; }
-.window-controls button { width: 2.7em; border-radius: 0; color: inherit; background: transparent; }
-.window-controls button:disabled { opacity: .5; }
-.window-controls button:active { transform: none; }
-.window-controls button:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
-.sidebar { flex: 0 0 12.75em; width: 12.75em; min-height: 0; padding: 1.25em .75em .75em; display: flex; flex-direction: column; gap: .5em; overflow-y: auto; overflow-x: hidden; border-right: 1px solid var(--border); background: var(--sidebar); }
-.sidebar > * { flex-shrink: 0; }
-.sidebar-brand { display: flex; align-items: center; gap: .65em; padding: .3em .4em 1.4em; }
-.sidebar-brand > svg { color: var(--accent-ink); }
-.sidebar-brand strong { font-size: 1.1em; }
-.sidebar-brand small { display: block; font-size: .6em; font-weight: 400; color: var(--muted); margin-top: .3em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sidebar-account { display: flex; align-items: center; gap: .7em; min-height: 4em; padding: .5em; text-align: left; color: var(--text); background: transparent; border-radius: min(9px, var(--radius)); width: 100%; }
-.sidebar-account-copy { flex: 1; min-width: 0; }
-.sidebar-account strong { display: block; font-size: .875em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.sidebar-account small { display: block; font-size: .75em; color: var(--muted); margin-top: .3em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sidebar-instance { padding: .75em .5em 1em; border-bottom: 1px solid var(--border); }
-.sidebar-instance > div { display: flex; align-items: center; gap: .6em; margin: .7em 0 .35em; }
-.sidebar-instance strong { min-width: 0; font-size: .875em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sidebar-instance small { font-size: .75em; color: var(--muted); }
-.sidebar-instance .text-button { margin-top: .65em; font-size: .75em; }
-.nav-caption { display: block; color: var(--muted); font-size: .75em; margin: .8em .6em .25em; }
-.sidebar nav { display: grid; gap: .25em; }
-.nav-item { display: flex; width: 100%; min-height: 2.7em; justify-content: flex-start; gap: .75em; padding: .6em .7em; border-radius: min(9px, var(--radius)); text-align: left; color: var(--muted); background: transparent; font-size: .875em; }
-.nav-item > svg { flex-shrink: 0; }
-.nav-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nav-fallback { display: inline-grid; width: 18px; flex: 0 0 18px; place-items: center; font-weight: 700; }
-.nav-item b { margin-left: auto; font-size: .85em; font-weight: 400; }
-.nav-item.active, .sidebar-account.active { background: var(--hover); color: var(--text); }
-.nav-item.active { box-shadow: inset 3px 0 var(--accent); }
-.nav-item.active > svg { color: var(--accent-ink); }
-.sidebar-bottom { margin-top: auto; padding-top: 1em; display: grid; gap: .25em; }
-.sidebar-environment { font-size: .7em; color: var(--muted); margin: 1em .8em .2em; }
-.detail-sections { border-top: 1px solid var(--border); padding-top: .5em; }
-.workspace { min-width: 0; min-height: 0; flex: 1; display: flex; }
-.workspace > main { flex: 1; min-width: 0; min-height: 0; width: 100%; overflow: auto; padding: 1.5em 1.75em; scrollbar-gutter: stable; }
-.page-heading { display: flex; align-items: center; justify-content: space-between; gap: 1em; flex-wrap: wrap; margin-bottom: 1.5em; }
-.page-heading h1 { font-size: 1.6em; font-weight: 600; margin: 0 0 .3em; }
-.page-heading p { font-size: .8125em; margin: 0; color: var(--muted); }
-
-.workspace > .detail-workspace { padding: 0; }
-.detail-workspace > .page-heading { display: none; }
-.compact .sidebar { flex-basis: 4em; width: 4em; padding: 1em .35em; }
-.compact .sidebar .nav-label, .compact .sidebar .nav-caption, .compact .sidebar .nav-item b, .compact .sidebar-brand, .compact .sidebar-instance, .compact .sidebar-account-copy, .compact .sidebar-account > svg, .compact .sidebar-environment { display: none; }
-.compact .sidebar .nav-item, .compact .sidebar-account { justify-content: center; padding: .65em .25em; }
+/* The workspace header owns window controls; the rail and main scroll separately. */
+.modern-shell { display: flex; height: 100dvh; min-height: 0; padding-top: var(--titlebar-height); overflow: hidden; background: var(--bg); color: var(--text); }
+.modern-shell.workspace-ready { padding-top: 0; }
+.modern-shell .window-bar { position: fixed; inset: 0 0 auto; height: var(--titlebar-height); z-index: 40; display: flex; align-items: center; justify-content: space-between; background: var(--titlebar); color: var(--text); user-select: none; border-bottom: 1px solid var(--border); }
+.modern-shell .window-title { min-width: 0; display: flex; gap: .6rem; align-items: center; padding-left: 1rem; font-size: var(--meta-size); font-weight: 600; }
+.modern-shell .window-title > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.modern-shell .window-title small { font-size: inherit; font-weight: 400; margin-left: .5rem; color: var(--muted); }
+.modern-shell .window-controls { display: flex; align-self: stretch; flex-shrink: 0; }
+.modern-shell .window-controls button { width: 2.9rem; min-height: var(--control-height); padding: 0; border-radius: 0; background: transparent; color: inherit; }
+.modern-shell.workspace-ready .window-bar { position: static; inset: auto; background: transparent; border: 0; height: 3.6rem; }
+.modern-shell.workspace-ready .window-title { display: none; }
+.modern-shell .sidebar { flex: 0 0 var(--rail-width); width: var(--rail-width); min-height: 0; display: flex; flex-direction: column; gap: .6rem; padding: 1rem .5rem .75rem; overflow: auto; border-right: 1px solid var(--border); background: var(--sidebar); }
+.modern-shell .sidebar > * { flex-shrink: 0; }
+.modern-shell .sidebar-brand { display: flex; align-items: center; justify-content: center; gap: .5rem; padding: .5rem 0 1rem; color: var(--text); }
+.modern-shell .sidebar-brand > svg { width: 25px; height: 25px; color: var(--accent-ink); }
+.modern-shell .sidebar-brand strong, .modern-shell .sidebar-brand small, .modern-shell .nav-caption, .modern-shell .instance-sidebar-storage, .modern-shell .sidebar-environment { display: none; }
+.modern-shell .sidebar nav, .modern-shell .sidebar-bottom { display: grid; gap: .35rem; }
+.modern-shell .nav-item { position: relative; display: flex; flex-direction: column; width: 100%; min-height: 3.9rem; justify-content: center; gap: .45rem; padding: .65rem .25rem; border-radius: var(--radius, 6px); color: var(--muted); background: transparent; font-size: max(12px, .86em); text-align: center; }
+.modern-shell .nav-item > svg { flex-shrink: 0; }
+.modern-shell .nav-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
+.modern-shell .nav-fallback { width: 18px; height: 18px; display: inline-grid; place-items: center; font-weight: 600; }
+.modern-shell .nav-item b { position: absolute; top: .4rem; right: .4rem; padding: .05rem .25rem; background: var(--bg); border-radius: 3px; color: var(--muted); font-size: 12px; font-weight: 400; line-height: 1.2; }
+.modern-shell .nav-item.active, .modern-shell .sidebar-account.active { color: var(--text); background: var(--selected); }
+.modern-shell .nav-item.active > svg { color: var(--accent-ink); }
+.modern-shell .nav-item .error-dot { position: absolute; top: .6rem; right: .7rem; }
+.modern-shell .sidebar-bottom { margin-top: auto; padding-top: .75rem; }
+.modern-shell .sidebar-account { display: flex; width: 100%; flex-direction: column; justify-content: center; align-items: center; gap: .4rem; padding: .65rem .25rem; margin-top: .5rem; text-align: center; background: transparent; color: var(--text); border-radius: var(--radius, 6px); }
+.modern-shell .sidebar-account-copy { max-width: 100%; min-width: 0; }
+.modern-shell .sidebar-account strong { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: max(12px,.86em); font-weight: 500; }
+.modern-shell .sidebar-account small, .modern-shell .sidebar-account > svg { display: none; }
+.modern-shell .detail-sections { padding-top: .5rem; border-top: 1px solid var(--border); }
+.modern-shell .workspace { min-width: 0; min-height: 0; flex: 1; display: flex; flex-direction: column; container-type: inline-size; }
+.modern-shell .workspace > main { flex: 1; min-width: 0; min-height: 0; width: 100%; overflow: auto; padding: 0 1.8rem 1.5rem; scrollbar-gutter: stable; }
+.modern-shell .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 6.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.modern-shell .page-heading > div:first-child { min-width: 0; padding: 1.15rem 0; }
+.modern-shell .page-heading h1 { margin: 0 0 .3rem; font-size: max(19px,1.5em); font-weight: 600; line-height: 1.3; }
+.modern-shell .page-heading p { margin: 0; font-size: max(12px,.86em); line-height: 1.5; color: var(--muted); overflow-wrap: anywhere; }
+.modern-shell .current-launch-target { display: none; }
+.modern-shell.compact { --rail-width: 4.6rem; }
+.modern-shell.compact .nav-label, .modern-shell.compact .sidebar-account-copy, .modern-shell.compact .nav-item b { display: none; }
+.modern-shell.compact .nav-item { min-height: 3.1rem; }
 @media (hover: hover) and (pointer: fine) {
-  .nav-item:hover, .sidebar-account:hover { background: var(--hover); color: var(--text); }
-  .window-controls button:not(:disabled):hover { background: #ffffff20; }
-  .window-controls .window-close:not(:disabled):hover { background: #c83d49; color: white; }
+  .modern-shell .nav-item:hover, .modern-shell .sidebar-account:hover, .modern-shell .window-controls button:not(:disabled):hover { background: var(--hover); color: var(--text); }
+  .modern-shell .window-controls .window-close:not(:disabled):hover { background: var(--danger-action); color: #fff; }
 }
-@media (max-width: 850px) {
-  .sidebar { flex-basis: 4em; width: 4em; padding: 1em .35em; }
-  .sidebar .nav-label, .sidebar .nav-caption, .sidebar .nav-item b, .sidebar-brand, .sidebar-instance, .sidebar-account-copy, .sidebar-account > svg, .sidebar-environment { display: none; }
-  .sidebar .nav-item, .sidebar-account { justify-content: center; padding: .65em .25em; }
-  .workspace > main { padding: 1.25em; }
+@media (max-width: 1050px) {
+  .modern-shell .workspace > main { padding-left: 1.1rem; padding-right: 1.1rem; }
+  .modern-shell .current-launch-target { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex: 0 0 auto; background: var(--surface); border-top: 1px solid var(--border); padding: .7rem 1.1rem; }
+  .modern-shell .current-launch-copy { min-width: 0; display: grid; gap: .25rem; }
+  .modern-shell .current-launch-copy > span { font-size: max(12px,.86em); color: var(--muted); }
+  .modern-shell .current-launch-copy > strong { max-width: 100%; font-size: max(13px,1em); font-weight: 500; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .modern-shell .current-launch-target > button { flex: 0 0 auto; }
 }
-@media (max-width: 640px) {
-  .sidebar, .compact .sidebar { flex-basis: 3.5em; width: 3.5em; padding: .5em .2em; }
-  .sidebar-bottom { padding-top: .5em; }
-  .workspace > main { padding: .8em; }
-  .window-title small { display: none; }
-  .page-heading h1 { font-size: 1.25em; }
-  .page-heading p { overflow-wrap: anywhere; }
-  .toolbar, .filter-row, .button-group { flex-wrap: wrap; }
+@media (max-width: 719px) {
+  .modern-shell.workspace-ready { padding-top: 0; }
+  .modern-shell .page-heading { min-height: 5.4rem; gap: .35rem; margin-bottom: .8rem; }
+  .modern-shell .page-heading > div:first-child { padding: .85rem 0; }
+  .modern-shell.workspace-ready .window-bar { height: 3rem; }
+  .modern-shell .window-controls button { width: 2.4rem; }
+  .modern-shell .page-heading p { display: none; }
+  .modern-shell .current-launch-target { padding: .65rem .85rem; }
 }
-@media (max-width: 360px) { .window-controls button { width: 2.1em; } .window-title { padding-left: .5em; gap: .4em; } .window-title > svg { display: none; } }
+@media (max-width: 380px) {
+  .modern-shell .window-controls button { width: 2rem; }
+  .modern-shell .window-title small { display: none; }
+  .modern-shell .page-heading h1 { font-size: 18px; }
+}

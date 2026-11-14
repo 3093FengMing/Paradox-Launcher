@@ -1274,6 +1274,10 @@
     "tryFilters": "调整搜索内容或级别筛选以查看其他日志。"
   },
   "responsiveUi": {
-    "navigation": "导航菜单"
+    "navigation": "导航菜单",
+    "showInspector": "显示详情栏",
+    "hideInspector": "收起详情栏",
+    "currentLaunchTarget": "当前启动实例",
+    "launchNamed": "启动 {{name}}"
   }
 }

@@ -4,6 +4,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createBrowserFixture } from './lib/ui-browser-fixture.mjs';
 import { initialConfig, loadApp } from './lib/hook-test-host.mjs';
+import { globalRouteControl, renderedRouteLabelSelector } from './lib/ui-redesign-navigation.mjs';
 
 // Run this destination script only after root integrates and freezes Task10 sources.
 const artifacts = resolve(import.meta.dirname, '../../.test-data/default-ui-task10', process.env.PARADOX_TASK10_EVIDENCE || 'current-default');
@@ -39,12 +40,13 @@ for (const suite of ['modern', 'immersive']) {
     await page.waitForFunction(({ field, value }) => window.foundationDesktop.config.settings.appearance[field] === value && window.suiteBuiltinsFixture.snapshot.appearance.value[field] === value && !window.suiteBuiltinsFixture.snapshot.settings.saving, { field, value });
     await action('navigation.navigate', [previous.id, previous.params]);
     await page.waitForFunction(() => document.querySelector('.app-shell')?.dataset.theme === window.suiteBuiltinsFixture.snapshot.appearance.theme);
-    const actual = await page.locator('.app-shell').evaluate(element => ({ publicTheme: window.suiteBuiltinsFixture.snapshot.appearance.theme, domTheme: element.dataset.theme, committedTheme: window.foundationDesktop.config.settings.appearance.theme, committedScale: window.foundationDesktop.config.settings.appearance.ui_scale, publicScale: window.suiteBuiltinsFixture.snapshot.appearance.value.ui_scale, variable: window.suiteBuiltinsFixture.snapshot.appearance.variables.fontSize, rootStyle: element.style.fontSize, computedFont: parseFloat(getComputedStyle(element).fontSize) }));
+    const actual = await page.locator('.app-shell').evaluate(element => ({ publicTheme: window.suiteBuiltinsFixture.snapshot.appearance.theme, domTheme: element.dataset.theme, committedTheme: window.foundationDesktop.config.settings.appearance.theme, committedScale: window.foundationDesktop.config.settings.appearance.ui_scale, publicScale: window.suiteBuiltinsFixture.snapshot.appearance.value.ui_scale, variable: window.suiteBuiltinsFixture.snapshot.appearance.variables.fontSize, rootStyle: element.style.fontSize, computedFont: parseFloat(getComputedStyle(element).fontSize), parentFont: parseFloat(getComputedStyle(element.parentElement).fontSize) }));
     assert.equal(actual.domTheme, actual.publicTheme);
     assert.equal(actual.publicScale, actual.committedScale);
     assert.equal(actual.variable, `${actual.committedScale}%`);
-    assert.equal(actual.rootStyle, actual.variable);
-    assert.ok(Math.abs(actual.computedFont - 16 * actual.committedScale / 100) < .2, 'Scale applies once at actual root');
+    const expectedFont = Math.max(13, 14 * actual.committedScale / 100);
+    assert.equal(actual.rootStyle, `${expectedFont}px`);
+    assert.ok(Math.abs(actual.computedFont - expectedFont) < .2, 'Scale applies once at actual root with the suite readable font floor');
     if (field === 'theme') assert.equal(actual.domTheme, value);
     report.appearance.push({ suite, field, value, ...actual });
   }
@@ -55,9 +57,10 @@ for (const suite of ['modern', 'immersive']) {
     await page.waitForFunction(value => window.suiteBuiltinsFixture.snapshot.settings.draft.language === value && window.suiteBuiltinsFixture.snapshot.settings.dirty, value);
     assert.equal(await action('settings.save'), true, 'Original settings owner saves real language draft');
     const heading = locales[value].nav.settings;
-    await page.waitForFunction(({ value, heading }) => { const s = window.suiteBuiltinsFixture.snapshot; return !s.settings.saving && !s.settings.dirty && window.foundationDesktop.config.settings.language === value && s.config.value.settings.language === value && s.settings.draft.language === value && document.documentElement.lang === value && document.querySelector('.settings-page h1')?.textContent.trim() === heading; }, { value, heading });
+    const headingSelector = suite === 'modern' ? '.page-heading h1' : '.settings-page-heading h1';
+    await page.waitForFunction(({ value, heading, headingSelector }) => { const s = window.suiteBuiltinsFixture.snapshot, node = document.querySelector(headingSelector); return !s.settings.saving && !s.settings.dirty && window.foundationDesktop.config.settings.language === value && s.config.value.settings.language === value && s.settings.draft.language === value && document.documentElement.lang === value && node?.getClientRects().length && node.textContent.trim() === heading; }, { value, heading, headingSelector });
     language = value;
-    const after = await page.evaluate(() => { const s = window.suiteBuiltinsFixture.snapshot; return { committedLanguage: window.foundationDesktop.config.settings.language, publicConfigLanguage: s.config.value.settings.language, publicDraftLanguage: s.settings.draft.language, documentLanguage: document.documentElement.lang, renderedSettingsHeading: document.querySelector('.settings-page h1').textContent.trim(), saveCalls: window.foundationDesktop.calls.filter(call => call.command === 'save_config').length }; });
+    const after = await page.evaluate(headingSelector => { const s = window.suiteBuiltinsFixture.snapshot; return { committedLanguage: window.foundationDesktop.config.settings.language, publicConfigLanguage: s.config.value.settings.language, publicDraftLanguage: s.settings.draft.language, documentLanguage: document.documentElement.lang, renderedSettingsHeading: document.querySelector(headingSelector).textContent.trim(), saveCalls: window.foundationDesktop.calls.filter(call => call.command === 'save_config').length }; }, headingSelector);
     assert.equal(after.saveCalls - before.saveCalls, 1, 'One real language Save reaches original save_config boundary');
     report.languageTransitions.push({ suite, language: value, before, after, nativeSaveDelta: after.saveCalls - before.saveCalls });
   }
@@ -132,7 +135,7 @@ for (const suite of ['modern', 'immersive']) {
     assert.deepEqual(findings.filter(value => value.classification === 'decorative-avatar-graphic' && value.ratio < 3), [], `${suite}/${routeId}/${theme}: decorative avatar graphic contrast >=3`);
     const boundaries = await page.locator('.workspace').locator('input:not([type=range]):not([type=color]), textarea, select, button.secondary, .ui-select-trigger').evaluateAll(elements => elements
       .filter(element => element.getClientRects().length && !element.disabled && parseFloat(getComputedStyle(element).borderTopWidth) > 0)
-      .map(element => ({ site: element.getAttribute('data-ui-site'), ...window.task10Boundary.contrast(element, getComputedStyle(element).borderTopColor, '-1px') }))
+      .map(element => ({ site: element.getAttribute('data-ui-site'), text: element.textContent.trim(), label: element.getAttribute('aria-label'), background: getComputedStyle(element).backgroundColor, border: getComputedStyle(element).borderTopColor, ...window.task10Boundary.contrast(element, getComputedStyle(element).borderTopColor, '-1px') }))
       .filter(value => value.alpha > 0));
     report.contrast.push({ suite, routeId, theme, boundaries });
     assert.deepEqual(boundaries.filter(value => value.ratio < 3), [], `${suite}/${routeId}/${theme}: control boundary contrast >=3`);
@@ -250,7 +253,7 @@ for (const suite of ['modern', 'immersive']) {
             assert.ok(layout.scrollWidth <= layout.clientWidth + 2 && layout.documentWidth <= layout.viewportWidth + 2, `${suite}/${theme}/${scale}/${viewport.width}/${routeId} no horizontal clipping`);
             if (viewport.width === 320) {
               const workspace = page.locator('.workspace');
-              const controls = { home: workspace.locator(suite === 'modern' ? '.launch-button' : '.immersive-launch-primary'), instances: workspace.getByRole('button', { name: text('common.createInstance'), exact: true }), 'custom.versions': workspace.getByRole('button', { name: text('common.createInstance'), exact: true }), downloads: workspace.getByRole('combobox', { name: text('versionDownloads.status'), exact: true }), accounts: workspace.getByRole('button', { name: text('accounts.save'), exact: true }), content: workspace.getByRole('button', { name: text('content.search'), exact: true }), 'custom.instance-details': workspace.getByRole('button', { name: text('common.launch'), exact: true }) };
+              const controls = { home: workspace.locator(suite === 'modern' ? '.launch-button' : '.immersive-launch-primary'), instances: workspace.getByRole('button', { name: text('common.createInstance'), exact: true }), 'custom.versions': workspace.getByRole('button', { name: text('common.createInstance'), exact: true }), downloads: workspace.getByRole('combobox', { name: text('versionDownloads.status'), exact: true }), accounts: workspace.getByRole('button', { name: text('accounts.save'), exact: true }), content: workspace.getByRole('button', { name: text('content.search'), exact: true }), 'custom.instance-details': workspace.locator('button[data-ui-site$=":InstanceDetail-launch"]') };
               const control = controls[routeId];
               if (control) await reachable(control.first(), { suite, theme, scale, viewport, routeId, control: 'primary accessible role/label' });
             }
@@ -284,11 +287,39 @@ for (const suite of ['modern', 'immersive']) {
     pass(`${suite}:all_pages_five_viewports_themes_scales_keyboard_and_text_contrast`);
 
     await page.setViewportSize({ width: 640, height: 480 }); await route('logs');
+    if (suite === 'immersive') {
+      const instances = globalRouteControl(page, suite, 'instances', text('nav.instances'));
+      await reachable(instances, { suite, routeId: 'logs', control: 'top navigation instances' });
+      await instances.focus(); await page.keyboard.press('Enter');
+      await page.waitForFunction(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'instances');
+      assert.equal(await instances.evaluate(element => element === document.activeElement), true, 'top navigation retains actual keyboard focus across route changes');
+      const details = page.locator('.instance-row[data-profile-key="original-instance"] button[data-ui-site$=":ProfileCard-view"]');
+      await reachable(details, { suite, routeId: 'instances', control: 'explicit instance details for contextual menu' });
+      await details.focus(); await page.keyboard.press('Enter');
+      await page.waitForFunction(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'custom.instance-details' && window.suiteBuiltinsFixture.snapshot.navigation.params.profileKey === 'original-instance');
+    }
     const navigation = page.locator('.mobile-navigation').getByRole('button', { name: text('responsiveUi.navigation'), exact: true });
     await navigation.focus(); await page.keyboard.press('Enter');
-    const menu = page.getByRole('menu'); await menu.waitFor(); await page.keyboard.press('End'); await page.keyboard.press('Enter'); await menu.waitFor({ state: 'hidden' });
+    const menu = page.getByRole('menu'); await menu.waitFor();
+    if (suite === 'modern') await page.keyboard.press('End');
+    else await menu.getByRole('menuitem', { name: text('shellHome.sections.settings'), exact: true }).and(menu.locator('[data-ui-site$="SidebarMenu-section"]')).focus();
+    await page.keyboard.press('Enter'); await menu.waitFor({ state: 'hidden' });
+    await page.waitForFunction(element => element === document.activeElement, await navigation.elementHandle());
+    if (suite === 'immersive') {
+      assert.equal(await page.locator('.instance-detail-tabs').getByRole('button', { name: text('shellHome.sections.settings'), exact: true }).getAttribute('aria-pressed'), 'true', 'real contextual menu changes the rendered detail section');
+      assert.equal(await page.locator('.instance-detail [data-ui-site$=":InstanceDetail-settings-list"]').isVisible(), true);
+      assert.equal(await page.locator('.instance-detail').getAttribute('data-profile-key'), 'original-instance');
+      assert.equal(await page.evaluate(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId), 'custom.instance-details');
+    }
     await navigation.focus(); await page.keyboard.press('Enter'); await page.keyboard.press('Escape'); await menu.waitFor({ state: 'hidden' });
     assert.equal(await navigation.evaluate(element => element === document.activeElement), true);
+    if (suite === 'immersive') {
+      const logsRoute = globalRouteControl(page, suite, 'logs', text('nav.logs'));
+      await reachable(logsRoute, { suite, routeId: 'instances', control: 'top navigation logs' });
+      await logsRoute.focus(); await page.keyboard.press('Enter');
+      await page.waitForFunction(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'logs');
+      assert.equal(await logsRoute.evaluate(element => element === document.activeElement), true);
+    }
     await commitAppearance('reduce_motion', true);
     await page.emulateMedia({ reducedMotion: 'reduce' });
     const motion = await page.locator('.app-shell').evaluate(element => [...element.querySelectorAll('*')].filter(node => node.getClientRects().length).filter(node => { const css = getComputedStyle(node); return css.animationName !== 'none' || css.transitionDuration.split(',').some(value => parseFloat(value) > 0); }).map(node => node.getAttribute('data-ui-site')));
@@ -302,8 +333,9 @@ for (const suite of ['modern', 'immersive']) {
       if (routeId === 'custom.instance-details') await route(routeId, { profileKey: 'original-instance' });
       else await route(routeId);
       const expectedTitle = text(provenance.routes.find(route => route.id === routeId).title);
-      await page.waitForFunction(title => { const s = window.suiteBuiltinsFixture.snapshot; return window.foundationDesktop.config.settings.language === 'zh-CN' && s.config.value.settings.language === 'zh-CN' && s.settings.draft.language === 'zh-CN' && document.documentElement.lang === 'zh-CN' && document.querySelector('.mobile-navigation-label')?.textContent.trim() === title; }, expectedTitle);
-      const actual = await page.locator('.workspace').evaluate(element => { const s = window.suiteBuiltinsFixture.snapshot; return { actualRouteId: s.navigation.routeId, publicProfileKey: s.navigation.params.profileKey ?? null, renderedProfileKey: document.querySelector('.instance-detail-page .instance-detail')?.getAttribute('data-profile-key') ?? null, committedLanguage: window.foundationDesktop.config.settings.language, publicConfigLanguage: s.config.value.settings.language, publicDraftLanguage: s.settings.draft.language, documentLanguage: document.documentElement.lang, renderedRouteLabel: document.querySelector('.mobile-navigation-label').textContent.trim(), publicScale: s.appearance.value.ui_scale, committedScale: window.foundationDesktop.config.settings.appearance.ui_scale, clientWidth: element.clientWidth, scrollWidth: element.scrollWidth, viewportWidth: innerWidth, documentWidth: document.documentElement.scrollWidth }; });
+      const labelSelector = renderedRouteLabelSelector(suite, routeId);
+      await page.waitForFunction(({ title, labelSelector }) => { const s = window.suiteBuiltinsFixture.snapshot, label = document.querySelector(labelSelector); return window.foundationDesktop.config.settings.language === 'zh-CN' && s.config.value.settings.language === 'zh-CN' && s.settings.draft.language === 'zh-CN' && document.documentElement.lang === 'zh-CN' && label?.getClientRects().length && label.textContent.trim() === title; }, { title: expectedTitle, labelSelector });
+      const actual = await page.locator('.workspace').evaluate((element, labelSelector) => { const s = window.suiteBuiltinsFixture.snapshot; return { actualRouteId: s.navigation.routeId, publicProfileKey: s.navigation.params.profileKey ?? null, renderedProfileKey: document.querySelector('.instance-detail-page .instance-detail')?.getAttribute('data-profile-key') ?? null, committedLanguage: window.foundationDesktop.config.settings.language, publicConfigLanguage: s.config.value.settings.language, publicDraftLanguage: s.settings.draft.language, documentLanguage: document.documentElement.lang, renderedRouteLabel: document.querySelector(labelSelector).textContent.trim(), publicScale: s.appearance.value.ui_scale, committedScale: window.foundationDesktop.config.settings.appearance.ui_scale, clientWidth: element.clientWidth, scrollWidth: element.scrollWidth, viewportWidth: innerWidth, documentWidth: document.documentElement.scrollWidth }; }, labelSelector);
       assert.equal(actual.actualRouteId, routeId, 'Chinese capture uses the actual requested route');
       assert.equal(actual.publicScale, 120); assert.equal(actual.committedScale, 120);
       assert.equal(actual.renderedRouteLabel, expectedTitle, 'Chinese route label is actually rendered');

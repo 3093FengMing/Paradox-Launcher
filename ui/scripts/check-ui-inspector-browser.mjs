@@ -370,10 +370,12 @@ try {
         const ambiguousHandle=c.actions.createDomPreview(exact,document.createElement('div')),ambiguous=ambiguousHandle.getSnapshot(),ambiguousLocated=await c.actions.locateTarget(exact,0);ambiguousHandle.dispose();
         leases.forEach(dispose=>dispose());directRoots.forEach(root=>root.remove());
         const nullContainer=document.createElement('div'),nullHandle=c.actions.createDomPreview({kind:'type',target:'component.inspector-null'},nullContainer),opaque=nullHandle.getSnapshot();nullHandle.dispose();
-        window.suiteFinalFixture.actions.navigation.navigate('home');await new Promise(yes=>setTimeout(yes,160));const unmounted=p.handle.getSnapshot(),empty=p.content.childElementCount;
-        window.suiteFinalFixture.actions.navigation.navigate('accounts');await new Promise(yes=>setTimeout(yes,160));const remounted=p.handle.getSnapshot();
+        const routePreviewStates=[];
+        const waitRoutePreview=async(route,status)=>{const until=Date.now()+3000;do{const snapshot=p.handle.getSnapshot(),routeId=window.suiteFinalFixture.snapshot.navigation.routeId;routePreviewStates.push({route,routeId,status:snapshot.status,roots:snapshot.rootCount});if(routeId===route&&snapshot.status===status)break;await new Promise(yes=>setTimeout(yes,20));}while(Date.now()<until);};
+        window.suiteFinalFixture.actions.navigation.navigate('home');await waitRoutePreview('home','unmounted');const unmounted=p.handle.getSnapshot(),empty=p.content.childElementCount;
+        window.suiteFinalFixture.actions.navigation.navigate('accounts');await waitRoutePreview('accounts','resolved');const remounted=p.handle.getSnapshot();
         let afterDispose=0;const stop=p.handle.subscribe(()=>afterDispose++);p.handle.dispose();p.handle.dispose();document.querySelector('[data-preview-real]').textContent='changed after disposal';await new Promise(yes=>setTimeout(yes,80));p.handle.refresh();stop();
-        return {canvasFallback,hidden,hiddenLocated,beforeTop,afterTop,located,rangeWaitRows,ranges,escaped,cancelled,outlineUnchanged:real.style.outline===outline,multiple,noFirst,invalidIndex,explicitIndex,ambiguous,ambiguousLocated,opaque,unmounted,empty,remounted,afterDispose,removed:!p.container.firstElementChild};
+        return {canvasFallback,hidden,hiddenLocated,beforeTop,afterTop,located,rangeWaitRows,ranges,escaped,cancelled,outlineUnchanged:real.style.outline===outline,multiple,noFirst,invalidIndex,explicitIndex,ambiguous,ambiguousLocated,opaque,routePreviewStates,unmounted,empty,remounted,afterDispose,removed:!p.container.firstElementChild};
       });
       await writeFile(resolve(out,'fallback-location-root-updates-and-disposal.json'),JSON.stringify(result,null,2));
       assert.equal(result.canvasFallback.present,true);assert.match(result.canvasFallback.reason,/Canvas pixels/);assert.equal(result.hidden.status,'hidden');assert.equal(result.hiddenLocated,false);

@@ -66,7 +66,7 @@ async function choose(trigger, option) {
 }
 async function navigate(key) {
   await page
-    .locator('.sidebar')
+    .locator('.sidebar, .window-navigation')
     .getByRole('button', { name: new RegExp('^(?:' + text(`nav.${key}`) + ')(?:\\s|$)') })
     .click();
 }
@@ -479,6 +479,11 @@ async function smallWindowEditor() {
   await page.setViewportSize({ width: 1240, height: 720 });
 }
 async function scaledPortals() {
+  assert.equal(await page.evaluate(() => window.foundationDesktop.config.settings.appearance.ui_scale), 100);
+  const baselineEditor = await openEditor(page);
+  const editorBaseFont = await baselineEditor.evaluate(element => getComputedStyle(element).fontSize);
+  const editorTriggerBaseFont = await baselineEditor.getByRole('combobox', {name:text('uiSuiteEditor.suite'),exact:true}).evaluate(element => getComputedStyle(element).fontSize);
+  await baselineEditor.locator('header button').click();
   await navigate('settings');
   await page.getByRole('tab', { name: text('settings.tabs.appearance'), exact: true }).click();
   const slider = page.getByRole('slider', { name: text('appearance.scale'), exact: true });
@@ -528,7 +533,8 @@ async function scaledPortals() {
   await page.keyboard.press('Escape');
   await menu.waitFor({ state: 'hidden' });
   const editor = await openEditor(page);
-  assert.equal(await editor.evaluate((element) => getComputedStyle(element).fontSize), shellFont);
+  const editorFont = await editor.evaluate(element => getComputedStyle(element).fontSize);
+  assert.ok(Math.abs(Number.parseFloat(editorFont) - Number.parseFloat(editorBaseFont) * 1.2) < .02, 'ordinary editor applies its own 100% typography scale once');
   const target = editor.getByRole('combobox', {
     name: text('uiSuiteEditor.suite'),
     exact: true,
@@ -537,10 +543,9 @@ async function scaledPortals() {
   const popup = page.getByRole('listbox');
   await popup.waitFor({ state: 'visible' });
   const shadowFont = await target.evaluate((element) => getComputedStyle(element).fontSize);
-  assert.equal(
-    shadowFont,
-    documentFont,
-    'ShadowRoot Trigger uses the same scaled Field typography',
+  assert.ok(
+    Math.abs(Number.parseFloat(shadowFont) - Number.parseFloat(editorTriggerBaseFont) * 1.2) < .02,
+    'ordinary ShadowRoot Trigger applies its own 100% Field typography scale once',
   );
   assert.equal(await popup.evaluate((element) => getComputedStyle(element).fontSize), shadowFont);
   await page.keyboard.press('Escape');
@@ -558,6 +563,9 @@ async function scaledPortals() {
     shellFont,
     documentTrigger: documentFont,
     nativeInput: nativeFont,
+    editorBaseFont,
+    editorFont,
+    editorTriggerBaseFont,
     shadowTrigger: shadowFont,
   };
   check('portal_and_control_scale_applied_once:120_percent');

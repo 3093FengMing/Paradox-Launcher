@@ -21,7 +21,7 @@ export default function DiscoverPage() {
       data-ui-site="Discover-target-label">
       <Download
       size={18}
-      data-ui-site="Discover-target-icon"/>
+      data-ui-site="Discover-target-icon" aria-hidden="true"/>
       <h2
         data-ui-site="Discover-target-title">{t('accountDiscovery.installTarget')}
       </h2>
@@ -50,7 +50,7 @@ export default function DiscoverPage() {
       data-ui-site="Discover-create">
       <Plus
       size={16}
-      data-ui-site="Discover-create-icon"/>{t('app.createInstance')}
+      data-ui-site="Discover-create-icon" aria-hidden="true"/>{t('app.createInstance')}
     </button>}
     {profile?.loader === 'vanilla' && <p
       className="discover-guidance"
@@ -71,12 +71,12 @@ export default function DiscoverPage() {
       data-ui-site="Discover-intro">
       <div
         data-ui-site="Discover-title-group">
+        <h2
+          data-ui-site="Discover-title">Modrinth</h2>
         <p
           className="discover-eyebrow"
           data-ui-site="Discover-eyebrow">{t('accountDiscovery.resourceLibrary')}
         </p>
-        <h2
-          data-ui-site="Discover-title">Modrinth</h2>
       </div>
       <button
         className="secondary"
@@ -85,7 +85,7 @@ export default function DiscoverPage() {
         data-ui-site="Discover-import">
         <Upload
         size={16}
-        data-ui-site="Discover-import-icon"/>{t('content.importPack')}
+        data-ui-site="Discover-import-icon" aria-hidden="true"/>{t('content.importPack')}
       </button>
     </header>
     <p
@@ -131,7 +131,7 @@ export default function DiscoverPage() {
           data-ui-site="Discover-submit">
           <Search
           size={17}
-          data-ui-site="Discover-search-icon"/>{t('content.search')}
+          data-ui-site="Discover-search-icon" aria-hidden="true"/>{t('content.search')}
         </button>
       </div>
     </form>
@@ -181,7 +181,7 @@ export default function DiscoverPage() {
       data-ui-site="Discover-initial">
       <Package
       size={32}
-      data-ui-site="Discover-initial-icon"/>
+      data-ui-site="Discover-initial-icon" aria-hidden="true"/>
       <h3
         data-ui-site="Discover-initial-title">{t('accountDiscovery.startSearch')}
       </h3>
@@ -194,7 +194,7 @@ export default function DiscoverPage() {
       data-ui-site="Discover-empty">
       <Search
       size={30}
-      data-ui-site="Discover-empty-icon"/>
+      data-ui-site="Discover-empty-icon" aria-hidden="true"/>
       <h3
         data-ui-site="Discover-empty-title">{t('accountDiscovery.noResults')}
       </h3>
@@ -220,7 +220,7 @@ export default function DiscoverPage() {
             data-ui-site="Discover-project-symbol">
             <Package
             size={25}
-            data-ui-site="Discover-project-icon"/>
+            data-ui-site="Discover-project-icon" aria-hidden="true"/>
           </div>
           <div
             className="discover-project-copy"
@@ -250,7 +250,7 @@ export default function DiscoverPage() {
             data-ui-site="Discover-install">
             <Download
             size={16}
-            data-ui-site="Discover-install-icon"/>{t(project.project_type === 'modpack' ? 'content.installPack' : 'content.install')}
+            data-ui-site="Discover-install-icon" aria-hidden="true"/>{t(project.project_type === 'modpack' ? 'content.installPack' : 'content.install')}
           </button>
         </article>
       </UiIdentity>)}

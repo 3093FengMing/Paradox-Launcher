@@ -149,7 +149,9 @@ for (const suite of ['modern', 'immersive']) {
     await site('ProfileDialog-submit').click();
     await wait(() => window.suiteBuiltinsFixture.snapshot.profileDraft.editor === null && window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'instances');
     assert.equal(await act(() => window.task6Boundary.calls.filter(c => c.command === 'enqueue_install').length), 0, 'creation never guesses new identity or auto-installs');
-    await page.locator('[data-profile-key="created-fixture"]').getByRole('button', { name: 'Install', exact: true }).click();
+    const createdInstall = page.locator('.instance-row[data-profile-key="created-fixture"] button[data-ui-site$=":ProfileCard-launch"]');
+    assert.equal((await createdInstall.innerText()).trim(), 'Install', 'explicitly identified created instance exposes its install action');
+    await createdInstall.click();
     await wait(() => window.task6Boundary.calls.some(c => c.command === 'enqueue_install' && c.args.key === 'created-fixture'));
     pass('focused_create_loader_pair_debounce_late_result_isolation_failure_retains_draft_explicit_known_instance_install');
     await act(() => {

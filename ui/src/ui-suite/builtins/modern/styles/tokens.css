@@ -1,29 +1,91 @@
-/* modern: tokens. Retained page rules are owned here during the source redesign. */
-[data-theme="dark"] {
-  --shadow: 0 1px 3px #00000016, 0 0 0 1px #ffffff06;
-  --bg: #10151e;
-  --sidebar: #18212e;
-  --surface: #192432;
-  --input: #192432;
-  --hover: #2a3a50;
-  --border: #2a3a50;
-  --text: #eaf1fd;
-  --muted: #bac7dd;
-  --faint: #9eadc4;
-  --titlebar: #171e29;
-  --titlebar-height: 2.625em;
+/* Three layers: primitive values, semantic roles, and component measurements. */
+.modern-shell, .modern-dialog-theme, .modern-portal {
+  /* Primitive palette. These values have no component or business meaning. */
+  --p-graphite-900: #24272d;
+  --p-graphite-800: #30353d;
+  --p-graphite-750: #383e49;
+  --p-graphite-700: #48515e;
+  --p-graphite-600: #586476;
+  --p-graphite-500: #7a879b;
+  --p-graphite-450: #8997ab;
+  --p-graphite-300: #bac5d4;
+  --p-graphite-200: #cbd2de;
+  --p-graphite-150: #e7ecf4;
+  --p-graphite-100: #edf1f7;
+  --p-white: #fff;
+  --p-violet-950: #0d1022;
+  --p-violet-900: #3d465c;
+  --p-violet-700: #4357b4;
+  --p-violet-500: #6676dc;
+  --p-violet-200: #b0bcff;
+  --p-violet-100: #e5e9fa;
+  --p-red-850: #a32135;
+  --p-red-800: #ad2639;
+  --p-red-200: #ffb0b8;
+  --p-amber-800: #7e570e;
+  --p-amber-200: #f0ce86;
+  --p-green-800: #23684e;
+  --p-green-200: #a8d9c1;
+  --p-overlay-dim: #101319a3;
+  --p-shadow-overlay: 0 12px 40px #00000038;
+  --p-radius-default: 6px;
+
+  /* Semantic defaults. Saved appearance variables override these inline. */
+  --accent: var(--p-violet-500);
+  --accent-fg: var(--p-violet-950);
+  --radius: var(--p-radius-default);
+  --shadow: none;
+  --overlay-backdrop: var(--p-overlay-dim);
+  --overlay-shadow: var(--p-shadow-overlay);
+  --ease-out: cubic-bezier(.2,.8,.2,1);
+
+  /* Component measurements retain their existing names and values. */
+  --titlebar-height: 3.4em;
+  --rail-width: 6.1em;
+  --inspector-width: 22em;
+  --control-height: 2.45em;
+  --body-size: max(13px, 1em);
+  --meta-size: max(12px, .86em);
 }
-[data-theme="light"] {
-  --shadow: 0 1px 3px #16162f05, 0 0 0 1px #16162f08;
-  --bg: #f3f6fa;
-  --sidebar: #ffffff;
-  --surface: #ffffff;
-  --input: #ffffff;
-  --hover: #e8edf5;
-  --border: #dbe3ef;
-  --text: #17253a;
-  --muted: #52627a;
-  --faint: #63728a;
-  --titlebar: #ffffff;
-  --titlebar-height: 2.625em;
+.modern-shell[data-theme="dark"], .modern-dialog-theme[data-theme="dark"], .modern-portal[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: var(--p-graphite-900);
+  --sidebar: var(--p-graphite-900);
+  --surface: var(--p-graphite-800);
+  --panel: var(--p-graphite-800);
+  --input: var(--p-graphite-800);
+  --hover: var(--p-graphite-750);
+  --selected: var(--p-violet-900);
+  --border: var(--p-graphite-700);
+  --control-border: var(--p-graphite-450);
+  --text: var(--p-graphite-100);
+  --muted: var(--p-graphite-300);
+  --faint: var(--p-graphite-300);
+  --accent-ink: var(--p-violet-200);
+  --titlebar: var(--p-graphite-900);
+  --danger: var(--p-red-200);
+  --danger-action: var(--p-red-800);
+  --warning: var(--p-amber-200);
+  --success: var(--p-green-200);
+}
+.modern-shell[data-theme="light"], .modern-dialog-theme[data-theme="light"], .modern-portal[data-theme="light"] {
+  color-scheme: light;
+  --bg: var(--p-graphite-100);
+  --sidebar: var(--p-graphite-100);
+  --surface: var(--p-white);
+  --panel: var(--p-white);
+  --input: var(--p-white);
+  --hover: var(--p-graphite-150);
+  --selected: var(--p-violet-100);
+  --border: var(--p-graphite-200);
+  --control-border: var(--p-graphite-500);
+  --text: var(--p-graphite-900);
+  --muted: var(--p-graphite-600);
+  --faint: var(--p-graphite-600);
+  --accent-ink: var(--p-violet-700);
+  --titlebar: var(--p-graphite-100);
+  --danger: var(--p-red-850);
+  --danger-action: var(--p-red-800);
+  --warning: var(--p-amber-800);
+  --success: var(--p-green-800);
 }

@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createBrowserFixture, openEditor } from './lib/ui-browser-fixture.mjs';
 import { initialConfig } from './lib/hook-test-host.mjs';
+import { globalRouteControl } from './lib/ui-redesign-navigation.mjs';
 import { redesignScenarios, redesignViewports, redesignScales, defaultRoutes, redesignConfig, sourceSite, launcherAction, boundaryMode, installRedesignBoundary, assertSameOwner, assertReachable, captureDefaultSurface, assertIndependentReducedMotion, runRedesignScenario, cancelRedesignLogin } from './lib/ui-redesign-scenarios.mjs';
 
 const root = resolve(import.meta.dirname, '../..');
@@ -113,7 +114,7 @@ for (const suite of ['modern', 'immersive']) for (const theme of ['dark', 'light
           await page.waitForFunction(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'instances');
         }
         const mobile = page.locator('.mobile-navigation').getByRole('button', { name: text('responsiveUi.navigation'), exact: true });
-        if (await mobile.isVisible()) {
+        if (suite === 'modern' && await mobile.isVisible()) {
           row.reachability.push(await assertReachable(page, mobile, 'mobile navigation trigger ' + routeId));
           await page.keyboard.press('Enter');
           const menu = page.getByRole('menu'); await menu.waitFor();
@@ -128,7 +129,7 @@ for (const suite of ['modern', 'immersive']) for (const theme of ['dark', 'light
             await page.keyboard.press('Enter');
             await page.waitForFunction(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'instances');
           }
-          const control = routeId === 'accounts' ? page.locator('.sidebar-account') : page.locator('.sidebar').getByRole('button', { name: text(route.title), exact: true });
+          const control = globalRouteControl(page, suite, routeId, text(route.title));
           row.reachability.push(await assertReachable(page, control, 'navigation ' + routeId));
           await page.keyboard.press('Enter');
         }

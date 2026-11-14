@@ -24,7 +24,7 @@ export default function Shell() {
     'app-shell immersive-shell', 'immersive', home ? 'is-home' : '',
     s.appearance.value?.compact_sidebar ? 'compact' : '',
     s.appearance.value?.reduce_motion ? 'reduce-motion' : '', keyboard ? 'keyboard-navigation' : '',
-  ].filter(Boolean).join(' ')} data-theme={s.appearance.theme} style={s.appearance.variables}
+  ].filter(Boolean).join(' ')} data-theme={s.appearance.theme} style={{ ...s.appearance.variables, fontSize: `${Math.max(13, 14 * (s.appearance.value?.ui_scale ?? 100) / 100)}px` }}
     onKeyDownCapture={() => setKeyboard(true)} onPointerDownCapture={() => setKeyboard(false)}>
     <UiView data-ui-site="Shell-2" id="component.window-bar" />
     <UiView data-ui-site="Shell-3" id="host.loading" />

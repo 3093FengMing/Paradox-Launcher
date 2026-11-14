@@ -18,7 +18,7 @@ export default function InstanceDetailPage() {
   if (!entry || !key) return <UiView data-ui-site="InstanceDetailPage-missing" id="component.instance-detail" props={{ profileKey: key }} Original={InstanceDetail}/>;
   return <UiIdentity namespace="profile" value={key}><div data-ui-site="InstanceDetailPage-root" className="instance-detail-page modern-detail-page">
 
-    <div data-ui-site="InstanceDetailPage-main" className="instance-detail-main"><button data-ui-site="InstanceDetailPage-back" className="text-button instance-back" onClick={() => a.navigation.navigate('instances')}><ArrowLeft data-ui-site="InstanceDetailPage-back-icon" size={15}/>{t('instancePages.back')}</button>
+    <div data-ui-site="InstanceDetailPage-main" className="instance-detail-main"><button data-ui-site="InstanceDetailPage-back" className="text-button instance-back" onClick={() => a.navigation.navigate('instances')}><ArrowLeft data-ui-site="InstanceDetailPage-back-icon" size={15} aria-hidden="true"/>{t('instancePages.back')}</button>
       <nav data-ui-site="InstanceDetailPage-tabs" className="instance-detail-tabs" aria-label={t('shellHome.instanceSections')}>{['overview', 'settings', 'mods', 'resourcepacks', 'shaderpacks', 'saves'].map(value => <button data-ui-site="InstanceDetailPage-tab" className={section === value ? 'active' : ''} key={value} aria-pressed={section === value} onClick={() => chooseSection(value)}>{t(`shellHome.sections.${value}`)}</button>)}</nav>
       <UiView data-ui-site="InstanceDetailPage-detail" id="component.instance-detail" props={{ profileKey: key, detailSection: section, onDetailSectionChange: chooseSection }} Original={InstanceDetail}/>
     </div>

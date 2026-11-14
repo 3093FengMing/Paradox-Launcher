@@ -1274,6 +1274,10 @@
     "tryFilters": "Change the search or level filter to view other entries."
   },
   "responsiveUi": {
-    "navigation": "Navigation menu"
+    "navigation": "Navigation menu",
+    "showInspector": "Show inspector",
+    "hideInspector": "Hide inspector",
+    "currentLaunchTarget": "Current launch target",
+    "launchNamed": "Launch {{name}}"
   }
 }

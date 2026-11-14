@@ -235,13 +235,15 @@ export async function runRedesignScenario(page, name, { navigate, capture, text,
             window.foundationDesktop.config.settings.appearance.theme === theme &&
             window.foundationDesktop.config.settings.appearance.ui_scale === scale &&
             f.snapshot.appearance.theme === theme && f.snapshot.appearance.value.ui_scale === scale &&
-            shell?.dataset.theme === theme && shell.style.fontSize === scale + '%';
+            shell?.dataset.theme === theme && f.snapshot.appearance.variables.fontSize === scale + '%' &&
+            shell.style.fontSize === Math.max(13, 14 * scale / 100) + 'px';
         }, { theme: committedTheme, scale: committedScale });
         const resolved = await page.evaluate(() => {
           const shell = document.querySelector('.app-shell');
           return { fontSize: parseFloat(getComputedStyle(shell).fontSize), parentFontSize: parseFloat(getComputedStyle(shell.parentElement).fontSize) };
         });
-        assert.ok(Math.abs(resolved.fontSize / resolved.parentFontSize - committedScale / 100) < 0.01, 'resolved root applies committed scale once');
+        const expectedFont = Math.max(13, 14 * committedScale / 100);
+        assert.ok(Math.abs(resolved.fontSize - expectedFont) < 0.2, 'resolved root applies committed scale once with the suite readable font floor');
       }
       await shot('saved-resolved-root');
       break;

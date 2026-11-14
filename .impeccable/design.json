@@ -1,0 +1,598 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-14T23:01:33Z",
+  "title": "Design System: Paradox Launcher",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "primary",
+        "canonical": "#6676dc"
+      },
+      "primary-foreground": {
+        "role": "primary",
+        "displayName": "primary-foreground",
+        "canonical": "#0d1022"
+      },
+      "graphite-canvas": {
+        "role": "neutral",
+        "displayName": "graphite-canvas",
+        "canonical": "#24272d",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "graphite-panel": {
+        "role": "neutral",
+        "displayName": "graphite-panel",
+        "canonical": "#30353d",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "paper-canvas": {
+        "role": "neutral",
+        "displayName": "paper-canvas",
+        "canonical": "#edf1f7",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "paper-panel": {
+        "role": "neutral",
+        "displayName": "paper-panel",
+        "canonical": "#fff",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "dark-text": {
+        "role": "neutral",
+        "displayName": "dark-text",
+        "canonical": "#edf1f7",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "light-text": {
+        "role": "neutral",
+        "displayName": "light-text",
+        "canonical": "#24272d",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "dark-muted": {
+        "role": "neutral",
+        "displayName": "dark-muted",
+        "canonical": "#bac5d4",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "light-muted": {
+        "role": "neutral",
+        "displayName": "light-muted",
+        "canonical": "#586476",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "dark-selection": {
+        "role": "primary",
+        "displayName": "dark-selection",
+        "canonical": "#3d465c"
+      },
+      "light-selection": {
+        "role": "primary",
+        "displayName": "light-selection",
+        "canonical": "#e5e9fa"
+      },
+      "dark-accent-ink": {
+        "role": "primary",
+        "displayName": "dark-accent-ink",
+        "canonical": "#b0bcff"
+      },
+      "light-accent-ink": {
+        "role": "primary",
+        "displayName": "light-accent-ink",
+        "canonical": "#4357b4"
+      },
+      "dark-control-line": {
+        "role": "neutral",
+        "displayName": "dark-control-line",
+        "canonical": "#8997ab",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "light-control-line": {
+        "role": "neutral",
+        "displayName": "沉浸式浅色控件边界",
+        "canonical": "#7c899d",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "modern-dark-line": {
+        "role": "neutral",
+        "displayName": "modern-dark-line",
+        "canonical": "#48515e",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "modern-light-line": {
+        "role": "neutral",
+        "displayName": "modern-light-line",
+        "canonical": "#cbd2de",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "immersive-dark-line": {
+        "role": "neutral",
+        "displayName": "immersive-dark-line",
+        "canonical": "#556170"
+      },
+      "immersive-light-line": {
+        "role": "neutral",
+        "displayName": "immersive-light-line",
+        "canonical": "#cbd3de"
+      },
+      "modern-dark-hover": {
+        "role": "neutral",
+        "displayName": "modern-dark-hover",
+        "canonical": "#383e49",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "modern-light-hover": {
+        "role": "neutral",
+        "displayName": "modern-light-hover",
+        "canonical": "#e7ecf4",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "modern-dark-danger": {
+        "role": "neutral",
+        "displayName": "modern-dark-danger",
+        "canonical": "#ffb0b8"
+      },
+      "modern-light-danger": {
+        "role": "neutral",
+        "displayName": "modern-light-danger",
+        "canonical": "#a32135"
+      },
+      "modern-danger-action": {
+        "role": "neutral",
+        "displayName": "modern-danger-action",
+        "canonical": "#ad2639"
+      },
+      "modern-dark-warning": {
+        "role": "neutral",
+        "displayName": "modern-dark-warning",
+        "canonical": "#f0ce86"
+      },
+      "modern-light-warning": {
+        "role": "neutral",
+        "displayName": "modern-light-warning",
+        "canonical": "#7e570e"
+      },
+      "modern-dark-success": {
+        "role": "neutral",
+        "displayName": "modern-dark-success",
+        "canonical": "#a8d9c1"
+      },
+      "modern-light-success": {
+        "role": "neutral",
+        "displayName": "modern-light-success",
+        "canonical": "#23684e"
+      },
+      "immersive-dark-danger": {
+        "role": "neutral",
+        "displayName": "immersive-dark-danger",
+        "canonical": "#ffb1b8"
+      },
+      "immersive-light-danger": {
+        "role": "neutral",
+        "displayName": "immersive-light-danger",
+        "canonical": "#943342"
+      },
+      "immersive-dark-warning": {
+        "role": "neutral",
+        "displayName": "immersive-dark-warning",
+        "canonical": "#f0c997"
+      },
+      "immersive-light-warning": {
+        "role": "neutral",
+        "displayName": "immersive-light-warning",
+        "canonical": "#7b4b17"
+      },
+      "modern-overlay": {
+        "role": "neutral",
+        "displayName": "modern-overlay",
+        "canonical": "#101319a3"
+      },
+      "modern-light-control-line": {
+        "role": "neutral",
+        "displayName": "Modern 浅色控件边界",
+        "canonical": "#7a879b",
+        "tonalRamp": [
+          "#24272d",
+          "#30353d",
+          "#48515e",
+          "#586476",
+          "#8997ab",
+          "#bac5d4",
+          "#edf1f7",
+          "#fff"
+        ]
+      },
+      "immersive-overlay": {
+        "role": "neutral",
+        "displayName": "immersive-overlay",
+        "canonical": "#16181dcc"
+      }
+    },
+    "typographyMeta": {
+      "modern-body": {
+        "displayName": "Modern 正文",
+        "purpose": "默认工作面，14px 基准，13px 下限。"
+      },
+      "immersive-body": {
+        "displayName": "沉浸式正文",
+        "purpose": "默认工作面，14px 基准，13px 下限。"
+      },
+      "modern-meta": {
+        "displayName": "Modern 元信息",
+        "purpose": "状态、版本、数量、辅助标签；12px 下限。"
+      },
+      "immersive-meta": {
+        "displayName": "沉浸式元信息",
+        "purpose": "辅助文字与版本；12px 下限。"
+      },
+      "modern-title": {
+        "displayName": "Modern 页面标题",
+        "purpose": "工作区标题，区别于查看栏标题。"
+      },
+      "immersive-title": {
+        "displayName": "沉浸式页面标题",
+        "purpose": "普通页面标题，首页实例名另采用 2.2em。"
+      },
+      "code": {
+        "displayName": "代码与日志",
+        "purpose": "可选择的日志、路径与参数文本。"
+      }
+    },
+    "shadows": [
+      {
+        "name": "workspace",
+        "value": "none",
+        "purpose": "普通工作面、面板和主要动作。"
+      },
+      {
+        "name": "modern-overlay",
+        "value": "0 12px 40px #00000038",
+        "purpose": "Modern 业务弹窗。"
+      },
+      {
+        "name": "immersive-overlay",
+        "value": "0 12px 40px #1114192f",
+        "purpose": "沉浸式业务弹窗与实例菜单。"
+      },
+      {
+        "name": "modern-instance-menu",
+        "value": "0 8px 24px #0003",
+        "purpose": "Modern 实例工具菜单。"
+      },
+      {
+        "name": "notice",
+        "value": "0 8px 24px #1114192f",
+        "purpose": "两套通知。"
+      }
+    ],
+    "motion": [
+      {
+        "name": "modern-control",
+        "value": "120ms cubic-bezier(.2,.8,.2,1)",
+        "purpose": "Modern 控件表面与边界变化；键盘导航与减少动效关闭过渡。"
+      },
+      {
+        "name": "modern-dialog",
+        "value": "opacity 140ms cubic-bezier(.2,.8,.2,1)",
+        "purpose": "Modern 业务弹窗与遮罩。"
+      },
+      {
+        "name": "immersive-dialog",
+        "value": "opacity 150ms cubic-bezier(.2,.7,.2,1)",
+        "purpose": "沉浸式业务弹窗与遮罩。"
+      },
+      {
+        "name": "spinner",
+        "value": "900ms linear infinite",
+        "purpose": "真实进行中的等待指示；减少动效禁用动画。"
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "common-mobile",
+        "value": "719px"
+      },
+      {
+        "name": "modern-footer",
+        "value": "1050px"
+      },
+      {
+        "name": "modern-inspector-container",
+        "value": "64rem"
+      },
+      {
+        "name": "modern-row-container",
+        "value": "40rem"
+      },
+      {
+        "name": "modern-home-reflow",
+        "value": "640px"
+      },
+      {
+        "name": "immersive-header-compaction",
+        "value": "1150px"
+      },
+      {
+        "name": "immersive-header-label-compaction",
+        "value": "950px"
+      },
+      {
+        "name": "immersive-home-low-height",
+        "value": "400px"
+      }
+    ],
+    "provenance": {
+      "sourceStage": "final-v4",
+      "sourceFingerprint": "8688318cc7db1a2b48767db03e6c1f2d2112e5291d40969ff9714e40fc81e124",
+      "sourceFiles": 125,
+      "sourceFingerprintAlgorithm": "JavaScript files.sort() of repository-relative forward-slash paths; UTF-8 path + NUL + raw file bytes + NUL; SHA-256; no newline normalization.",
+      "sourceRecord": "docs/ui-redesign-2026-11-15/evidence/application/provenance.json",
+      "verificationRecord": "docs/ui-redesign-2026-11-15/implementation-review.md",
+      "buildRecord": "docs/ui-redesign-2026-11-15/evidence/application/build-provenance.json",
+      "applicationScreenshots": [
+        "docs/ui-redesign-2026-11-15/evidence/application/immersive-home.png",
+        "docs/ui-redesign-2026-11-15/evidence/application/immersive-instances.png",
+        "docs/ui-redesign-2026-11-15/evidence/application/modern-home.png",
+        "docs/ui-redesign-2026-11-15/evidence/application/modern-instances.png"
+      ],
+      "verificationSummary": "docs/ui-redesign-2026-11-15/evidence/application/verification-summary.json",
+      "automaticVerification": "completed; native interactions pending"
+    }
+  },
+  "components": [
+    {
+      "name": "Modern primary button",
+      "kind": "button",
+      "refersTo": "modern-button-primary",
+      "description": "启动、安装、修复或提交等真实主要动作；示例仅展示外观。",
+      "html": "<button type=\"button\" class=\"ds-btn-primary\"><svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z\"/></svg><span>Launch game</span></button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8.8px;min-height:var(--control-height,2.45em);padding:8px 14.4px;border:1px solid transparent;border-radius:var(--radius,6px);background:var(--accent,#6676dc);color:var(--accent-fg,#0d1022);font:500 14px/1.45 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif;cursor:pointer;white-space:nowrap;box-shadow:none;transition:background-color 120ms cubic-bezier(.2,.8,.2,1),border-color 120ms cubic-bezier(.2,.8,.2,1)}.ds-btn-primary svg{flex-shrink:0}.ds-btn-primary:focus-visible{outline:2px solid var(--accent-ink,#b0bcff);outline-offset:2px}.ds-btn-primary:disabled{opacity:.5;cursor:not-allowed}@media(hover:hover) and (pointer:fine){.ds-btn-primary:hover:not(:disabled){filter:brightness(1.06)}}@media (prefers-reduced-motion:reduce){.ds-btn-primary{transition:none;animation:none}}"
+    },
+    {
+      "name": "Modern secondary button",
+      "kind": "button",
+      "refersTo": "modern-button-secondary",
+      "description": "有边界的次要动作，例如打开实例详情；复用实际控制边界和字号。",
+      "html": "<button type=\"button\" class=\"ds-btn-secondary\">Instance details</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8.8px;min-height:var(--control-height,2.45em);padding:8px 14.4px;border:1px solid var(--control-border,#8997ab);border-radius:var(--radius,6px);background:var(--surface,#30353d);color:var(--text,#edf1f7);font:500 14px/1.45 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif;cursor:pointer;white-space:nowrap;box-shadow:none;transition:background-color 120ms cubic-bezier(.2,.8,.2,1),border-color 120ms cubic-bezier(.2,.8,.2,1)}.ds-btn-secondary svg{flex-shrink:0}.ds-btn-secondary:focus-visible{outline:2px solid var(--accent-ink,#b0bcff);outline-offset:2px}.ds-btn-secondary:disabled{opacity:.5;cursor:not-allowed}@media(hover:hover) and (pointer:fine){.ds-btn-secondary:hover:not(:disabled){background:var(--hover,#383e49);color:var(--text,#edf1f7)}}@media (prefers-reduced-motion:reduce){.ds-btn-secondary{transition:none;animation:none}}"
+    },
+    {
+      "name": "Modern instance search",
+      "kind": "input",
+      "refersTo": "modern-instance-search",
+      "description": "实例集合的命名搜索字段；键盘焦点落在真实输入元素上。",
+      "html": "<label class=\"ds-instance-search\"><svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21 21-4.34-4.34\"/><circle cx=\"11\" cy=\"11\" r=\"8\"/></svg><input type=\"search\" aria-label=\"Search instances\" placeholder=\"Search instances\" autocomplete=\"off\"></label>",
+      "css": ".ds-instance-search{display:flex;align-items:center;gap:9.6px;min-width:0;min-height:2.45em;padding:0 12px;background:var(--surface,#30353d);border:1px solid var(--control-border,#8997ab);border-radius:var(--radius,6px);color:var(--muted,#bac5d4);font:14px/1.45 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif}.ds-instance-search svg{flex-shrink:0}.ds-instance-search input{min-width:0;width:100%;padding:8.8px 0;border:0;border-radius:0;background:transparent;color:var(--text,#edf1f7);font:14px/1.4 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif}.ds-instance-search input::placeholder{color:var(--muted,#bac5d4);opacity:1}.ds-instance-search input:focus-visible{outline:2px solid var(--accent-ink,#b0bcff);outline-offset:2px}.ds-instance-search:hover{border-color:var(--control-border,#8997ab)}"
+    },
+    {
+      "name": "Modern narrow rail",
+      "kind": "nav",
+      "refersTo": "modern-rail",
+      "description": "窄侧导航用图标和标签标记当前路由；真实项目根据公开路由列表生成条目。",
+      "html": "<nav class=\"ds-modern-rail\" aria-label=\"Workspace\"><button type=\"button\" class=\"ds-modern-route\" aria-current=\"page\"><svg width=\"21\" height=\"21\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z\"/><path d=\"m3.3 7 8.7 5 8.7-5\"/><path d=\"M12 22V12\"/></svg><span>Instances</span></button></nav>",
+      "css": ".ds-modern-rail{width:6.1em;padding:16px 8px 12px;background:var(--bg,#24272d);border-right:1px solid var(--border,#48515e);font:14px/1.45 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif}.ds-modern-route{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;min-height:62.4px;gap:7.2px;padding:10.4px 4px;border:0;border-radius:var(--radius,6px);background:transparent;color:var(--muted,#bac5d4);font:12.04px/1.2 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif;cursor:pointer}.ds-modern-route[aria-current=page]{background:var(--selected,#3d465c);color:var(--text,#edf1f7)}.ds-modern-route[aria-current=page] svg{color:var(--accent-ink,#b0bcff)}.ds-modern-route:focus-visible{outline:2px solid var(--accent-ink,#b0bcff);outline-offset:2px}@media(hover:hover) and (pointer:fine){.ds-modern-route:hover{background:var(--hover,#383e49);color:var(--text,#edf1f7)}}"
+    },
+    {
+      "name": "Immersive top navigation",
+      "kind": "nav",
+      "refersTo": "immersive-top-nav",
+      "description": "顶部主导航中的当前路由；窄窗口保留可横向滚动的导航。",
+      "html": "<nav class=\"ds-immersive-nav\" aria-label=\"Workspace\"><button type=\"button\" class=\"ds-immersive-route\" aria-current=\"page\"><svg width=\"21\" height=\"21\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z\"/><path d=\"m3.3 7 8.7 5 8.7-5\"/><path d=\"M12 22V12\"/></svg><span>Instances</span></button></nav>",
+      "css": ".ds-immersive-nav{display:flex;align-items:center;gap:.3em;min-width:0;overflow-x:auto;padding:.5em .25em;background:var(--surface,#30353d);font:14px/1.5 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif}.ds-immersive-route{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;gap:.55em;min-height:2.43em;padding:.45em .7em;border:1px solid transparent;border-radius:var(--radius,6px);background:transparent;color:var(--muted,#bac5d4);font:14px/1.35 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif;white-space:nowrap;cursor:pointer}.ds-immersive-route[aria-current=page]{background:var(--selected,#3d465c);color:var(--text,#edf1f7)}.ds-immersive-route[aria-current=page] svg{color:var(--accent-ink,#b0bcff)}.ds-immersive-route:focus-visible{outline:2px solid var(--accent-ink,#b0bcff);outline-offset:3px}@media(hover:hover) and (pointer:fine){.ds-immersive-route:hover{background:var(--hover,#3d465c);color:var(--text,#edf1f7)}}"
+    },
+    {
+      "name": "Modern status tag",
+      "kind": "chip",
+      "refersTo": "modern-status-tag",
+      "description": "实例状态文字采用实际行内标签；状态含义必须来自业务快照。",
+      "html": "<span class=\"ds-status-tag\">Installed</span>",
+      "css": ".ds-status-tag{display:inline-flex;align-items:center;width:fit-content;padding:2.4px 7.2px;border-radius:var(--radius,4px);background:var(--hover,#383e49);color:var(--text,#edf1f7);font:12.04px/1.4 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif;white-space:nowrap}"
+    },
+    {
+      "name": "Modern business dialog container",
+      "kind": "card",
+      "refersTo": "modern-dialog",
+      "description": "业务弹窗的纯色容器、标题和操作区。实际模态、焦点与提交守卫由 @paradox/ui Dialog 和现有草稿控制器负责。",
+      "html": "<section class=\"ds-dialog\" role=\"dialog\" aria-modal=\"false\" aria-labelledby=\"ds-dialog-title\"><h2 id=\"ds-dialog-title\">Instance settings</h2><p>Review the instance draft before saving.</p><div class=\"ds-dialog-actions\"><button type=\"button\" class=\"ds-dialog-cancel\">Cancel</button><button type=\"button\" class=\"ds-dialog-save\">Save</button></div></section>",
+      "css": ".ds-dialog{width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:27.2px;background:var(--surface,#30353d);color:var(--text,#edf1f7);border:1px solid var(--border,#48515e);border-radius:var(--radius,6px);box-shadow:var(--overlay-shadow,0 12px 40px #00000038);font:14px/1.45 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif}.ds-dialog h2{margin:0;font-size:max(19px,1.4em);line-height:1.35;font-weight:600}.ds-dialog p{margin:11.2px 0 22.4px;color:var(--muted,#bac5d4);font-size:max(13px,.93em);line-height:1.6}.ds-dialog-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:12.8px;margin-top:24px}.ds-dialog-actions button{display:inline-flex;align-items:center;justify-content:center;min-height:2.45em;padding:8px 14.4px;border:1px solid transparent;border-radius:var(--radius,6px);font:500 14px/1.45 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif;cursor:pointer}.ds-dialog-cancel{background:var(--surface,#30353d);color:var(--text,#edf1f7);border-color:var(--control-border,#8997ab)!important}.ds-dialog-save{background:var(--accent,#6676dc);color:var(--accent-fg,#0d1022)}.ds-dialog-actions button:focus-visible{outline:2px solid var(--accent-ink,#b0bcff);outline-offset:2px}@media(hover:hover) and (pointer:fine){.ds-dialog-cancel:hover{background:var(--hover,#383e49)}.ds-dialog-save:hover{filter:brightness(1.06)}}@media(max-width:480px){.ds-dialog{padding:19.2px}}"
+    },
+    {
+      "name": "Modern continuous instance row",
+      "kind": "custom",
+      "refersTo": "modern-instance-row",
+      "description": "查看名称、版本、加载器、状态和显式动作的连续行。查看、设为当前与启动使用各自业务入口；此处文字是字段示意。",
+      "html": "<div class=\"ds-row-demo\"><article class=\"ds-instance-row\"><button type=\"button\" class=\"ds-row-name\" aria-label=\"Inspect instance\" aria-pressed=\"true\"><svg width=\"21\" height=\"21\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z\"/><path d=\"m3.3 7 8.7 5 8.7-5\"/><path d=\"M12 22V12\"/></svg><strong>Instance name</strong></button><span class=\"ds-row-meta\">Version</span><span class=\"ds-row-meta\">Loader</span><span class=\"ds-row-tag\">Installed</span><div class=\"ds-row-actions\"><button type=\"button\" class=\"ds-row-launch\"><svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z\"/></svg><span>Launch</span></button><button type=\"button\" class=\"ds-row-detail\" aria-label=\"Instance details\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></button><button type=\"button\" class=\"ds-row-more\" aria-label=\"Instance tools\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"19\" cy=\"12\" r=\"1\"/><circle cx=\"5\" cy=\"12\" r=\"1\"/></svg></button></div></article></div>",
+      "css": ".ds-row-demo{container-type:inline-size}.ds-instance-row{display:grid;grid-template-columns:minmax(9rem,1fr) 5rem 6rem 6.5rem 11.6rem;align-items:center;gap:9.6px;min-width:0;min-height:3.85em;padding:8.8px 12.8px;border-bottom:1px solid var(--border,#48515e);background:var(--selected,#3d465c);color:var(--text,#edf1f7);font:14px/1.45 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif}.ds-row-name{display:flex;align-items:center;gap:10.4px;min-width:0;padding:3.2px 0;border:0;background:transparent;color:inherit;font:14px/1.45 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif;text-align:left;cursor:pointer}.ds-row-name svg{flex-shrink:0;color:var(--muted,#bac5d4)}.ds-row-name strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}.ds-row-meta{color:var(--muted,#bac5d4);font-size:12.04px;overflow-wrap:anywhere}.ds-row-tag{width:fit-content;padding:2.4px 7.2px;border-radius:var(--radius,4px);background:var(--hover,#383e49);font-size:12.04px;line-height:1.4}.ds-row-actions{display:flex;justify-content:flex-end;align-items:center;gap:5.6px}.ds-row-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7.2px;min-height:2.45em;padding:6.4px 9.6px;border:0;border-radius:var(--radius,6px);font:13.02px/1.45 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif;cursor:pointer}.ds-row-launch{background:var(--accent,#6676dc);color:var(--accent-fg,#0d1022)}.ds-row-detail,.ds-row-more{width:2.45em;background:transparent;color:var(--muted,#bac5d4)}.ds-instance-row button:focus-visible{outline:2px solid var(--accent-ink,#b0bcff);outline-offset:2px}@media(hover:hover) and (pointer:fine){.ds-row-launch:hover{filter:brightness(1.06)}.ds-row-detail:hover,.ds-row-more:hover{background:var(--hover,#383e49);color:var(--text,#edf1f7)}}@container(max-width:40rem){.ds-instance-row{grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;padding:13.6px}.ds-row-actions{grid-column:1/-1;justify-content:flex-start}.ds-row-name strong{white-space:normal;overflow-wrap:anywhere}}"
+    },
+    {
+      "name": "Modern Inspector",
+      "kind": "card",
+      "refersTo": "modern-inspector",
+      "description": "可收起的查看栏显示明确的查看对象；查看不静默切换当前启动目标。示例展示查看栏切换器与容器。",
+      "html": "<div class=\"ds-inspector-demo\"><button type=\"button\" class=\"ds-inspector-toggle\" aria-expanded=\"true\" aria-controls=\"ds-inspector-panel\"><svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M15 3v18\"/><path d=\"m8 9 3 3-3 3\"/></svg><span>Inspector</span></button><aside id=\"ds-inspector-panel\" class=\"ds-inspector\" aria-label=\"Instance inspector\"><h2>Instance name</h2><span class=\"ds-inspector-caption\">Inspector</span><p>Configured version and loader</p><button type=\"button\" class=\"ds-inspector-set\">Set as current instance</button><dl><div><dt>Memory</dt><dd>Configured value</dd></div></dl></aside></div>",
+      "css": ".ds-inspector-demo{width:22em;max-width:100%;font:14px/1.45 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif}.ds-inspector-toggle,.ds-inspector-set{display:inline-flex;align-items:center;justify-content:center;gap:8.8px;min-height:2.45em;padding:8px 14.4px;border:1px solid var(--control-border,#8997ab);border-radius:var(--radius,6px);background:var(--surface,#30353d);color:var(--text,#edf1f7);font:500 14px/1.45 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif;cursor:pointer}.ds-inspector-toggle{margin-bottom:16px}.ds-inspector{min-width:0;padding:19.2px;border:1px solid var(--border,#48515e);border-radius:var(--radius,6px);background:var(--surface,#30353d);color:var(--text,#edf1f7)}.ds-inspector h2{margin:0 0 4.8px;font-size:max(18px,1.25em);line-height:1.4;font-weight:600;overflow-wrap:anywhere}.ds-inspector-caption{display:block;margin:6.4px 0 10.4px;color:var(--muted,#bac5d4);font-size:12.04px}.ds-inspector p{margin:0 0 12px;color:var(--muted,#bac5d4);font-size:max(13px,.93em);line-height:1.6}.ds-inspector dl{margin:16px 0 0;padding-top:16px;border-top:1px solid var(--border,#48515e)}.ds-inspector dl div{display:grid;gap:4px;font-size:max(13px,.93em)}.ds-inspector dt{color:var(--muted,#bac5d4);line-height:1.7}.ds-inspector dd{margin:0;line-height:1.7;overflow-wrap:anywhere}.ds-inspector-demo button:focus-visible{outline:2px solid var(--accent-ink,#b0bcff);outline-offset:2px}@media(hover:hover) and (pointer:fine){.ds-inspector-demo button:hover{background:var(--hover,#383e49)}}"
+    },
+    {
+      "name": "Immersive split launch action",
+      "kind": "custom",
+      "refersTo": "immersive-launch-split",
+      "description": "主要区域执行当前实例的准备或启动；旁侧按钮选择实例。动作名称与目标名称并列显示真实作用对象。",
+      "html": "<div class=\"ds-launch-split\"><button type=\"button\" class=\"ds-launch-primary\" aria-label=\"Launch current instance\"><svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z\"/></svg><span class=\"ds-launch-copy\"><strong>Launch game</strong><small>Current instance name</small></span></button><button type=\"button\" class=\"ds-launch-select\" aria-label=\"Select instance\"><svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m6 9 6 6 6-6\"/></svg></button></div>",
+      "css": ".ds-launch-split{display:flex;width:100%;min-height:4em;border-radius:var(--radius,6px);background:var(--accent,#6676dc);color:var(--accent-fg,#0d1022);font:14px/1.5 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif;overflow:visible}.ds-launch-primary,.ds-launch-select{display:inline-flex;align-items:center;justify-content:center;gap:.8em;border:0;border-radius:0;background:transparent;color:inherit;font:14px/1.35 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif;cursor:pointer}.ds-launch-primary{flex:1;min-width:0;justify-content:flex-start;padding:.8em 1.05em;text-align:left}.ds-launch-primary svg{flex-shrink:0}.ds-launch-copy{display:grid;gap:.3em;min-width:0}.ds-launch-copy strong{font-size:1.15em;font-weight:650}.ds-launch-copy small{font-size:max(12px,.88em);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.ds-launch-select{flex:0 0 2.8em;border-left:1px solid color-mix(in srgb,var(--accent-fg,#0d1022) 35%,transparent)}.ds-launch-split button:focus-visible{outline:2px solid var(--accent-fg,#0d1022);outline-offset:-4px}.ds-launch-primary:disabled{opacity:.65;cursor:not-allowed}@media(hover:hover) and (pointer:fine){.ds-launch-primary:hover:not(:disabled),.ds-launch-select:hover:not(:disabled){filter:brightness(1.07)}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "折页＋石墨",
+    "overview": "折页式工作面把目标、状态与可执行动作集中在连续的区域中；石墨纯色表面用明暗、分隔线和紫蓝强调建立层次。默认密度采用 Operate：紧凑但可读，优先保证实例名称、真实状态和关键动作可扫读。\n\n两套默认来源使用同一业务能力与质量要求。沉浸式以顶部主导航、上下文侧导航和折页启动概览组织日常操作；Modern 以窄侧导航、连续实例表和可收起查看栏组织多实例操作。新增页面沿用所在套件的结构，不要求两套套用同一个页面模板。",
+    "keyCharacteristics": [
+      "纯色画布与面板；默认不使用背景图片、游戏封面或装饰性照片。",
+      "连续实例集合与明确分隔，选中状态使用表面色和文字标记。",
+      "正文与动作保持可读下限，元信息采用较小字号与明确用途。",
+      "正常界面均是可替换套件来源；唯一固定界面是平时隐藏的 Recovery。"
+    ],
+    "rules": [
+      {
+        "name": "The Action Pair Rule",
+        "body": "主要动作背景与前景必须配对使用公开的 --accent 和 --accent-fg；普通强调文字与焦点使用 --accent-ink，不将主动作背景色直接作为小字颜色。",
+        "section": "colors"
+      },
+      {
+        "name": "The Semantic State Rule",
+        "body": "错误、警告、准备与运行状态来自真实快照，并以文字说明；状态色不代替文字，也不表示没有业务数据支持的兼容性或同步状态。",
+        "section": "colors"
+      },
+      {
+        "name": "The Readable Floor Rule",
+        "body": "默认正文基准为 14px，应用缩放后的根字号下限为 13px，元信息下限为 12px。小窗口通过换行、重排和滚动容纳内容，不继续压低字号。",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Workspace Rule",
+        "body": "普通工作面使用纯色、边界和选中表面建立层次，默认无阴影；弹窗、菜单与通知采用各自来源定义的阴影标记临时浮层。",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "沿用所在套件的导航与工作面，显示真实实例、账户、任务和能力状态。",
+      "将查看对象、当前启动目标和启动动作分别表达；每个实例动作携带精确 profileKey。",
+      "用 primitive → semantic → component 层级引用颜色和尺寸，并保留公开外观设置。",
+      "保留 UiView、UiIdentity、data-ui-site、Original props/refs/callbacks，以及现有草稿、CAS、预览和保存协议。",
+      "用可见焦点、明确标签、文字状态和可选择日志支持键盘与中英文操作。"
+    ],
+    "donts": [
+      "不新增没有业务支持的游玩时长、收藏、云同步、多个离线账户、暂停/重排下载或兼容徽标。",
+      "不使用默认背景图片，不把设计板的示例记录当成真实业务数据。",
+      "不以查看某个实例静默改变当前启动目标，不在缺少 profileKey 时回退到当前实例。",
+      "不挂载第二个 LauncherProvider，不从套件直接调用私有 IPC、业务 Hook 或 Modrinth 请求。",
+      "不将普通编辑器改成新的石墨页面；保持其既有来源和控制器，不改动 Recovery 快捷键或 --ui-safe。",
+      "不把旧截图、中间截图、静态检查或设计片段当作最终浏览器与 Windows 原生验收。"
+    ]
+  }
+}

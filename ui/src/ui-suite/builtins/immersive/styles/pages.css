@@ -1,5 +1,5 @@
 /* immersive: pages. Retained page rules are owned here during the source redesign. */
-.personalization-settings {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .personalization-settings {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.1em;
@@ -8,14 +8,14 @@
   display: grid;
   gap: 1em;
 }
-.personalization-settings legend {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .personalization-settings legend {
   padding: 0 0.45em;
   font-weight: 650;
 }
-.personalization-settings .field-grid {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .personalization-settings .field-grid {
   margin: 0;
 }
-.background-preview {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .background-preview {
   width: 100%;
   min-height: 140px;
   max-height: 220px;
@@ -26,157 +26,157 @@
   background-position: center;
   background-repeat: no-repeat;
 }
-.personalization-settings .button-group {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .personalization-settings .button-group {
   flex-wrap: wrap;
 }
 
-.identity-card {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .identity-card {
   text-align: center;
   padding: 21px 22px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.identity-card h3 {
-  font-size: 1.05em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .identity-card h3 {
+  font-size: max(13px, 1.05em);
   margin: 12px 0 7px;
 }
-.identity-card p {
-  font-size: 0.63em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .identity-card p {
+  font-size: max(13px, 0.63em);
   margin: 17px 0 19px;
 }
-.metrics {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .metrics {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin: 18px 0 28px;
 }
-.metrics .panel {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .metrics .panel {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 18px 20px;
-  border-radius: min(12px, var(--radius));
+  border-radius: var(--radius,6px);
 }
-.metrics strong {
-  font-size: 1.2em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .metrics strong {
+  font-size: max(13px, 1.2em);
   font-weight: 550;
 }
-.metrics strong small {
-  font-size: 0.52em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .metrics strong small {
+  font-size: max(13px, 0.52em);
   color: var(--faint);
   font-weight: 400;
 }
-.metrics p {
-  font-size: 0.61em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .metrics p {
+  font-size: max(13px, 0.61em);
   margin-top: 4px;
 }
-.metrics .metric-word {
-  font-size: 0.9em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .metrics .metric-word {
+  font-size: max(13px, 0.9em);
 }
-.metrics .icon-button {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .metrics .icon-button {
   margin-left: auto;
 }
 
-.profile-list {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-list {
   display: grid;
   gap: 12px;
 }
-.profile-card {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-card {
   display: flex;
   align-items: center;
   gap: 16px;
 }
-.profile-card.selected {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-card.selected {
   border-color: color-mix(in srgb, var(--accent) 27%, var(--border));
 }
-.profile-icon {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-icon {
   display: grid;
   place-items: center;
   flex-shrink: 0;
 }
-.profile-info {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-info {
   flex: 1;
   min-width: 0;
 }
-.profile-info h3 {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-info h3 {
   overflow-wrap: anywhere;
 }
-.profile-info p {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-info p {
   margin-top: 6px;
 }
-.profile-info p span {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-info p span {
   margin: 0 7px;
   color: var(--faint);
 }
-.profile-actions {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-actions {
   display: flex;
   align-items: center;
 }
-.account-grid {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-grid {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 20px;
 }
-.account-detail {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-detail {
   padding: 28px;
 }
-.account-title {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-title {
   display: flex;
   align-items: center;
   gap: 17px;
   margin: 30px 0;
 }
-.account-title h2 {
-  font-size: 1.2em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-title h2 {
+  font-size: max(13px, 1.2em);
 }
-.account-title p {
-  font-size: 0.7em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-title p {
+  font-size: max(13px, 0.7em);
   margin-top: 5px;
 }
-.settings-tabs {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-tabs {
   border-bottom: 1px solid var(--border);
   margin: 0 0 22px;
 }
-.settings-tabs button {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-tabs button {
   background: transparent;
   border-bottom: 2px solid transparent;
   color: var(--muted);
 }
-.settings-tabs button.active {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-tabs button.active {
   border-color: var(--accent-ink);
 }
-.settings-intro {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-intro {
   margin-bottom: 26px;
 }
-.settings-intro h2 {
-  font-size: 1.04em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-intro h2 {
+  font-size: max(13px, 1.04em);
 }
-.settings-intro p {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-intro p {
   margin-top: 7px;
 }
-.theme-options {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .theme-options {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
-.theme-options button {
-  border-radius: min(12px, var(--radius));
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .theme-options button {
+  border-radius: var(--radius,6px);
   background: var(--input);
   color: var(--muted);
   padding: 20px 17px;
   justify-content: flex-start;
   gap: 12px;
 }
-.theme-options button.selected {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .theme-options button.selected {
   border-color: var(--accent-ink);
   color: var(--accent-ink);
   background: color-mix(in srgb, var(--accent) 6%, var(--surface));
 }
-.theme-options button > svg:last-child:not(:first-child) {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .theme-options button > svg:last-child:not(:first-child) {
   margin-left: auto;
 }
-.save-bar {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .save-bar {
   position: sticky;
   bottom: 0;
   background: var(--bg);
@@ -187,136 +187,136 @@
   border-top: 1px solid var(--border);
   margin-top: 20px;
 }
-.save-bar > span {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .save-bar > span {
   display: flex;
   align-items: center;
   gap: 8px;
   color: var(--muted);
 }
-.save-bar > div {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .save-bar > div {
   display: flex;
   gap: 12px;
 }
-.log-status {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .log-status {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.72em;
+  font-size: max(13px, 0.72em);
   color: var(--muted);
 }
-.log-status small {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .log-status small {
   color: var(--faint);
   margin-left: 12px;
 }
-.log-line {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .log-line {
   display: grid;
   grid-template-columns: 65px 52px 1fr;
   gap: 13px;
   padding: 10px 20px;
   font:
-    0.68em/1.65 Consolas,
+    max(13px, 0.68em)/1.65 Consolas,
     monospace;
   border-bottom: 1px solid var(--border);
 }
-.log-line time {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .log-line time {
   color: var(--faint);
 }
-.log-line b {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .log-line b {
   color: var(--accent-ink);
-  font-size: 0.88em;
+  font-size: max(13px, 0.88em);
 }
-.log-line span {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .log-line span {
   color: var(--muted);
   overflow-wrap: anywhere;
 }
-.log-line.error span,
-.log-line.error b {
-  color: #fb7185;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .log-line.error span,
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .log-line.error b {
+  color: var(--danger);
 }
 @media (max-width: 1080px) {
 
 
 
-  .metrics .panel {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .metrics .panel {
     padding: 16px;
     gap: 11px;
   }
-  .profile-card {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-card {
     gap: 11px;
     padding: 16px;
   }
-  .profile-card > .badge {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-card > .badge {
     display: none;
   }
 }
 @media (max-width: 780px) {
 
-  .identity-card {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .identity-card {
     display: none;
   }
-  .metrics {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .metrics {
     gap: 10px;
   }
-  .metrics .panel {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .metrics .panel {
     padding: 15px 10px;
   }
-  .metrics .metric-icon {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .metrics .metric-icon {
     display: none;
   }
-  .account-grid {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-grid {
     grid-template-columns: 1fr;
   }
-  .settings-panel {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-panel {
     padding: 22px 18px;
   }
-  .theme-options button {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .theme-options button {
     padding: 16px 12px;
     gap: 7px;
   }
-  .theme-options button > svg:last-child:not(:first-child) {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .theme-options button > svg:last-child:not(:first-child) {
     display: none;
   }
-  .theme-options {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .theme-options {
     gap: 8px;
   }
-  .profile-card {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-card {
     flex-wrap: wrap;
   }
-  .profile-actions {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-actions {
     margin-left: auto;
   }
-  .log-status small {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .log-status small {
     display: none;
   }
 }
-.account-list {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-list {
   display: grid;
   gap: 12px;
   margin-top: 20px;
 }
-.account-entry,
-.login-prompt {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-entry,
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .login-prompt {
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
-.account-entry {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-entry {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
   justify-content: space-between;
 }
-.account-entry > div {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-entry > div {
   min-width: 0;
 }
-.account-entry p,
-.login-prompt a {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-entry p,
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .login-prompt a {
   overflow-wrap: anywhere;
 }
 
-.library-empty {
-  border-radius: min(10px, var(--radius));
-  box-shadow: inset 0 0 0 1px var(--border);
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .library-empty {
+  border-radius: var(--radius,6px);
+  box-shadow: none;
   min-height: 173px;
   display: flex;
   flex-direction: column;
@@ -325,100 +325,100 @@
   text-align: center;
   padding: 21px 18px;
 }
-.library-empty h3 {
-  font-size: 0.82em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .library-empty h3 {
+  font-size: max(13px, 0.82em);
   font-weight: 500;
 }
-.library-empty p {
-  font-size: 0.7em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .library-empty p {
+  font-size: max(13px, 0.7em);
   margin: 7px 0 13px;
 }
-.library-empty .text-button {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .library-empty .text-button {
   color: var(--accent-ink);
-  font-size: 0.72em;
+  font-size: max(13px, 0.72em);
 }
 
-.profile-card {
-  border-radius: min(10px, var(--radius));
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-card {
+  border-radius: var(--radius,6px);
   padding: 17px;
 }
-.profile-card.selected {
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 23%, var(--border));
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-card.selected {
+  box-shadow: none;
 }
-.profile-icon {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-icon {
   width: 42px;
   height: 42px;
-  color: #a3cba8;
-  background: #364b3a;
+  color: var(--accent-ink);
+  background: var(--surface);
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--c-radius);
 }
-.profile-info h3 {
-  font-size: 0.83em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-info h3 {
+  font-size: max(13px, 0.83em);
   font-weight: 500;
 }
-.profile-info p {
-  font-size: 0.67em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-info p {
+  font-size: max(13px, 0.67em);
 }
-.profile-actions {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-actions {
   gap: 6px;
   flex-shrink: 0;
 }
-.library-section .profile-card {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .library-section .profile-card {
   flex-wrap: wrap;
   padding: 14px;
 }
-.library-section .profile-card > .badge {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .library-section .profile-card > .badge {
   display: none;
 }
-.library-section .profile-actions {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .library-section .profile-actions {
   margin-left: auto;
 }
-.settings-tabs {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-tabs {
   display: inline-flex;
   border: 0;
   gap: 4px;
   padding: 4px;
-  border-radius: 9px;
+  border-radius: var(--c-radius);
   background: var(--hover);
   margin-bottom: 23px;
 }
-.settings-tabs button {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-tabs button {
   padding: 9px 14px;
   border: 0;
-  border-radius: 6px;
-  font-size: 0.78em;
+  border-radius: var(--c-radius);
+  font-size: max(13px, 0.78em);
 }
-.settings-tabs button.active {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-tabs button.active {
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 1px 4px #00000014;
+  box-shadow: none;
 }
-.settings-panel {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-panel {
   padding: 27px 29px;
 }
-.settings-intro p {
-  font-size: 0.76em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-intro p {
+  font-size: max(13px, 0.76em);
 }
-.theme-options button {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .theme-options button {
   border: 0;
-  box-shadow: inset 0 0 0 1px var(--border);
+  box-shadow: none;
 }
-.theme-options button.selected {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent);
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .theme-options button.selected {
+  box-shadow: none;
 }
-.theme-options button span {
-  font-size: 0.8em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .theme-options button span {
+  font-size: max(13px, 0.8em);
 }
-.range-control output,
-.log-line time  {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .range-control output,
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .log-line time  {
   font-variant-numeric: tabular-nums;
 }
-.save-bar > span {
-  font-size: 0.76em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .save-bar > span {
+  font-size: max(13px, 0.76em);
 }
-.log-line {
-  font-size: 0.72em;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .log-line {
+  font-size: max(13px, 0.72em);
 }
 
 @media (max-width: 850px) {
@@ -428,7 +428,7 @@
 
 
 
-  .profile-actions {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-actions {
     margin-left: auto;
   }
 }
@@ -436,88 +436,88 @@
 
 
 
-  .settings-panel {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-panel {
     padding: 20px 17px;
   }
-  .settings-tabs button {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-tabs button {
     padding: 9px;
-    font-size: 0.7em;
+    font-size: max(13px, 0.7em);
     gap: 5px;
   }
-  .theme-options button {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .theme-options button {
     padding: 15px 8px;
     flex-direction: column;
   }
-  .save-bar > span {
-    font-size: 0.66em;
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .save-bar > span {
+    font-size: max(13px, 0.66em);
   }
-  .save-bar .primary,
-  .save-bar .secondary {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .save-bar .primary,
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .save-bar .secondary {
     padding: 9px 10px;
-    font-size: 0.7em;
+    font-size: max(13px, 0.7em);
   }
 }
 @media (max-width: 640px) {
-  .settings-tabs {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-tabs {
     display: flex;
     flex-wrap: wrap;
     max-width: 100%;
   }
-  .settings-tabs button {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-tabs button {
     min-width: 0;
     flex: 1 1 120px;
   }
-  .save-bar {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .save-bar {
     flex-wrap: wrap;
     gap: 12px;
   }
-  .save-bar > div {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .save-bar > div {
     width: 100%;
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 8px;
   }
-  .account-detail {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-detail {
     padding: 20px;
   }
-  .account-title .avatar {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-title .avatar {
     flex-shrink: 0;
   }
-  .account-title > div:last-child,
-  .info-panel > div {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-title > div:last-child,
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .info-panel > div {
     min-width: 0;
   }
-  .account-title h2 {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .account-title h2 {
     overflow-wrap: anywhere;
   }
-  .profile-actions,
-  .library-section .profile-actions {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .profile-actions,
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .library-section .profile-actions {
     width: 100%;
     flex-wrap: wrap;
     flex-shrink: 1;
     justify-content: flex-end;
     margin-left: 0;
   }
-  .log-line {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .log-line {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 6px;
     padding: 12px;
   }
-  .log-line > span {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .log-line > span {
     grid-column: 1/-1;
   }
 
 
-  .library-empty {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .library-empty {
     padding: 24px 16px;
   }
 }
 @media (max-width: 480px) {
-  .settings-panel .style-options,
-  .theme-options {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-panel .style-options,
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .theme-options {
     grid-template-columns: minmax(0, 1fr);
   }
-  .theme-options button {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .theme-options button {
     min-width: 0;
     flex-direction: row;
     justify-content: flex-start;
@@ -525,134 +525,134 @@
   }
 }
 @media (max-height: 400px) {
-  .save-bar {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .save-bar {
     position: static;
   }
 }
-.style-options {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-options {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin: 20px 0 28px;
 }
-.style-option {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-option {
   padding: 0;
   flex-direction: column;
   align-items: stretch;
   color: var(--muted);
   background: var(--input);
-  border-radius: 10px;
+  border-radius: var(--c-radius);
   overflow: hidden;
-  box-shadow: inset 0 0 0 1px var(--border);
+  box-shadow: none;
   border: 1px solid transparent;
 }
-.style-option.selected {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-option.selected {
   border-color: color-mix(in srgb, var(--accent) 70%, transparent);
 }
-.style-preview {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-preview {
   height: 105px;
   position: relative;
   overflow: hidden;
   margin: 8px;
-  border-radius: 5px;
-  background: #263247;
+  border-radius: var(--c-radius);
+  background: var(--surface);
 }
-.style-preview::before {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-preview::before {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 13px;
-  background: #6674cb;
+  background: var(--surface);
 }
-.style-preview::after {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-preview::after {
   content: "";
   position: absolute;
   top: 13px;
   bottom: 0;
   left: 0;
   width: 29%;
-  background: #23354c9c;
+  background: var(--surface);
 }
-.style-preview > i {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-preview > i {
   position: absolute;
   right: 9px;
   bottom: 10px;
   width: 57px;
   height: 17px;
-  border-radius: 3px;
-  background: #6674cb;
+  border-radius: var(--c-radius);
+  background: var(--surface);
 }
-.style-preview.modern-preview {
-  background: #17171b;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-preview.modern-preview {
+  background: var(--surface);
 }
-.style-preview.modern-preview::before {
-  background: #1d1d23;
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-preview.modern-preview::before {
+  background: var(--surface);
 }
-.style-preview.modern-preview::after {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-preview.modern-preview::after {
   width: 20%;
-  background: #24242a;
+  background: var(--surface);
 }
-.modern-preview > b {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .modern-preview > b {
   position: absolute;
   left: 27%;
   top: 23px;
   right: 8px;
   height: 42px;
-  border-radius: 4px;
-  background: #313f62;
+  border-radius: var(--c-radius);
+  background: var(--surface);
 }
-.modern-preview > i {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .modern-preview > i {
   left: 27%;
   top: 73px;
   bottom: auto;
   height: 20px;
   width: 42%;
-  background: #26262d;
+  background: var(--surface);
 }
-.style-option-label {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-option-label {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 7px 14px 13px;
   text-align: left;
 }
-.style-option-label strong {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-option-label strong {
   display: block;
   color: var(--text);
-  font-size: 0.82em;
+  font-size: max(13px, 0.82em);
   font-weight: 500;
 }
-.style-option-label small {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-option-label small {
   display: block;
-  font-size: 0.7em;
+  font-size: max(13px, 0.7em);
   color: var(--faint);
   margin-top: 5px;
 }
-.style-option-label > svg {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-option-label > svg {
   color: var(--accent-ink);
 }
 @media (max-width: 580px) {
-  .style-options {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-options {
     gap: 9px;
   }
-  .style-preview {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-preview {
     height: 85px;
   }
-  .style-option-label {
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-option-label {
     padding: 6px 10px 11px;
   }
-  .style-option-label small {
-    font-size: 0.63em;
+  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .style-option-label small {
+    font-size: max(13px, 0.63em);
   }
 }
-.immersive .account-caption {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive .account-caption {
   margin-bottom: 14px;
 }
-.immersive .save-bar {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive .save-bar {
   background: var(--surface);
   padding-right: 16px;
   padding-left: 16px;
-  border-radius: min(10px, var(--radius));
+  border-radius: var(--radius,6px);
 }

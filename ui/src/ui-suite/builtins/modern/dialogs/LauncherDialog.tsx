@@ -26,6 +26,11 @@ export default function LauncherDialog(input: Props | { props?: Readonly<Record<
   const { title, description, pending = false, onClose, initialFocus, finalFocus, popupRef, popupProps, portalProps, rootProps } = props;
   const children = input.children ?? props.children;
   const s = useLauncherSnapshot(), { t } = useTranslation();
+  const fontSize = `${Math.max(13, 14 * (s.appearance.value?.ui_scale ?? 100) / 100)}px`;
+  const extraStyle = popupProps?.style;
+  const popupStyle: PopupProps['style'] = typeof extraStyle === 'function'
+    ? state => ({ fontSize, ...extraStyle(state) })
+    : { fontSize, ...extraStyle };
   const extraClass = popupProps?.className;
   const className: PopupProps['className'] = typeof extraClass === 'function'
     ? state => `modal modern-business-dialog ${extraClass(state) ?? ''}`
@@ -37,9 +42,9 @@ export default function LauncherDialog(input: Props | { props?: Readonly<Record<
       if (!open && !details.isCanceled) onClose();
     }}>
     <Dialog.Portal {...portalProps} data-ui-site="ModernLauncherDialog-portal">
-      <div className={`dialog-theme modern-dialog-theme ${s.appearance.value?.reduce_motion ? 'reduce-motion' : ''} ${s.appearance.personalization.shortcuts ? 'keyboard-navigation' : ''}`} data-theme={s.appearance.theme} style={s.appearance.variables} data-ui-site="ModernLauncherDialog-theme">
+      <div className={`dialog-theme modern-dialog-theme ${s.appearance.value?.reduce_motion ? 'reduce-motion' : ''} ${s.appearance.personalization.shortcuts ? 'keyboard-navigation' : ''}`} data-theme={s.appearance.theme} style={{ ...s.appearance.variables, fontSize }} data-ui-site="ModernLauncherDialog-theme">
         <Dialog.Backdrop className="modal-backdrop" data-ui-site="ModernLauncherDialog-backdrop"/>
-        <Dialog.Popup {...popupProps} className={className} ref={popupRef ?? popupProps?.ref}
+        <Dialog.Popup {...popupProps} style={popupStyle} className={className} ref={popupRef ?? popupProps?.ref}
           initialFocus={initialFocus ?? popupProps?.initialFocus} finalFocus={finalFocus ?? popupProps?.finalFocus} data-ui-site="ModernLauncherDialog-popup">
           <header className="business-dialog-heading" data-ui-site="ModernLauncherDialog-heading">
             <Dialog.Title className="modal-title" data-ui-site="ModernLauncherDialog-title">{title}</Dialog.Title>

@@ -1,73 +1,78 @@
-/* immersive shell: one chrome row, independent navigation and content scrolling. */
-.app-shell { display: flex; height: 100dvh; min-height: 0; padding-top: var(--titlebar-height); overflow: hidden; background: var(--bg); color: var(--text); }
-.window-bar { position: fixed; inset: 0 0 auto; height: var(--titlebar-height); z-index: 40; display: flex; align-items: center; justify-content: space-between; background: var(--titlebar); color: #fff; user-select: none; border-bottom: 1px solid #ffffff20; }
-.window-title { min-width: 0; display: flex; gap: .6em; align-items: center; padding-left: .9em; font-size: .8125em; font-weight: 600; }
-.window-title > svg { flex-shrink: 0; }
-.window-title > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.window-title small { font-weight: 400; opacity: .85; margin-left: .5em; }
-.window-controls { display: flex; align-self: stretch; flex-shrink: 0; }
-.window-controls button { width: 2.7em; border-radius: 0; color: inherit; background: transparent; }
-.window-controls button:disabled { opacity: .5; }
-.window-controls button:active { transform: none; }
-.window-controls button:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
-.sidebar { flex: 0 0 13.75em; width: 13.75em; min-height: 0; padding: 1.25em .75em .75em; display: flex; flex-direction: column; gap: .5em; overflow-y: auto; overflow-x: hidden; border-right: 1px solid var(--border); background: color-mix(in srgb, var(--sidebar) calc(var(--sidebar-opacity, .62) * 100%), var(--bg)); }
-.sidebar > * { flex-shrink: 0; }
-.sidebar-brand { display: flex; align-items: center; gap: .65em; padding: .3em .4em 1.4em; }
-.sidebar-brand > svg { color: var(--accent-ink); }
-.sidebar-brand strong { font-size: 1.1em; }
-.sidebar-brand small { display: block; font-size: .6em; font-weight: 400; color: var(--muted); margin-top: .3em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sidebar-account { display: flex; align-items: center; gap: .7em; min-height: 4em; padding: .5em; text-align: left; color: var(--text); background: transparent; border-radius: min(6px, var(--radius)); width: 100%; }
-.sidebar-account-copy { flex: 1; min-width: 0; }
-.sidebar-account strong { display: block; font-size: .875em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.sidebar-account small { display: block; font-size: .75em; color: var(--muted); margin-top: .3em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sidebar-instance { padding: .75em .5em 1em; border-bottom: 1px solid var(--border); }
-.sidebar-instance > div { display: flex; align-items: center; gap: .6em; margin: .7em 0 .35em; }
-.sidebar-instance strong { min-width: 0; font-size: .875em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sidebar-instance small { font-size: .75em; color: var(--muted); }
-.sidebar-instance .text-button { margin-top: .65em; font-size: .75em; }
-.nav-caption { display: block; color: var(--muted); font-size: .75em; margin: .8em .6em .25em; }
-.sidebar nav { display: grid; gap: .25em; }
-.nav-item { display: flex; width: 100%; min-height: 2.7em; justify-content: flex-start; gap: .75em; padding: .6em .7em; border-radius: min(6px, var(--radius)); text-align: left; color: var(--muted); background: transparent; font-size: .875em; }
-.nav-item > svg { flex-shrink: 0; }
-.nav-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nav-fallback { display: inline-grid; width: 18px; flex: 0 0 18px; place-items: center; font-weight: 700; }
-.nav-item b { margin-left: auto; font-size: .85em; font-weight: 400; }
-.nav-item.active, .sidebar-account.active { background: var(--hover); color: var(--text); }
-.nav-item.active { box-shadow: inset 3px 0 var(--accent); }
-.nav-item.active > svg { color: var(--accent-ink); }
-.sidebar-bottom { margin-top: auto; padding-top: 1em; display: grid; gap: .25em; }
-.sidebar-environment { font-size: .7em; color: var(--muted); margin: 1em .8em .2em; }
-.detail-sections { border-top: 1px solid var(--border); padding-top: .5em; }
-.workspace { min-width: 0; min-height: 0; flex: 1; display: flex; }
-.workspace > main { flex: 1; min-width: 0; min-height: 0; width: 100%; overflow: auto; padding: 1.5em; scrollbar-gutter: stable; }
-.page-heading { display: flex; align-items: center; justify-content: space-between; gap: 1em; flex-wrap: wrap; margin-bottom: 1.5em; }
-.page-heading h1 { font-size: 1.6em; font-weight: 600; margin: 0 0 .3em; }
-.page-heading p { font-size: .8125em; margin: 0; color: var(--muted); }
+/* One integrated chrome owner, with contextual navigation inside the workspace. */
+.immersive-shell.app-shell { display: flex; height: 100dvh; min-height: 0; padding-top: var(--titlebar-height); overflow: hidden; background: var(--bg); color: var(--text); line-height: 1.5; }
+.immersive-shell .window-bar { position: fixed; inset: 0 0 auto; height: var(--titlebar-height); z-index: 40; display: flex; align-items: center; gap: 1.2em; background: var(--titlebar); color: var(--text); user-select: none; border-bottom: 1px solid var(--border); }
+.immersive-shell .window-title { min-width: 0; display: flex; gap: .65em; align-items: center; padding-left: 1.6em; font-weight: 600; flex: 0 0 auto; }
+.immersive-shell .window-title > svg { color: var(--accent-ink); flex-shrink: 0; }
+.immersive-shell .window-title > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.immersive-shell .window-title small { font-weight: 400; color: var(--muted); margin-left: .3em; }
+.immersive-shell .window-navigation { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: safe center; gap: .3em; overflow-x: auto; padding: .5em .25em; overscroll-behavior-x: contain; }
+.immersive-shell .window-route { flex: 0 0 auto; min-height: var(--c-control-height); padding: .45em .7em; background: transparent; color: var(--muted); border-radius: var(--c-radius); white-space: nowrap; }
+.immersive-shell .window-route[aria-current=page] { background: var(--c-navigation-active); color: var(--text); }
+.immersive-shell .window-route[aria-current=page] svg { color: var(--accent-ink); }
+.immersive-shell .window-controls { display: flex; align-items: center; align-self: stretch; flex-shrink: 0; padding-right: .35em; }
+.immersive-shell .window-controls button { width: 2.7em; min-height: var(--c-control-height); border-radius: 0; color: inherit; background: transparent; border: 0; padding: .3em; }
+.immersive-shell .window-controls button:active { transform: none; }
+.immersive-shell .window-controls button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -4px; }
+.immersive-shell .sidebar { flex: 0 0 14em; width: 14em; min-height: 0; padding: 1.5em 1em; display: flex; flex-direction: column; gap: .5em; overflow-y: auto; overflow-x: hidden; border-right: 1px solid var(--border); background: color-mix(in srgb, var(--sidebar) calc(var(--sidebar-opacity, .62) * 100%), var(--bg)); }
+.immersive-shell .sidebar > * { flex-shrink: 0; }
+.immersive-shell .sidebar-instance { padding: .75em .2em 1em; border-bottom: 1px solid var(--border); }
+.immersive-shell .sidebar-instance > div { display: flex; align-items: center; gap: .6em; margin: .7em 0 .35em; }
+.immersive-shell .sidebar-instance strong { min-width: 0; overflow-wrap: anywhere; white-space: normal; font-weight: 600; }
+.immersive-shell .sidebar-instance small { color: var(--muted); }
+.immersive-shell .sidebar-instance .text-button { margin-top: .65em; }
+.immersive-shell .nav-caption { display: block; color: var(--muted); margin: .8em .3em .25em; font-size: max(12px,.9em); }
+.immersive-shell .sidebar nav { display: grid; gap: .25em; }
+.immersive-shell .nav-item { display: flex; width: 100%; min-height: var(--c-control-height); justify-content: flex-start; gap: .75em; padding: .6em .7em; border-radius: var(--c-radius); text-align: left; color: var(--muted); background: transparent; }
+.immersive-shell .nav-item > svg { flex-shrink: 0; }
+.immersive-shell .nav-label { overflow-wrap: anywhere; }
+.immersive-shell .nav-item.active { background: var(--c-navigation-active); color: var(--text); box-shadow: inset 3px 0 var(--accent); }
+.immersive-shell .nav-item.active > svg { color: var(--accent-ink); }
+.immersive-shell .detail-sections { border-top: 1px solid var(--border); padding-top: .5em; }
+.immersive-shell .instance-directory-sidebar > :not(.instance-sidebar-storage) { display: none; }
+.immersive-shell .instance-directory-sidebar .instance-sidebar-storage { margin: 0; }
+.immersive-shell .workspace { min-width: 0; min-height: 0; flex: 1; display: flex; }
+.immersive-shell .workspace > main { flex: 1; min-width: 0; min-height: 0; width: 100%; overflow: auto; padding: 2em 2.4em; scrollbar-gutter: stable; }
+.immersive-shell .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 1em; flex-wrap: wrap; margin-bottom: 1.6em; }
+.immersive-shell .page-heading h1 { font-size: 1.8em; font-weight: 600; margin: 0 0 .3em; }
+.immersive-shell .page-heading p { margin: 0; color: var(--muted); }
 .immersive-shell.is-home .page-heading { display: none; }
 .immersive-shell.is-home .workspace > main { padding: 0; scrollbar-gutter: auto; }
-.workspace > .detail-workspace { padding: 0; }
-.detail-workspace > .page-heading { display: none; }
-.compact .sidebar { flex-basis: 4em; width: 4em; padding: 1em .35em; }
-.compact .sidebar .nav-label, .compact .sidebar .nav-caption, .compact .sidebar .nav-item b, .compact .sidebar-brand, .compact .sidebar-instance, .compact .sidebar-account-copy, .compact .sidebar-account > svg, .compact .sidebar-environment { display: none; }
-.compact .sidebar .nav-item, .compact .sidebar-account { justify-content: center; padding: .65em .25em; }
-@media (hover: hover) and (pointer: fine) {
-  .nav-item:hover, .sidebar-account:hover { background: var(--hover); color: var(--text); }
-  .window-controls button:not(:disabled):hover { background: #ffffff20; }
-  .window-controls .window-close:not(:disabled):hover { background: #c83d49; color: white; }
+.immersive-shell .workspace > .detail-workspace { padding: 0; }
+.immersive-shell .detail-workspace > .page-heading { display: none; }
+@media (hover:hover) and (pointer:fine) {
+ .immersive-shell .nav-item:hover, .immersive-shell .window-route:hover, .immersive-shell .window-controls button:not(:disabled):hover { background: var(--hover); color: var(--text); }
+ .immersive-shell .window-controls .window-close:not(:disabled):hover { background: var(--s-danger-fill); color: var(--s-danger-on-fill); }
 }
-@media (max-width: 850px) {
-  .sidebar { flex-basis: 4em; width: 4em; padding: 1em .35em; }
-  .sidebar .nav-label, .sidebar .nav-caption, .sidebar .nav-item b, .sidebar-brand, .sidebar-instance, .sidebar-account-copy, .sidebar-account > svg, .sidebar-environment { display: none; }
-  .sidebar .nav-item, .sidebar-account { justify-content: center; padding: .65em .25em; }
-  .workspace > main { padding: 1.25em; }
+@media (max-width: 1150px) {
+ .immersive-shell .window-bar { gap: .5em; }
+ .immersive-shell .window-title { padding-left: 1em; }
+ .immersive-shell .window-title small { display: none; }
+ .immersive-shell .window-route { padding: .45em .55em; }
+ .immersive-shell .window-navigation { justify-content: flex-start; }
+ .immersive-shell .workspace > main { padding: 1.5em; }
 }
-@media (max-width: 640px) {
-  .sidebar, .compact .sidebar { flex-basis: 3.5em; width: 3.5em; padding: .5em .2em; }
-  .sidebar-bottom { padding-top: .5em; }
-  .workspace > main { padding: .8em; }
-  .window-title small { display: none; }
-  .page-heading h1 { font-size: 1.25em; }
-  .page-heading p { overflow-wrap: anywhere; }
-  .toolbar, .filter-row, .button-group { flex-wrap: wrap; }
+@media (max-width: 950px) {
+ .immersive-shell .window-title > span { display: none; }
+ .immersive-shell .window-title { padding-left: .8em; }
+ .immersive-shell .window-route { gap: .35em; }
 }
-@media (max-width: 360px) { .window-controls button { width: 2.1em; } .window-title { padding-left: .5em; gap: .4em; } .window-title > svg { display: none; } }
+@media (max-width: 719px) {
+ .immersive-shell.app-shell { --titlebar-height: 7.2em; }
+ .immersive-shell .window-bar { display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-rows: 3.4em minmax(0,1fr); gap: 0; padding: .25em .5em 0; }
+ .immersive-shell .window-title { grid-row: 1; grid-column: 1; padding-left: .3em; font-size: max(13px,.95em); }
+ .immersive-shell .window-title > span { display: block; }
+ .immersive-shell .window-controls { grid-row: 1; grid-column: 2; padding-right: 0; }
+ .immersive-shell .window-controls button { width: 2.3em; }
+ .immersive-shell .window-navigation { grid-row: 2; grid-column: 1 / -1; width: 100%; padding: .25em; gap: .3em; }
+ .immersive-shell .window-route { padding: .45em .7em; }
+ .immersive-shell .workspace > main { padding: 1em; }
+ .immersive-shell .page-heading h1 { font-size: 1.5em; }
+}
+@media (max-width: 360px) {
+ .immersive-shell .window-title { gap: .4em; }
+ .immersive-shell .window-title > span { max-width: 10.5em; font-size: 13px; }
+ .immersive-shell .window-controls button { width: 2.1em; }
+}
+
+.immersive-shell.compact .instance-directory-sidebar { flex-basis: 11.5em; width: 11.5em; padding: 1em .65em; }
+.immersive-shell.compact .instance-context-sidebar { flex-basis: 12em; width: 12em; padding: 1em .7em; }

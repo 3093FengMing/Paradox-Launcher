@@ -48,9 +48,14 @@ function DefaultSelect(props: UiSelectProps): React.JSX.Element {
   );
   const popupStyle = foundationStyle(environment.variables);
   if (open && trigger.current) {
-    popupStyle.fontSize = trigger.current.ownerDocument.defaultView?.getComputedStyle(
-      trigger.current,
-    ).fontSize;
+    const computed = trigger.current.ownerDocument.defaultView?.getComputedStyle(trigger.current);
+    popupStyle.fontSize = computed?.fontSize;
+    // A portal carries the actual control's suite palette, including editor/custom styles.
+    for (const name of ['surface', 'input', 'text', 'muted', 'border', 'highlight']) {
+      const key = `--ui-select-${name}`;
+      const value = computed?.getPropertyValue(key).trim();
+      if (value) Object.assign(popupStyle, { [key]: value });
+    }
   }
   return (
     <BaseSelect.Root<string>

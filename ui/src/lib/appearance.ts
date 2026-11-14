@@ -4,7 +4,7 @@ import type { Appearance, Personalization } from '../types';
 import { defaultPersonalization } from './preferences';
 
 const fonts: Record<Personalization['font'], string> = {
-  system: '"Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif',
+  system: '"Segoe UI Variable", "Microsoft YaHei UI", "Segoe UI", "PingFang SC", sans-serif',
   yahei: '"Microsoft YaHei", "PingFang SC", sans-serif',
   arial: 'Arial, Helvetica, sans-serif',
   serif: 'Georgia, "Times New Roman", serif',

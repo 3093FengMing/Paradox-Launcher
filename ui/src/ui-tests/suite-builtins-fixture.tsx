@@ -307,8 +307,8 @@ export async function installSuiteBuiltinsFixture(root: Root) {
           c.actions.patchFile(
             shell,
             file.text.replace(
-              /(<UiView[^>]*id="component.window-bar")/,
-              '<h2 data-ui-site="task12-custom-shell">My custom shell</h2>$1',
+              /(onPointerDownCapture=\{\(\) => setKeyboard\(false\)\}>)/,
+              '$1<h2 data-ui-site="task12-custom-shell">My custom shell</h2>',
             ),
           );
         c.actions.patchFile(
@@ -339,7 +339,7 @@ export async function installSuiteBuiltinsFixture(root: Root) {
         if (file.encoding === 'utf8')
           c.actions.patchFile(
             style,
-            file.text + '\n[aria-label="Custom home input"]{color:rgb(20,80,150)}',
+            file.text + '\n.app-shell input[aria-label="Custom home input"]{color:rgb(20,80,150)}',
           );
         assert(await c.actions.preview(), 'CSS-only compilation');
         await turn();

@@ -75,8 +75,8 @@ chromium.launch = async (...args) => {
       }).observe({ type: 'longtask', buffered: true });
       const visible = (element) => !!element && element.getBoundingClientRect().width > 0 && element.getBoundingClientRect().height > 0 && getComputedStyle(element).visibility !== 'hidden';
       const routeReady = (route) => {
-        const active = route === 'accounts' ? document.querySelector('.sidebar-account.active') : [...document.querySelectorAll('.sidebar button')].find(button => button.getAttribute('aria-label') === labels[route] && button.getAttribute('aria-current') === 'page');
-        if (!visible(active) || !active.classList.contains('active') || active.disabled) return false;
+        const active = [...document.querySelectorAll('.window-navigation button,.sidebar button')].find(button => button.getAttribute('aria-label') === labels[route] && button.getAttribute('aria-current') === 'page') || (route === 'accounts' ? document.querySelector('.sidebar-account.active') : null);
+        if (!visible(active) || active.disabled) return false;
         if (route === 'home') return visible(document.querySelector('.immersive-home, .home-page'));
         return visible(document.querySelector(({ instances: '.instances-page', accounts: '.accounts-page', settings: '.settings-page' })[route]));
       };
@@ -90,7 +90,7 @@ chromium.launch = async (...args) => {
         };
         requestAnimationFrame(check);
       };
-      painted(() => routeReady('home') && [...document.querySelectorAll('.sidebar button')].filter(visible).every((b) => !b.disabled), (end) => { data.startup = { scenario: 'startup-home', start: 0, end, duration: end }; });
+      painted(() => routeReady('home') && [...document.querySelectorAll('.window-navigation button,.sidebar button')].filter(visible).every((b) => !b.disabled), (end) => { data.startup = { scenario: 'startup-home', start: 0, end, duration: end }; });
       document.addEventListener('click', () => {
         const measurement = data.armed;
         if (!measurement) return;
@@ -154,14 +154,15 @@ try {
       await activeInstrumentation.cdp.send('Profiler.start');
       for (const action of actions) {
         const before = await page.evaluate((value) => { window.uiPerformance.armed = value; return window.uiPerformance.measurements.length; }, action);
-        const target = action.route === 'accounts' ? page.locator('.sidebar-account') : action.route ? page.locator('.sidebar').getByRole('button', { name: routeLabels[action.route], exact: true }) : page.getByRole('button', { name: action.control, exact: true });
+        const topNavigation = page.locator('.window-navigation');
+        const target = action.route ? (await topNavigation.count() ? topNavigation.getByRole('button', { name: routeLabels[action.route], exact: true }) : action.route === 'accounts' ? page.locator('.sidebar-account') : page.locator('.sidebar').getByRole('button', { name: routeLabels[action.route], exact: true })) : page.getByRole('button', { name: action.control, exact: true });
         try {
           await target.click({ timeout: 30_000 });
           await page.waitForFunction((length) => window.uiPerformance.measurements.length > length, before, { timeout: 30_000 });
         } catch (error) {
           const observed = await page.evaluate(() => ({
             language: document.documentElement.lang,
-            routeLabels: [...document.querySelectorAll('.sidebar .active, .mobile-navigation-label')].map(element => ({ text: element.textContent, current: element.getAttribute('aria-current') })),
+            routeLabels: [...document.querySelectorAll('.window-navigation [aria-current="page"], .sidebar .active, .mobile-navigation-label')].map(element => ({ text: element.textContent, current: element.getAttribute('aria-current') })),
             controls: [...document.querySelectorAll('button,[role="button"],[role="combobox"]')].filter(element => element.getClientRects().length).map(element => ({ role: element.getAttribute('role'), text: element.textContent, ariaLabel: element.getAttribute('aria-label'), labelledBy: element.getAttribute('aria-labelledby'), pressed: element.getAttribute('aria-pressed'), disabled: element.disabled, site: element.getAttribute('data-ui-site') })),
             performance: window.uiPerformance,
           }));

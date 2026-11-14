@@ -1,9 +1,12 @@
-/* Independently installed in player and editor roots; no player tokens or global element rules. */
-.ui-notice-viewport.immersive-notice-viewport { z-index: 40; --ui-notice-viewport-bottom: 70px; --ui-notice-viewport-max-height: calc(100dvh - 172px); }
-.immersive-notice { pointer-events: auto; display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid var(--border, #465671); border-radius: 5px; background: var(--surface, #151923); color: var(--text, #dce3f0); box-shadow: 0 4px 18px #0003; font: 13px/1.5 var(--font-family, sans-serif); }
-.immersive-notice > svg { flex: 0 0 auto; margin-top: 2px; color: var(--accent-ink, #6387f5); }
-.immersive-notice[data-kind="error"] > svg, .immersive-notice[data-kind="warning"] > svg { color: #df9769; }
-.immersive-notice > span { flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-.immersive-notice > button { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 28px; width: 28px; height: 28px; padding: 4px; border: 0; border-radius: 4px; background: transparent; color: inherit; cursor: pointer; }
-.immersive-notice > button:hover { background: var(--hover, #2a3a50); }
-.immersive-notice > button:focus-visible { outline: 2px solid var(--accent, #6387f5); outline-offset: 2px; }
+/* Notice-owned solid surfaces also work in the ordinary editor root. */
+.ui-notice-viewport.immersive-notice-viewport { z-index: 40; --ui-notice-viewport-bottom: 96px; --ui-notice-viewport-max-height: calc(100dvh - 190px); }
+.immersive-notice { --notice-panel: #30353d; --notice-text: #edf1f7; --notice-muted: #bac5d4; --notice-line: #556170; --notice-hover: #3d465c; --notice-warning: #f0c997; --notice-danger: #ffb1b8; pointer-events: auto; display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid var(--notice-line); border-radius: var(--radius,6px); background: var(--notice-panel); color: var(--notice-text); box-shadow: 0 8px 24px #1114192f; line-height: 1.5; }
+.immersive-notice[data-theme=light] { --notice-panel: #fff; --notice-text: #24272d; --notice-muted: #586476; --notice-line: #cbd3de; --notice-hover: #e5e9fa; --notice-warning: #7b4b17; --notice-danger: #943342; }
+.immersive-notice > svg { flex: 0 0 auto; margin-top: 2px; color: var(--accent-ink,#b0bcff); }
+.immersive-notice[data-kind=error] > svg { color: var(--notice-danger); }
+.immersive-notice[data-kind=warning] > svg { color: var(--notice-warning); }
+.immersive-notice > span { flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: max(13px,1em); }
+.immersive-notice > button { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 28px; width: 28px; height: 28px; padding: 4px; border: 0; border-radius: var(--radius,6px); background: transparent; color: inherit; cursor: pointer; }
+.immersive-notice > button:hover { background: var(--notice-hover); }
+.immersive-notice > button:focus-visible { outline: 2px solid var(--accent-ink,#b0bcff); outline-offset: 2px; }
+@media(max-height:340px){.ui-notice-viewport.immersive-notice-viewport{--ui-notice-viewport-bottom:82px;--ui-notice-viewport-max-height:calc(100dvh - 130px);}}

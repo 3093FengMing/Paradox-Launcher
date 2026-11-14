@@ -27,7 +27,7 @@ export default function AccountsPage() {
       data-ui-site="Accounts-offline-heading">
       <UserRound
       size={19}
-      data-ui-site="Accounts-offline-icon"/>
+      data-ui-site="Accounts-offline-icon" aria-hidden="true"/>
       <h2
         data-ui-site="Accounts-offline-title">{t('accounts.offlineIdentity')}
       </h2>{accounts.ready && accounts.state.active === null && <Badge
@@ -80,7 +80,7 @@ export default function AccountsPage() {
         data-ui-site="Accounts-save-name">
         <Check
         size={16}
-        data-ui-site="Accounts-save-icon"/>{t('accounts.save')}
+        data-ui-site="Accounts-save-icon" aria-hidden="true"/>{t('accounts.save')}
       </button>
       <button
         className="secondary"
@@ -100,7 +100,7 @@ export default function AccountsPage() {
       data-ui-site="Accounts-config-heading">
       <KeyRound
       size={19}
-      data-ui-site="Accounts-config-icon"/>
+      data-ui-site="Accounts-config-icon" aria-hidden="true"/>
       <h2
         data-ui-site="Accounts-config-title">{t('accountDiscovery.connection')}
       </h2>
@@ -140,13 +140,13 @@ export default function AccountsPage() {
       data-ui-site="Accounts-microsoft-heading">
       <div
         data-ui-site="Accounts-microsoft-intro">
+        <h2
+          data-ui-site="Accounts-microsoft-title">{t('accounts.microsoft')}
+        </h2>
         <p
           className="accounts-eyebrow"
           data-ui-site="Accounts-microsoft-eyebrow">{t('auth.microsoftIdentity')}
         </p>
-        <h2
-          data-ui-site="Accounts-microsoft-title">{t('accounts.microsoft')}
-        </h2>
         <p
           className="accounts-help"
           data-ui-site="Accounts-microsoft-description">{t('auth.description')}
@@ -180,7 +180,7 @@ export default function AccountsPage() {
         data-ui-site="Accounts-reload">
         <RefreshCw
         size={16}
-        data-ui-site="Accounts-reload-icon"/>{t('common.retry')}
+        data-ui-site="Accounts-reload-icon" aria-hidden="true"/>{t('common.retry')}
       </button>
     </div>}
     {accounts.pending && !accounts.prompt && <div
@@ -201,7 +201,7 @@ export default function AccountsPage() {
       data-ui-site="Accounts-empty">
       <UserRound
       size={28}
-      data-ui-site="Accounts-empty-icon"/>
+      data-ui-site="Accounts-empty-icon" aria-hidden="true"/>
       <p
         data-ui-site="Accounts-empty-text">{t('auth.noAccounts')}
       </p>
@@ -254,7 +254,7 @@ export default function AccountsPage() {
               data-ui-site="Accounts-refresh">
               <RefreshCw
               size={15}
-              data-ui-site="Accounts-refresh-icon"/>{t('auth.refresh')}
+              data-ui-site="Accounts-refresh-icon" aria-hidden="true"/>{t('auth.refresh')}
             </button>{removingId !== account.id && <button
               className="text-button"
               disabled={disabled || !desktop}
@@ -262,7 +262,7 @@ export default function AccountsPage() {
               data-ui-site="Accounts-logout">
               <LogOut
               size={15}
-              data-ui-site="Accounts-logout-icon"/>{t('auth.logout')}
+              data-ui-site="Accounts-logout-icon" aria-hidden="true"/>{t('auth.logout')}
             </button>}
           </div>
       {removingId === account.id && <div

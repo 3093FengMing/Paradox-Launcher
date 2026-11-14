@@ -85,6 +85,23 @@ for (const suite of ['immersive', 'modern']) {
     await page.locator('.instance-row[data-profile-key="beta-instance"] [data-ui-site$=":ProfileCard-view"]').click();
     if (suite === 'modern') {
       assert.equal(await page.locator('.instances-inspector .instance-detail').getAttribute('data-profile-key'), 'beta-instance');
+      const toggle = site('InstancesPage-inspector-toggle'), inspector = page.locator('.instances-inspector');
+      const detailNode = await inspector.locator('.instance-detail').elementHandle();
+      const listWidth = await page.locator('.instances-list-region').evaluate(element => element.getBoundingClientRect().width);
+      assert.equal(await toggle.getAttribute('aria-controls'), await inspector.getAttribute('id'));
+      assert.equal(await toggle.getAttribute('aria-expanded'), 'true');
+      await toggle.focus(); await page.keyboard.press('Enter');
+      await inspector.waitFor({ state: 'hidden' });
+      assert.equal(await toggle.getAttribute('aria-expanded'), 'false');
+      assert.equal(await toggle.evaluate(element => element === document.activeElement), true);
+      assert.ok(await page.locator('.instances-list-region').evaluate((element, before) => element.getBoundingClientRect().width > before, listWidth), 'closing Inspector gives its space back to the instance list');
+      assert.equal(await act(() => window.suiteBuiltinsFixture.snapshot.profiles.activeKey), 'original-instance');
+      await page.keyboard.press('Enter'); await inspector.waitFor({ state: 'visible' });
+      assert.equal(await toggle.getAttribute('aria-expanded'), 'true');
+      assert.equal(await inspector.locator('.instance-detail').getAttribute('data-profile-key'), 'beta-instance');
+      assert.equal(await detailNode.evaluate(element => element === document.querySelector('.instances-inspector .instance-detail')), true, 'collapse preserves the real inspected detail node');
+      assert.equal(await toggle.evaluate(element => element === document.activeElement), true);
+      pass('Inspector_keyboard_collapse_reclaims_list_space_retains_viewed_key_node_focus_and_launch_target');
       await site('InstanceDetail-open-full').click();
     }
     await site('InstanceDetail-name').waitFor();
@@ -236,7 +253,7 @@ for (const suite of ['immersive', 'modern']) {
         assert.equal(await page.locator('body').evaluate(e => e.scrollWidth <= innerWidth), true);
         if (width === 1440) {
           await page.locator('.workspace > main').evaluate(e => { e.scrollTop = 0; });
-          if (suite === 'immersive') for (const height of await site('ProfileCard-root').evaluateAll(rows => rows.map(row => row.getBoundingClientRect().height))) assert.ok(height >= 60 && height <= 68, 'compact normal and repair rows stay 60–68px');
+          for (const height of await site('ProfileCard-root').evaluateAll(rows => rows.map(row => row.getBoundingClientRect().height))) assert.ok(height >= 53 && height <= 55, 'compact normal and repair rows in both suites stay at the approved 54px height');
           if (suite === 'modern') {
             const columns = await page.evaluate(() => ({
               headings: Array.from(document.querySelector('.instances-table-heading').children, cell => cell.getBoundingClientRect().left),

@@ -186,7 +186,7 @@ try {
   }
   await run('I2:keyboard_picking_cancel_preserves_editor_focus_and_drafts', async (result) => {
     await page
-      .locator('.sidebar')
+      .locator('.sidebar, .window-navigation')
       .getByRole('button', { name: text('nav.instances') })
       .click();
     await page

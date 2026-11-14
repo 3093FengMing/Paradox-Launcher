@@ -1,23 +1,23 @@
-.settings-presets { display: grid; gap: 17px; min-width: 0; }
-.settings-presets h2, .settings-presets h4 { margin: 0; }
-.settings-presets h2 { font-size: 1.06rem; }
-.settings-presets h4 { font-size: .87rem; overflow-wrap: anywhere; }
-.settings-presets p { margin: 0; color: var(--muted); line-height: 1.65; font-size: .82rem; overflow-wrap: anywhere; }
-.settings-presets button { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
-.settings-preset-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; min-width: 0; }
-.settings-preset-heading > div { display: grid; gap: 6px; min-width: 0; }
-.settings-preset-tools { display: flex; flex-wrap: wrap; gap: 8px; }
-.settings-preset-list { display: grid; gap: 10px; min-width: 0; }
-.settings-preset { display: grid; gap: 13px; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 15px; min-width: 0; }
-.settings-preset.current { border-color: var(--accent); }
-.settings-preset-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.settings-preset-info > svg { flex-shrink: 0; }
-.settings-preset-info > div { display: grid; gap: 5px; min-width: 0; }
-.settings-preset-actions { display: flex; flex-wrap: wrap; gap: 7px; }
-.settings-preset-empty { display: flex; gap: 12px; align-items: center; padding: 19px; border: 1px dashed var(--border); border-radius: 8px; color: var(--muted); }
-.settings-preset-empty > svg { flex-shrink: 0; }
-.settings-preset-note { font-size: .77rem; }
-@media(max-width:600px){ .settings-preset-heading { flex-wrap: wrap; } .settings-preset-tools { width: 100%; } .settings-preset-tools > button { flex: 1 1 auto; } .settings-preset { padding: 12px; } }
-.immersive-presets .settings-preset { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
-.immersive-presets .settings-preset-info { flex: 1; }
-@media(max-width:700px){.immersive-presets .settings-preset { flex-wrap: wrap; }}
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-presets { display: grid; gap: 17px; min-width: 0; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-presets h2, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-presets h4 { margin: 0; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-presets h2 { font-size: max(13px, 1.06em); }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-presets h4 { font-size: max(13px, .87em); overflow-wrap: anywhere; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-presets p { margin: 0; color: var(--muted); line-height: 1.65; font-size: max(13px, .82em); overflow-wrap: anywhere; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-presets button { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; min-width: 0; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset-heading > div { display: grid; gap: 6px; min-width: 0; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset-list { display: grid; gap: 10px; min-width: 0; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset { display: grid; gap: 13px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--c-radius); padding: 15px; min-width: 0; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset.current { border-color: var(--accent-ink); }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset-info > svg { flex-shrink: 0; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset-info > div { display: grid; gap: 5px; min-width: 0; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset-empty { display: flex; gap: 12px; align-items: center; padding: 19px; border: 1px dashed var(--border); border-radius: var(--c-radius); color: var(--muted); }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset-empty > svg { flex-shrink: 0; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset-note { font-size: max(13px, .77em); }
+@media(max-width:600px){ :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset-heading { flex-wrap: wrap; } :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset-tools { width: 100%; } :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset-tools > button { flex: 1 1 auto; } :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-preset { padding: 12px; } }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-presets .settings-preset { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-presets .settings-preset-info { flex: 1; }
+@media(max-width:700px){:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-presets .settings-preset { flex-wrap: wrap; }}

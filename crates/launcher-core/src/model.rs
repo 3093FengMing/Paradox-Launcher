@@ -121,9 +121,9 @@ impl Default for Appearance {
         Self {
             interface_style: "immersive".into(),
             theme: "dark".into(),
-            accent_color: "#6387f5".into(),
+            accent_color: "#6676dc".into(),
             ui_scale: 100,
-            border_radius: 14,
+            border_radius: 6,
             compact_sidebar: false,
             reduce_motion: false,
             background_art: false,

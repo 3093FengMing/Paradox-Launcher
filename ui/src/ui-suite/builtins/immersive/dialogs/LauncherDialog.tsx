@@ -4,6 +4,8 @@ import { X } from 'lucide-react';
 import { Dialog } from '@paradox/ui';
 import { useLauncherSnapshot } from '@paradox/launcher';
 import { viewProps } from '../../common/lib/view';
+import '../styles/tokens.css';
+import '../styles/components.css';
 import '../styles/business-dialogs.css';
 import '../styles/responsive.css';
 
@@ -27,6 +29,10 @@ export default function LauncherDialog(input: Props | { props?: Readonly<Record<
   const popupClass: PopupProps['className'] = typeof extraClass === 'function'
     ? state => `modal immersive-business-dialog ${extraClass(state) ?? ''}`
     : `modal immersive-business-dialog ${extraClass ?? ''}`;
+  const popupFontSize = `${Math.max(13, 14 * (s.appearance.value?.ui_scale ?? 100) / 100)}px`;
+  const popupStyle: PopupProps['style'] = typeof p.popupProps?.style === 'function'
+    ? state => ({ fontSize: popupFontSize, ...(typeof p.popupProps?.style === 'function' ? p.popupProps.style(state) : {}) })
+    : { fontSize: popupFontSize, ...p.popupProps?.style };
   return <Dialog.Root {...p.rootProps} open data-ui-modal-boundary data-ui-site="ImmersiveLauncherDialog-root"
     onOpenChange={(next, details) => {
       if (!next && pending) { details.cancel(); return; }
@@ -34,9 +40,9 @@ export default function LauncherDialog(input: Props | { props?: Readonly<Record<
       if (!next && !details.isCanceled) p.onClose();
     }}>
     <Dialog.Portal {...p.portalProps} data-ui-site="ImmersiveLauncherDialog-portal">
-      <div className={`dialog-theme immersive-dialog-theme ${s.appearance.value?.reduce_motion ? 'reduce-motion' : ''} ${s.appearance.personalization.shortcuts ? 'keyboard-navigation' : ''}`} style={s.appearance.variables} data-theme={s.appearance.theme} data-ui-site="ImmersiveLauncherDialog-theme">
+      <div className={`dialog-theme immersive-dialog-theme ${s.appearance.value?.reduce_motion ? 'reduce-motion' : ''} ${s.appearance.personalization.shortcuts ? 'keyboard-navigation' : ''}`} style={{ ...s.appearance.variables, fontSize: `${Math.max(13,14*(s.appearance.value?.ui_scale ?? 100)/100)}px` }} data-theme={s.appearance.theme} data-ui-site="ImmersiveLauncherDialog-theme">
         <Dialog.Backdrop className="modal-backdrop" data-ui-site="ImmersiveLauncherDialog-backdrop"/>
-        <Dialog.Popup {...p.popupProps} ref={p.popupRef ?? p.popupProps?.ref} className={popupClass}
+        <Dialog.Popup {...p.popupProps} ref={p.popupRef ?? p.popupProps?.ref} className={popupClass} style={popupStyle}
           initialFocus={p.initialFocus ?? p.popupProps?.initialFocus} finalFocus={p.finalFocus ?? p.popupProps?.finalFocus} data-ui-site="ImmersiveLauncherDialog-popup">
           <header className="business-dialog-heading" data-ui-site="ImmersiveLauncherDialog-heading">
             <div className="business-dialog-heading-copy" data-ui-site="ImmersiveLauncherDialog-heading-copy">

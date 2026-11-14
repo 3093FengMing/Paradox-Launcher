@@ -1,0 +1,695 @@
+{
+  "kind": "foundation-final-v4-verification-index",
+  "createdAt": "2026-11-14T23:28:16.523Z",
+  "applicationSourceAggregateSha256": "338393b8fb4a2a5ada466b74c06ec56c0bdcf23edaea3e6d4bfde756fd661cd8",
+  "fullGroups": [
+    {
+      "lane": "dev",
+      "url": "http://127.0.0.1:1433",
+      "naturalGroupExitCode": 0,
+      "summary": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/summary.json"
+    },
+    {
+      "lane": "compiled",
+      "url": "http://127.0.0.1:1441",
+      "naturalGroupExitCode": 1,
+      "summary": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/summary.json"
+    }
+  ],
+  "recheckGroups": [
+    ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4-repeat-foundation/compiled/summary.json",
+    ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4-stable-repeat/dev/summary.json",
+    ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4-stable-repeat/compiled/summary.json"
+  ],
+  "coverage": {
+    "requestedChecksPerLane": 14,
+    "acceptedDevChecks": 14,
+    "acceptedCompiledChecks": 14,
+    "allAcceptedNaturalExitZero": true,
+    "allAcceptedCompleteInputDriftZero": true,
+    "applicationSourceChangedDuringAnyRun": false
+  },
+  "compiled": {
+    "nativeCspFlag": 1,
+    "policy": "default-src 'self'; script-src 'self' blob:; connect-src ipc: http://ipc.localhost; img-src 'self' blob: asset: http://asset.localhost data:; style-src 'self' 'unsafe-inline'; font-src 'self' blob: data:",
+    "note": "All compiled executions used PARADOX_TEST_NATIVE_CSP=1 against the final-v4 artifact; existing script assertions and returned reports cover observed CSP, unexpected page errors and source-module requests. Native window interaction is outside this agent assignment."
+  },
+  "knownFirstAttemptEvents": [
+    {
+      "lane": "compiled",
+      "script": "check-ui-foundation-browser.mjs",
+      "nature": "single unreproduced generic Select keyboard assertion",
+      "failure": "line914: hiddenInput '' !== 'b'",
+      "changedForRecheck": false
+    },
+    {
+      "lane": "dev",
+      "script": "check-ui-inspector-browser.mjs --picker-only",
+      "nature": "unrelated test script input drift",
+      "drift": [
+        "ui/scripts/check-ui-logs-responsive-browser.mjs"
+      ],
+      "changedForRecheck": false
+    },
+    {
+      "lane": "compiled",
+      "script": "check-ui-customization-browser.mjs",
+      "nature": "unrelated test script input drift",
+      "drift": [
+        "ui/scripts/check-ui-logs-responsive-browser.mjs"
+      ],
+      "changedForRecheck": false
+    }
+  ],
+  "checks": [
+    {
+      "lane": "dev",
+      "name": "check-ui-foundation-browser",
+      "script": "check-ui-foundation-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-foundation-browser/20261114T225929840Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-foundation-browser/20261114T225929840Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-foundation-browser/20261114T225929840Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-foundation-browser/20261114T225929840Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-foundation-browser/20261114T225929840Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "eaa892eb55e594034fa1ef0d4f4cb80a973a0e0be461d008547c7224195ecaf6"
+    },
+    {
+      "lane": "dev",
+      "name": "check-ui-foundation-review-browser",
+      "script": "check-ui-foundation-review-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-foundation-review-browser/20261114T230049596Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-foundation-review-browser/20261114T230049596Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-foundation-review-browser/20261114T230049596Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-foundation-review-browser/20261114T230049596Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-foundation-review-browser/20261114T230049596Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "d000a8b81c320718e0a56500fea45026a61f5c7a30b212815974233b69317c6d"
+    },
+    {
+      "lane": "dev",
+      "name": "check-ui-notices-browser",
+      "script": "check-ui-notices-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-notices-browser/20261114T230103021Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-notices-browser/20261114T230103021Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-notices-browser/20261114T230103021Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-notices-browser/20261114T230103021Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-notices-browser/20261114T230103021Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "ce5a171ee4899af293a8030d53ddefc08f7e149510d3f33826f0c7b0c1232935"
+    },
+    {
+      "lane": "dev",
+      "name": "check-launcher-public-api-browser",
+      "script": "check-launcher-public-api-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-public-api-browser/20261114T230145237Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-public-api-browser/20261114T230145237Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-public-api-browser/20261114T230145237Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-public-api-browser/20261114T230145237Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-public-api-browser/20261114T230145237Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "b39d4ce57649e624a485315928a66586348a242a481d21d54b7866fbd1d041be"
+    },
+    {
+      "lane": "dev",
+      "name": "check-launcher-routes-browser",
+      "script": "check-launcher-routes-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-routes-browser/20261114T230205340Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-routes-browser/20261114T230205340Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-routes-browser/20261114T230205340Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-routes-browser/20261114T230205340Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-routes-browser/20261114T230205340Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "73e5f7cec3f3088b3a2ce486bdc4f40bd2efefed6ec775280d422955900edb46"
+    },
+    {
+      "lane": "dev",
+      "name": "check-launcher-java-current-draft-browser",
+      "script": "check-launcher-java-current-draft-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-java-current-draft-browser/20261114T230238787Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-java-current-draft-browser/20261114T230238787Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-java-current-draft-browser/20261114T230238787Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-java-current-draft-browser/20261114T230238787Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-java-current-draft-browser/20261114T230238787Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "063599d03e5c1ab99e1ec31863d46b4a8b4a4aa79fb2a7ba3acb16bd4705f0fc"
+    },
+    {
+      "lane": "dev",
+      "name": "check-launcher-appearance-drafts-browser",
+      "script": "check-launcher-appearance-drafts-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-appearance-drafts-browser/20261114T230242057Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-appearance-drafts-browser/20261114T230242057Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-appearance-drafts-browser/20261114T230242057Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-appearance-drafts-browser/20261114T230242057Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-launcher-appearance-drafts-browser/20261114T230242057Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "75d0c3002d35b751879c4c39bb44e0ded76d06e44cdb56f534ebef0fe2671fe1"
+    },
+    {
+      "lane": "dev",
+      "name": "check-ui-final-browser",
+      "script": "check-ui-final-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-final-browser/20261114T230306631Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-final-browser/20261114T230306631Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-final-browser/20261114T230306631Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-final-browser/20261114T230306631Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-final-browser/20261114T230306631Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "7b888899fca5ad1edf027ecd2b9cef3728aa07624b74bb8539fdbf8af176df37"
+    },
+    {
+      "lane": "dev",
+      "name": "check-ui-suite-storage-browser",
+      "script": "check-ui-suite-storage-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-suite-storage-browser/20261114T230402294Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-suite-storage-browser/20261114T230402294Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-suite-storage-browser/20261114T230402294Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-suite-storage-browser/20261114T230402294Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-suite-storage-browser/20261114T230402294Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "9ddd55cdcc0598a2271461d457773d5bc3bc32bffb2f1de4e54826dc6a37e4f5"
+    },
+    {
+      "lane": "dev",
+      "name": "check-ui-inspector-browser",
+      "script": "check-ui-inspector-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-browser/20261114T230416139Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-browser/20261114T230416139Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-browser/20261114T230416139Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-browser/20261114T230416139Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-browser/20261114T230416139Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "407a8c598ee00dd0eb1f0fc0c1f164eb4e1804be5627b8e319255061d70696fd"
+    },
+    {
+      "lane": "dev",
+      "name": "check-ui-inspector-overrides-browser",
+      "script": "check-ui-inspector-overrides-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-overrides-browser/20261114T230507094Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-overrides-browser/20261114T230507094Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-overrides-browser/20261114T230507094Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-overrides-browser/20261114T230507094Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-overrides-browser/20261114T230507094Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "0048ee5a012dafd5ad701734db2487e6631003ef11d82d4d5c25a0fa30e4b4f5"
+    },
+    {
+      "lane": "dev",
+      "name": "check-ui-customization-browser",
+      "script": "check-ui-customization-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-customization-browser/20261114T230728736Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-customization-browser/20261114T230728736Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-customization-browser/20261114T230728736Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-customization-browser/20261114T230728736Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-customization-browser/20261114T230728736Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "f1e4b0336321900cbe934b48b5cdf04d8174e6140893aa1bcdc7c9f5ad7883a5"
+    },
+    {
+      "lane": "dev",
+      "name": "check-ui-inspector-browser-preview-only",
+      "script": "check-ui-inspector-browser.mjs",
+      "args": [
+        "--preview-only"
+      ],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-browser-preview-only/20261114T231419543Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-browser-preview-only/20261114T231419543Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-browser-preview-only/20261114T231419543Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-browser-preview-only/20261114T231419543Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-browser-preview-only/20261114T231419543Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "407a8c598ee00dd0eb1f0fc0c1f164eb4e1804be5627b8e319255061d70696fd"
+    },
+    {
+      "lane": "dev",
+      "name": "check-ui-inspector-browser-picker-only",
+      "script": "check-ui-inspector-browser.mjs",
+      "args": [
+        "--picker-only"
+      ],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [
+          "ui/scripts/check-ui-logs-responsive-browser.mjs"
+        ],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-browser-picker-only/20261114T231529441Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/dev/check-ui-inspector-browser-picker-only/20261114T231529441Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4-stable-repeat/dev/check-ui-inspector-browser-picker-only/20261114T232148952Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4-stable-repeat/dev/check-ui-inspector-browser-picker-only/20261114T232148952Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4-stable-repeat/dev/check-ui-inspector-browser-picker-only/20261114T232148952Z/artifact-manifest.json"
+      },
+      "recheckReason": "Unrelated logs-responsive script changed during original successful run; unchanged complete picker branch rerun with stable complete inputs.",
+      "sameScriptHash": true,
+      "scriptSha256": "407a8c598ee00dd0eb1f0fc0c1f164eb4e1804be5627b8e319255061d70696fd"
+    },
+    {
+      "lane": "compiled",
+      "name": "check-ui-foundation-browser",
+      "script": "check-ui-foundation-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 1,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-foundation-browser/20261114T230350328Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-foundation-browser/20261114T230350328Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4-repeat-foundation/compiled/check-ui-foundation-browser/20261114T230845602Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4-repeat-foundation/compiled/check-ui-foundation-browser/20261114T230845602Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4-repeat-foundation/compiled/check-ui-foundation-browser/20261114T230845602Z/artifact-manifest.json"
+      },
+      "recheckReason": "Original generic Select keyboard case returned empty value once; unchanged complete script rerun succeeded under same compiled artifact and CSP.",
+      "sameScriptHash": true,
+      "scriptSha256": "eaa892eb55e594034fa1ef0d4f4cb80a973a0e0be461d008547c7224195ecaf6"
+    },
+    {
+      "lane": "compiled",
+      "name": "check-ui-foundation-review-browser",
+      "script": "check-ui-foundation-review-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-foundation-review-browser/20261114T230455146Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-foundation-review-browser/20261114T230455146Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-foundation-review-browser/20261114T230455146Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-foundation-review-browser/20261114T230455146Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-foundation-review-browser/20261114T230455146Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "d000a8b81c320718e0a56500fea45026a61f5c7a30b212815974233b69317c6d"
+    },
+    {
+      "lane": "compiled",
+      "name": "check-ui-notices-browser",
+      "script": "check-ui-notices-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-notices-browser/20261114T230508364Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-notices-browser/20261114T230508364Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-notices-browser/20261114T230508364Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-notices-browser/20261114T230508364Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-notices-browser/20261114T230508364Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "ce5a171ee4899af293a8030d53ddefc08f7e149510d3f33826f0c7b0c1232935"
+    },
+    {
+      "lane": "compiled",
+      "name": "check-launcher-public-api-browser",
+      "script": "check-launcher-public-api-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-public-api-browser/20261114T230555860Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-public-api-browser/20261114T230555860Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-public-api-browser/20261114T230555860Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-public-api-browser/20261114T230555860Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-public-api-browser/20261114T230555860Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "b39d4ce57649e624a485315928a66586348a242a481d21d54b7866fbd1d041be"
+    },
+    {
+      "lane": "compiled",
+      "name": "check-launcher-routes-browser",
+      "script": "check-launcher-routes-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-routes-browser/20261114T230615908Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-routes-browser/20261114T230615908Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-routes-browser/20261114T230615908Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-routes-browser/20261114T230615908Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-routes-browser/20261114T230615908Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "73e5f7cec3f3088b3a2ce486bdc4f40bd2efefed6ec775280d422955900edb46"
+    },
+    {
+      "lane": "compiled",
+      "name": "check-launcher-java-current-draft-browser",
+      "script": "check-launcher-java-current-draft-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-java-current-draft-browser/20261114T230643957Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-java-current-draft-browser/20261114T230643957Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-java-current-draft-browser/20261114T230643957Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-java-current-draft-browser/20261114T230643957Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-java-current-draft-browser/20261114T230643957Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "063599d03e5c1ab99e1ec31863d46b4a8b4a4aa79fb2a7ba3acb16bd4705f0fc"
+    },
+    {
+      "lane": "compiled",
+      "name": "check-launcher-appearance-drafts-browser",
+      "script": "check-launcher-appearance-drafts-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-appearance-drafts-browser/20261114T230646254Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-appearance-drafts-browser/20261114T230646254Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-appearance-drafts-browser/20261114T230646254Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-appearance-drafts-browser/20261114T230646254Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-launcher-appearance-drafts-browser/20261114T230646254Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "75d0c3002d35b751879c4c39bb44e0ded76d06e44cdb56f534ebef0fe2671fe1"
+    },
+    {
+      "lane": "compiled",
+      "name": "check-ui-final-browser",
+      "script": "check-ui-final-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-final-browser/20261114T230704690Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-final-browser/20261114T230704690Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-final-browser/20261114T230704690Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-final-browser/20261114T230704690Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-final-browser/20261114T230704690Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "7b888899fca5ad1edf027ecd2b9cef3728aa07624b74bb8539fdbf8af176df37"
+    },
+    {
+      "lane": "compiled",
+      "name": "check-ui-suite-storage-browser",
+      "script": "check-ui-suite-storage-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-suite-storage-browser/20261114T230749369Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-suite-storage-browser/20261114T230749369Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-suite-storage-browser/20261114T230749369Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-suite-storage-browser/20261114T230749369Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-suite-storage-browser/20261114T230749369Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "9ddd55cdcc0598a2271461d457773d5bc3bc32bffb2f1de4e54826dc6a37e4f5"
+    },
+    {
+      "lane": "compiled",
+      "name": "check-ui-inspector-browser",
+      "script": "check-ui-inspector-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser/20261114T230758739Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser/20261114T230758739Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser/20261114T230758739Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser/20261114T230758739Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser/20261114T230758739Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "407a8c598ee00dd0eb1f0fc0c1f164eb4e1804be5627b8e319255061d70696fd"
+    },
+    {
+      "lane": "compiled",
+      "name": "check-ui-inspector-overrides-browser",
+      "script": "check-ui-inspector-overrides-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-overrides-browser/20261114T230839411Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-overrides-browser/20261114T230839411Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-overrides-browser/20261114T230839411Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-overrides-browser/20261114T230839411Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-overrides-browser/20261114T230839411Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "0048ee5a012dafd5ad701734db2487e6631003ef11d82d4d5c25a0fa30e4b4f5"
+    },
+    {
+      "lane": "compiled",
+      "name": "check-ui-customization-browser",
+      "script": "check-ui-customization-browser.mjs",
+      "args": [],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [
+          "ui/scripts/check-ui-logs-responsive-browser.mjs"
+        ],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-customization-browser/20261114T231051686Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-customization-browser/20261114T231051686Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4-stable-repeat/compiled/check-ui-customization-browser/20261114T232148992Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4-stable-repeat/compiled/check-ui-customization-browser/20261114T232148992Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4-stable-repeat/compiled/check-ui-customization-browser/20261114T232148992Z/artifact-manifest.json"
+      },
+      "recheckReason": "Unrelated logs-responsive script changed during original successful run; unchanged complete script rerun with stable complete inputs.",
+      "sameScriptHash": true,
+      "scriptSha256": "f1e4b0336321900cbe934b48b5cdf04d8174e6140893aa1bcdc7c9f5ad7883a5"
+    },
+    {
+      "lane": "compiled",
+      "name": "check-ui-inspector-browser-preview-only",
+      "script": "check-ui-inspector-browser.mjs",
+      "args": [
+        "--preview-only"
+      ],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser-preview-only/20261114T231657475Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser-preview-only/20261114T231657475Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser-preview-only/20261114T231657475Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser-preview-only/20261114T231657475Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser-preview-only/20261114T231657475Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "407a8c598ee00dd0eb1f0fc0c1f164eb4e1804be5627b8e319255061d70696fd"
+    },
+    {
+      "lane": "compiled",
+      "name": "check-ui-inspector-browser-picker-only",
+      "script": "check-ui-inspector-browser.mjs",
+      "args": [
+        "--picker-only"
+      ],
+      "original": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser-picker-only/20261114T231755416Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser-picker-only/20261114T231755416Z/execution.json"
+      },
+      "accepted": {
+        "exitCode": 0,
+        "inputDrift": [],
+        "evidence": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser-picker-only/20261114T231755416Z",
+        "execution": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser-picker-only/20261114T231755416Z/execution.json",
+        "artifactManifest": ".test-data/ui-redesign/2026-11-15/20261114T215848834Z/foundation-agent/final-v4/compiled/check-ui-inspector-browser-picker-only/20261114T231755416Z/artifact-manifest.json"
+      },
+      "recheckReason": null,
+      "sameScriptHash": true,
+      "scriptSha256": "407a8c598ee00dd0eb1f0fc0c1f164eb4e1804be5627b8e319255061d70696fd"
+    }
+  ],
+  "checkedExecutionCount": 31
+}

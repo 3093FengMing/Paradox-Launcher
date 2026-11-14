@@ -1,52 +1,104 @@
-/* Player-only finishing rules; the ordinary editor has a separate root. */
+/* Final rules stay within the player and its business overlays. */
 .modern-shell .mobile-navigation { display: none; }
-.modern-shell .workspace { container-type: inline-size; }
-.modern-shell :is(button, input, textarea, select, a, [tabindex]):focus-visible,
-.modern-dialog-theme :is(button, input, textarea, select, a, [tabindex]):focus-visible {
-  outline: 2px solid var(--accent-ink); outline-offset: 2px;
-}
-.modern-shell [data-theme=dark], .modern-dialog-theme[data-theme=dark] { --control-border: #687f9d; }
-.modern-shell[data-theme=dark] { --control-border: #687f9d; }
-.modern-shell [data-theme=light], .modern-dialog-theme[data-theme=light] { --control-border: #77859a; }
-.modern-shell[data-theme=light] { --control-border: #77859a; }
-.modern-shell :is(input:not([type=range]):not([type=color]), textarea, select, .ui-select-trigger, button.secondary),
-.modern-dialog-theme :is(input:not([type=range]):not([type=color]), textarea, select, .ui-select-trigger, button.secondary) { border-color: var(--control-border); }
-/* Status and selection labels are ordinary text on their existing fills. */
-.modern-shell :is(.instance-tag:not(.needs-repair), .badge:not(.muted), .instance-detail-tabs button.active),
-.modern-shell :is(.accounts-page .accounts-eyebrow, .discover-page .discover-eyebrow, .settings-options > button.selected, .settings-style-option.selected) { color: var(--text); }
-.modern-shell :is(.settings-options > button.selected, .settings-style-option.selected) > svg { color: var(--accent-ink); }
+.modern-shell :is(button,input,textarea,select,a,summary,[tabindex]):focus-visible,
+.modern-dialog-theme :is(button,input,textarea,select,a,summary,[tabindex]):focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.modern-shell :is(input:not([type=range]):not([type=color]),textarea,select,.ui-select-trigger,button.secondary),
+.modern-dialog-theme :is(input:not([type=range]):not([type=color]),textarea,select,.ui-select-trigger,button.secondary) { border-color: var(--control-border); }
+.modern-shell :is(.settings-page p,.discover-page p,.accounts-page p,.modern-downloads p,.instance-detail p),
+.modern-dialog-theme :is(p,.dialog-help,.dialog-override small) { font-size: max(13px,.93em); }
+.modern-shell :is(.settings-tabs,.instance-detail-tabs) { background: transparent; border-radius: 0; padding: 0 0 .7rem; }
+.modern-shell :is(.settings-tabs > button,.instance-detail-tabs > button) { font-size: max(13px,.93em); min-height: var(--control-height); padding: .5rem .8rem; border-radius: var(--radius, 6px); box-shadow: none; }
+.modern-shell :is(.settings-tabs > button.selected,.instance-detail-tabs > button.active,.settings-options > button.selected,.settings-style-option.selected) { color: var(--text); background: var(--selected); border-color: var(--control-border); box-shadow: none; }
+.modern-shell :is(.settings-options > button.selected,.settings-style-option.selected) > svg { color: var(--accent-ink); }
+.modern-shell .settings-page-heading { display: none; }
+.modern-shell .settings-section { padding: 1.4rem; border-radius: var(--radius, 6px); }
+.modern-shell .settings-section :is(h2,h3,h4) { font-size: max(14px,1.05em); }
+.modern-shell :is(.settings-template-list,.settings-preset-list) { grid-template-columns: minmax(0,1fr); gap: 0; }
+.modern-shell :is(.settings-template,.settings-preset) { background: transparent; border-radius: 0; border: 0; border-bottom: 1px solid var(--border); padding: 1rem 0; }
+.modern-shell .settings-preset.current { border-color: var(--border); }
+.modern-shell .settings-save-bar { border-radius: var(--radius, 6px); background: var(--surface); box-shadow: none; }
+.modern-shell .settings-tabs { gap: .45rem; }
+.modern-shell .settings-swatches > button, .modern-shell .settings-swatches > input { width: 32px; height: 32px; min-width: 32px; }
+.modern-shell :is(.accounts-eyebrow,.discover-eyebrow,.instance-eyebrow) { display: block; color: var(--muted); font-size: max(12px,.86em); letter-spacing: 0; margin: .4rem 0 .65rem; }
+.modern-shell .accounts-page .accounts-eyebrow,
+.modern-shell .discover-page .discover-eyebrow { color: var(--muted); }
+.modern-shell .accounts-microsoft-heading h2 { font-size: max(18px,1.3em); margin-bottom: .45rem; }
+.modern-shell .accounts-offline { border-top: 1px solid var(--border); }
+.modern-shell :is(.accounts-offline,.accounts-configuration,.accounts-microsoft,.discover-search,.discover-target) { border-radius: var(--radius, 6px); padding: 1.4rem; }
+.modern-shell .accounts-list { grid-template-columns: minmax(0,1fr); gap: 0; }
+.modern-shell .accounts-row { background: transparent; padding: 1rem 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; }
+.modern-shell .accounts-row > .accounts-identity { flex: 1 1 16rem; }
+.modern-shell .accounts-row > .accounts-actions { width: auto; }
+.modern-shell .accounts-notice, .modern-shell .discover-error { border-left-width: 1px; border-radius: var(--radius, 6px); }
+.modern-shell .discover-intro h2 { font-size: max(20px,1.45em); letter-spacing: 0; }
+.modern-shell .discover-result-list { gap: 0; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius, 6px); overflow: hidden; }
+.modern-shell .discover-result { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 1.2rem; background: transparent; }
+.modern-shell .discover-result:last-child { border-bottom: 0; }
+.modern-shell .discover-project-symbol { border: 0; background: transparent; width: 2.6rem; height: 2.6rem; color: var(--muted); }
+.modern-shell .discover-guidance { padding-left: 0; border-left: 0; }
+.modern-shell .versions-kind-filters button[aria-pressed=true] { background: var(--selected); box-shadow: none; }
+.modern-shell .versions-catalog { border-radius: var(--radius, 6px); }
+.modern-shell .versions-row { min-height: 3.85rem; padding: .85rem 1.2rem; }
+.modern-shell .downloads-counts { display: flex; gap: 1.5rem; flex-wrap: wrap; padding: .8rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.modern-shell .downloads-counts > div { display: flex; align-items: center; gap: .55rem; padding: 0; background: transparent; border: 0; border-radius: 0; }
+.modern-shell .downloads-counts strong { font-size: max(14px,1em); font-weight: 600; }
+.modern-shell .downloads-counts span { font-size: max(12px,.86em); }
+.modern-shell .queue-list { gap: 0; overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius, 6px); }
+.modern-shell .queue-task { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; padding: 1.2rem; }
+.modern-shell .queue-task:last-child { border-bottom: 0; }
+.modern-shell .queue-task.is-selected { border-color: var(--border); background: var(--selected); }
+.modern-shell .queue-details { border-radius: var(--radius, 6px); padding: 1.2rem; }
+.modern-shell .queue-task[data-status=failed] .queue-status { color: var(--danger); }
+.modern-shell .logs-panel { border-radius: var(--radius, 6px); }
+.modern-shell .logs-console { font-size: max(12px,.93em); }
+.modern-shell .instance-detail-heading { margin-bottom: 1rem; }
+.modern-shell .instance-detail-heading h2 { margin: 0 0 .3rem; font-size: max(21px,1.5em); }
+.modern-shell .instance-detail-heading > .instance-actions { flex: 0 1 auto; }
+.modern-shell .instance-detail-section h3 { font-size: max(14px,1em); }
+.modern-shell .instance-inspector-content .instance-detail-heading { display: block; }
+.modern-shell .instance-inspector-content .instance-detail-heading h2 { font-size: max(18px,1.25em); }
+.modern-shell .instance-inspector-content .instance-detail-heading > .instance-actions { margin-top: .9rem; }
+.modern-shell .instance-inspector-content .instance-detail-section { padding: 1rem 0; }
+.modern-shell .instance-inspector-content .instance-section-heading { align-items: center; }
+.modern-shell .instance-inspector-content .instance-section-heading > button { width: 100%; }
+.modern-shell .instance-inspector-content .instance-summary > div { grid-template-columns: minmax(0,1fr); gap: .25rem; }
+.modern-shell .instance-summary > div { font-size: max(13px,.93em); }
+.modern-shell .instance-summary dd small { font-size: max(12px,.86em); }
+.modern-dialog-theme .modern-business-dialog { border-radius: var(--radius, 6px); padding: 1.6rem; }
+.modern-dialog-theme :is(.dialog-error,.dialog-danger-note,.dialog-inherited,.dialog-import-row,.environment-row,.profile-loader-choice,.account-login-card) { border-radius: var(--radius, 6px); }
+.modern-dialog-theme .dialog-danger-action { background: var(--danger-action); color: #fff; }
+.modern-dialog-theme .dialog-import-list { gap: 0; }
+.modern-dialog-theme .dialog-import-row { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 1rem 0; }
+.modern-dialog-theme .environment-row { background: var(--bg); border-color: var(--border); }
+.modern-dialog-theme :is(.dialog-actions,.profile-dialog-actions,.account-login-footer) { padding-top: 1rem; margin-top: .7rem; }
 .modern-navigation-positioner { z-index: 45; max-width: calc(100vw - 16px); }
-.modern-navigation-menu { display: grid; min-width: min(20em, calc(100vw - 16px)); max-width: calc(100vw - 16px); max-height: calc(100dvh - 5em); overflow: auto; padding: 8px; background: var(--surface); color: var(--text); border: 1px solid var(--control-border, #77859a); border-radius: min(8px, var(--radius)); }
-.modern-navigation-menu [role^=menuitem] { display: flex; align-items: center; gap: 8px; padding: 10px; overflow-wrap: anywhere; border-radius: min(6px, var(--radius)); }
+.modern-navigation-menu { display: grid; min-width: min(20rem,calc(100vw - 16px)); max-width: calc(100vw - 16px); max-height: calc(100dvh - 5rem); overflow: auto; padding: .5rem; background: var(--surface); color: var(--text); border: 1px solid var(--control-border); border-radius: var(--radius, 6px); }
+.modern-navigation-menu [role^=menuitem] { display: flex; align-items: center; gap: .65rem; padding: .7rem; min-height: 2.45rem; font-size: max(13px,.93em); overflow-wrap: anywhere; border-radius: var(--radius, 4px); }
 .modern-navigation-menu [role^=menuitem][data-highlighted] { background: var(--hover); outline: 2px solid var(--accent-ink); outline-offset: -2px; }
-@container (max-width: 48em) {
-  .modern-instances .instances-layout { grid-template-columns: minmax(0, 1fr); }
-  .modern-instances .instances-inspector { display: none; }
-}
-@media (max-width: 719px) {
+/* Suite-owned menu parts carry modern-portal and use the same semantic tokens. */
+@media (max-width:719px) {
   .modern-shell { flex-direction: column; }
   .modern-shell > .sidebar { display: none; }
-  .modern-shell > .mobile-navigation { display: flex; gap: 10px; align-items: center; flex: 0 0 auto; padding: .45em .75em; border-bottom: 1px solid var(--border); background: var(--sidebar); }
-  .modern-shell .mobile-navigation > button { flex: 0 0 auto; }
-  .modern-shell .mobile-navigation-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .82em; }
+  .modern-shell > .mobile-navigation { display: flex; gap: .65rem; align-items: center; flex: 0 0 auto; padding: .45rem .85rem; border-bottom: 1px solid var(--border); background: var(--sidebar); }
+  .modern-shell .mobile-navigation-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: max(12px,.86em); }
   .modern-shell .workspace { width: 100%; min-height: 0; }
-  .modern-shell .workspace > main { padding: .85em; }
-  .modern-shell .settings-save-actions { flex-direction: column; align-items: stretch; }
-  .modern-shell .settings-save-actions > button { flex: 0 0 auto; white-space: nowrap; overflow-wrap: normal; }
+  .modern-shell .workspace > main { padding: 0 .85rem .85rem; }
+  .modern-shell .settings-save-actions { align-items: stretch; }
+  .modern-shell .settings-save-actions > button { flex: 1 1 auto; white-space: nowrap; }
   .modern-shell .settings-row { flex-direction: column; align-items: stretch; }
   .modern-shell .settings-row > .toggle { align-self: start; }
   .modern-shell .settings-range-control, .modern-shell .settings-swatches { flex-basis: auto; }
+  .modern-shell :is(.accounts-offline,.accounts-configuration,.accounts-microsoft,.discover-search,.discover-target,.settings-section) { padding: 1.1rem; }
 }
-@media (max-width: 420px) {
-  .modern-shell .settings-save-bar { padding: 10px; }
-  .modern-shell .settings-section { padding: 12px; }
-  .modern-dialog-theme :is(.dialog-actions, .profile-dialog-actions, .account-login-footer) { display: flex; flex-direction: column; align-items: stretch; }
-  .modern-dialog-theme :is(.dialog-actions, .profile-dialog-actions, .account-login-footer) > button { width: 100%; min-width: 0; white-space: normal; overflow-wrap: normal; word-break: normal; }
+@media (max-width:420px) {
+  .modern-shell .settings-save-bar { padding: .75rem; }
+  .modern-dialog-theme .modern-business-dialog { padding: 1.1rem; }
+  .modern-dialog-theme :is(.dialog-actions,.profile-dialog-actions,.account-login-footer) { display: flex; flex-direction: column; align-items: stretch; }
+  .modern-dialog-theme :is(.dialog-actions,.profile-dialog-actions,.account-login-footer) > button { width: 100%; min-width: 0; white-space: normal; overflow-wrap: normal; word-break: normal; }
 }
 .modern-shell.reduce-motion *, .modern-shell.reduce-motion *::before, .modern-shell.reduce-motion *::after,
-.modern-dialog-theme.reduce-motion *, .modern-dialog-theme.reduce-motion *::before, .modern-dialog-theme.reduce-motion *::after,
-.modern-shell.reduce-motion .toggle span, .modern-dialog-theme.reduce-motion .toggle span { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-@media (prefers-reduced-motion: reduce) {
+.modern-dialog-theme.reduce-motion *, .modern-dialog-theme.reduce-motion *::before, .modern-dialog-theme.reduce-motion *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+@media (prefers-reduced-motion:reduce) {
   .modern-shell *, .modern-shell *::before, .modern-shell *::after,
   .modern-dialog-theme *, .modern-dialog-theme *::before, .modern-dialog-theme *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

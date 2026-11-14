@@ -432,13 +432,13 @@ try {
     });
     await commitAppearance('ui_scale', 100); await action('instanceDraft.open', [originalKey]); await site(p + 'InstanceSettings-template').click(); await page.getByRole('listbox').waitFor();
     const baseline = await measureScale();
-    assert.ok(baseline.samePortal && Math.abs(baseline.popup - 16) < .2 && Math.abs(baseline.select - baseline.trigger) < .2, '100% baseline uses Dialog and trigger typography: ' + JSON.stringify(baseline));
+    assert.ok(baseline.samePortal && Math.abs(baseline.popup - 14) < .2 && Math.abs(baseline.select - baseline.trigger) < .2, '100% baseline uses approved 14px Dialog and trigger typography: ' + JSON.stringify(baseline));
     await page.keyboard.press('Escape'); assert.ok(await snapshot('instanceDraft.profile')); await site(p + 'InstanceSettings-cancel').click();
     await commitAppearance('ui_scale', 120); await action('instanceDraft.open', [originalKey]); await site(p + 'InstanceSettings-template').click(); await page.getByRole('listbox').waitFor();
     const scale = await measureScale();
     assert.ok(scale.samePortal, 'nested Select remains in Dialog Portal');
     assert.equal(scale.committed, 120); assert.equal(scale.resolved, 120); assert.equal(scale.variable, '120%');
-    assert.ok(Math.abs(scale.popup - 19.2) < .2 && Math.abs(scale.popup / baseline.popup - 1.2) < .02 && Math.abs(scale.trigger / baseline.trigger - 1.2) < .02 && Math.abs(scale.select / baseline.select - 1.2) < .02 && Math.abs(scale.select - scale.trigger) < .2, '120% font scale applies once with trigger typography: ' + JSON.stringify({ baseline, scale }));
+    assert.ok(Math.abs(scale.popup - 16.8) < .2 && Math.abs(scale.popup / baseline.popup - 1.2) < .02 && Math.abs(scale.trigger / baseline.trigger - 1.2) < .02 && Math.abs(scale.select / baseline.select - 1.2) < .02 && Math.abs(scale.select - scale.trigger) < .2, '120% font scale applies once with approved Dialog and trigger typography: ' + JSON.stringify({ baseline, scale }));
     report.scale.push({ suite, baseline, scale });
     await page.keyboard.press('Escape'); assert.ok(await snapshot('instanceDraft.profile')); await site(p + 'InstanceSettings-cancel').click(); await commitAppearance('ui_scale', 100);
     await action('profileDraft.openCreate', ['1.21.1']);
