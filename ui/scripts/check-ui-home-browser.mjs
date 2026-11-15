@@ -3,11 +3,11 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createBrowserFixture } from './lib/ui-browser-fixture.mjs';
 import { initialConfig } from './lib/hook-test-host.mjs';
-import { globalRouteControl } from './lib/ui-redesign-navigation.mjs';
+import { globalRouteControl, globalRouteFocusReturn, prepareGlobalRouteControl } from './lib/ui-redesign-navigation.mjs';
 
 const out = resolve('.test-data/default-ui-task4', process.env.PARADOX_HOME_EVIDENCE || 'focused');
 await mkdir(out, { recursive: true });
-const report = { rows: [] };
+const report = { rows: [], errors: [], cspViolations: [], sourceRequests: [] };
 const config = structuredClone(initialConfig);
 config.settings.language = 'en-US';
 config.profiles[0].name = 'Alpha world';
@@ -18,7 +18,7 @@ for (const suite of ['immersive', 'modern']) {
   const checks = [];
   const pass = name => { checks.push(name); console.log(`PASS ${suite}: ${name}`); };
   const primary = () => page.locator(suite === 'immersive' ? '.immersive-launch-primary' : '.launch-button');
-  const navigation = () => page.locator(suite === 'immersive' ? '.window-navigation' : '.sidebar');
+  const navigation = () => page.locator(suite === 'immersive' ? '.window-bar' : '.sidebar');
   const selectedState = () => page.locator('.home-instance-state');
   const act = (fn, arg) => page.evaluate(fn, arg);
   const wait = fn => page.waitForFunction(fn);
@@ -63,6 +63,20 @@ for (const suite of ['immersive', 'modern']) {
         assert.ok(box.x >= 0 && box.x + box.width <= viewport.width + 1, 'primary horizontal reachability');
         assert.ok(await navigation().evaluate((e, suite) => suite === 'modern' ? e.clientWidth < innerWidth / 2 : e.getBoundingClientRect().left >= -1 && e.getBoundingClientRect().right <= innerWidth + 1, suite));
         assert.equal(await page.locator('body').evaluate(e => e.scrollWidth <= innerWidth), true);
+        if (suite === 'immersive') {
+          const chrome = await navigation().evaluate(e => {
+            const nav = e.querySelector('.window-navigation');
+            return {
+              overflow: e.scrollWidth > e.clientWidth + 1,
+              navigationOverflow: !!nav?.clientWidth && nav.scrollWidth > nav.clientWidth + 1,
+              controls: [...e.querySelectorAll('button')].map(control => control.getBoundingClientRect())
+                .filter(rect => rect.width > 0).map(rect => ({ left: rect.left, right: rect.right })),
+            };
+          });
+          assert.equal(chrome.overflow, false, 'title bar does not overflow horizontally');
+          assert.equal(chrome.navigationOverflow, false, 'global navigation has no horizontal scrolling');
+          assert.ok(chrome.controls.every(rect => rect.left >= -1 && rect.right <= viewport.width + 1), 'visible title-bar controls remain within the viewport');
+        }
         if (suite === 'immersive' && viewport.width <= 640) assert.equal(await page.locator('.immersive-launch-split').evaluate(e => getComputedStyle(e).position), 'fixed');
         await page.screenshot({ path: resolve(out, `current-default-${suite}-${theme}-${viewport.width}.png`) });
       }
@@ -78,7 +92,8 @@ for (const suite of ['immersive', 'modern']) {
       await window.suiteBuiltinsFixture.actions.accounts.reload();
     });
     await wait(() => !!window.suiteBuiltinsFixture.snapshot.avatars['account-a']);
-    assert.ok(await page.locator('.account-avatar img').count() >= (suite === 'immersive' ? 1 : 2));
+    assert.ok(await page.locator('.account-avatar img').count() >= 1, 'the real homepage account keeps its cached avatar after removing duplicate navigation accounts');
+    assert.equal(await act(() => window.suiteBuiltinsFixture.snapshot.navigation.routes.find(route => route.id === 'accounts').navigation), false, 'account is registered but is reached from the homepage');
     assert.equal(await page.locator('.account-avatar img').first().getAttribute('src').then(s => s.startsWith('data:image/png')), true);
     assert.ok(!(await page.locator('.app-shell').innerHTML()).includes('https://textures.minecraft.net'));
     await act(async () => window.suiteBuiltinsFixture.actions.accounts.select(null));
@@ -89,7 +104,7 @@ for (const suite of ['immersive', 'modern']) {
     await page.locator(suite === 'immersive' ? '.immersive-hint-copy button' : '.home-personalize').click();
     await wait(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'settings');
     assert.equal(await act(() => window.suiteBuiltinsFixture.snapshot.settings.tab), 'appearance');
-    await globalRouteControl(page, suite, 'home', 'Play').click();
+    await (await prepareGlobalRouteControl(page, suite, 'home', 'Play')).click();
     await wait(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'home');
     pass('appearance_deep_link_and_registry_home_return');
     // Each window action uses the existing public owner.
@@ -98,14 +113,29 @@ for (const suite of ['immersive', 'modern']) {
       await button.focus(); await page.keyboard.press('Enter');
     }
     assert.ok((await act(() => window.foundationDesktop.calls.filter(c => c.command.startsWith('plugin:window|')))).length >= 1);
-    await globalRouteControl(page, suite, 'accounts', 'Accounts').focus(); await page.keyboard.press('Enter');
+    const accountControl = await prepareGlobalRouteControl(page, suite, 'accounts', 'Accounts');
+    await act(() => { window.homeBoundary.accountOwner = window.suiteBuiltinsFixture.actions; });
+    await accountControl.focus(); await page.keyboard.press('Enter');
     await wait(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'accounts');
-    await act(() => window.suiteBuiltinsFixture.actions.navigation.navigate('home'));
+    let enteredAccounts = false;
+    for (let index = 0; index < 30; index++) {
+      await page.keyboard.press('Tab');
+      enteredAccounts = await act(() => !!document.activeElement?.closest('.accounts-page'));
+      if (enteredAccounts) break;
+    }
+    assert.equal(enteredAccounts, true, 'keyboard continues into actual account-page controls after the homepage trigger unmounts');
+    assert.equal(await act(() => { const control = document.activeElement, css = getComputedStyle(control); return !control.disabled && parseFloat(css.outlineWidth) >= 2 && css.outlineStyle !== 'none' && window.suiteBuiltinsFixture.actions === window.homeBoundary.accountOwner; }), true, 'account destination has a visible keyboard focus and the same permanent action owner');
+    await (await prepareGlobalRouteControl(page, suite, 'home', 'Play')).click();
+    await wait(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'home');
     pass('keyboard_account_and_window_actions');
     if (suite === 'immersive') {
       const trigger = page.locator('.immersive-launch-select');
+      assert.equal(await trigger.locator('svg.lucide-chevron-down').count(), 1, 'instance selector has a downward arrow');
+      assert.equal(await trigger.locator('svg').getAttribute('aria-hidden'), 'true');
       await trigger.focus(); await page.keyboard.press('Enter');
       await page.getByRole('menu').waitFor();
+      const triggerBox = await trigger.boundingBox(), menuBox = await page.getByRole('menu').boundingBox();
+      assert.ok(menuBox.y >= triggerBox.y + triggerBox.height - 1, 'desktop instance menu opens below the downward selector');
       await page.keyboard.press('b'); await page.keyboard.press('Enter');
       await wait(() => window.suiteBuiltinsFixture.snapshot.profiles.activeKey === 'beta-instance');
       await page.getByRole('menu').waitFor({ state: 'hidden' });
@@ -117,7 +147,7 @@ for (const suite of ['immersive', 'modern']) {
       await page.waitForFunction(element => element === document.activeElement, await trigger.elementHandle(), { timeout: 3000 });
       assert.equal(await trigger.evaluate(e => e === document.activeElement), true);
       await act(async () => window.suiteBuiltinsFixture.actions.profiles.select('original-instance'));
-      pass('upward_split_menu_keyboard_typeahead_selection_escape_focus');
+      pass('downward_split_menu_geometry_keyboard_typeahead_selection_escape_focus');
     }
     // Launch-account selection and actual B launch remain separate from selected A.
     await primary().click();
@@ -174,6 +204,26 @@ for (const suite of ['immersive', 'modern']) {
     await act(() => window.foundationDesktop.emit('launcher://downloads', [{ id: 'task-beta', kind: 'install', name: 'Beta install', profile_key: 'beta-instance', java_major: null, status: 'queued', message: '', progress: null }]));
     await wait(() => window.suiteBuiltinsFixture.snapshot.downloads.active);
     assert.equal(await primary().isDisabled(), false, 'unrelated queued install must not block install A');
+    if (suite === 'immersive') {
+      const indicator = page.locator('.download-indicator');
+      await indicator.waitFor();
+      for (const viewport of [{ width: 640, height: 480 }, { width: 320, height: 240 }]) {
+        await page.setViewportSize(viewport);
+        await primary().scrollIntoViewIfNeeded();
+        await settled();
+        const splitBox = await page.locator('.immersive-launch-split').boundingBox(), indicatorBox = await indicator.boundingBox();
+        assert.ok(splitBox.x + splitBox.width + 4 <= indicatorBox.x, 'active download indicator leaves the compact instance-selector area clear');
+        assert.ok(indicatorBox.x >= 0 && indicatorBox.y >= 0 && indicatorBox.x + indicatorBox.width <= viewport.width + 1 && indicatorBox.y + indicatorBox.height <= viewport.height + 1, 'download indicator remains in the viewport');
+        for (const control of [primary(), page.locator('.immersive-launch-select'), indicator]) {
+          assert.equal(await control.evaluate(e => { const rect = e.getBoundingClientRect(); return e.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)); }), true, 'launch, instance selector and task controls are not covered');
+        }
+        assert.equal(await act(() => window.suiteBuiltinsFixture.snapshot.profiles.activeKey), 'original-instance');
+        assert.equal(await act(() => window.suiteBuiltinsFixture.snapshot.downloads.tasks[0].profile_key), 'beta-instance');
+        await page.screenshot({ path: resolve(out, `state-${suite}-B-queued-A-selected-${viewport.width}.png`) });
+      }
+      await page.setViewportSize({ width: 1240, height: 720 });
+      pass('queued_B_indicator_clears_compact_split_and_preserves_A_target');
+    }
     await primary().click();
     assert.equal(await act(() => window.foundationDesktop.calls.filter(c => c.command === 'enqueue_install' && c.args.key === 'original-instance').length), 1);
     await act(() => window.foundationDesktop.emit('launcher://downloads', [{ id: 'task-alpha', kind: 'install', name: 'Alpha install', profile_key: 'original-instance', java_major: null, status: 'running', message: '', progress: null }]));
@@ -214,36 +264,79 @@ for (const suite of ['immersive', 'modern']) {
       for (const id of ['component.window-bar','component.app-sidebar','component.account-avatar','component.activity-bar']) {
         const path = c.getSnapshot().draft.manifest.views[id];
         if (!path.startsWith(suite + '/components/')) throw Error('component mapping not owned by suite');
-        c.actions.patchFile(path, c.getSnapshot().draft.files[path].text.replace('data-ui-site=', `data-task4-component="${id}" data-ui-site=`));
+        const source = c.getSnapshot().draft.files[path].text;
+        const site = suite === 'immersive' && id === 'component.app-sidebar' ? 'data-ui-site="AppSidebar-context"' : 'data-ui-site=';
+        if (!source.includes(site)) throw Error('component source marker site is absent');
+        c.actions.patchFile(path, source.replace(site, `data-task4-component="${id}" ${site}`));
       }
       if (!await c.actions.preview()) throw Error('component source preview failed');
       c.actions.createFile('RouteProbe.tsx', 'tsx');
       c.actions.patchFile('RouteProbe.tsx', 'export default()=> <h2 data-ui-site="registry-probe">Registered route probe</h2>');
       const manifest = c.getSnapshot().draft.manifest;
+      const acceptedBeforeInvalidRegistry = c.getActivation().primary;
+      c.actions.patchManifest({ routes: manifest.routes.filter(route => route.id !== 'accounts') });
+      if (await c.actions.preview()) throw Error('Incomplete registry without required accounts was accepted');
+      if (c.getActivation().primary !== acceptedBeforeInvalidRegistry) throw Error('Invalid registry replaced the accepted source activation');
       c.actions.patchManifest({ views: { ...manifest.views, 'page.custom.probe': 'RouteProbe.tsx' }, routes: [...manifest.routes.map(r => ['settings','accounts','downloads'].includes(r.id) ? { ...r, navigation: false } : r.id === 'instances' ? { ...r, title: 'Library renamed' } : r), { id:'custom.probe',entry:'RouteProbe.tsx',title:'Registry probe',description:'Probe',navigation:true,startupSelectable:true,order:1,icon:'UnknownIcon' }] });
       if (!await c.actions.preview()) throw Error('registry fixture preview failed');
       c.actions.close();
     }, suite);
-    assert.equal(await globalRouteControl(page, suite, 'accounts', 'Accounts').count(), 0);
+    if (suite === 'immersive') {
+      const navigationTrigger = page.locator('.window-navigation-trigger'), popup = page.locator('.immersive-navigation-menu');
+      await navigationTrigger.focus(); await page.keyboard.press('Enter'); await popup.waitFor();
+      assert.equal(await popup.getByRole('menuitem', { name: 'Accounts', exact: true }).count(), 0);
+      assert.equal(await popup.getByRole('menuitem', { name: 'Help and settings', exact: true }).count(), 0);
+      await page.keyboard.press('Escape'); await popup.waitFor({ state: 'hidden' });
+      await page.waitForFunction(element => element === document.activeElement, await navigationTrigger.elementHandle());
+    } else assert.equal(await page.locator('.sidebar-account').count(), 0);
+    assert.equal(await globalRouteControl(page, suite, 'accounts', 'Accounts').count(), 1, 'registered account remains reachable from home despite being hidden from global navigation');
+    assert.equal(await act(() => window.suiteBuiltinsFixture.snapshot.navigation.routes.find(route => route.id === 'accounts').navigation), false);
     assert.ok(await page.locator('[data-task4-component="component.window-bar"]').count());
     assert.ok(await page.locator('[data-task4-component="component.account-avatar"]').count());
     if (suite === 'immersive') {
-      await globalRouteControl(page, suite, 'instances', 'Library renamed').click();
+      await (await prepareGlobalRouteControl(page, suite, 'instances', 'Library renamed')).click();
       await wait(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'instances');
-      assert.ok(await page.locator('[data-task4-component="component.app-sidebar"]').count());
-      await globalRouteControl(page, suite, 'home', 'Play').click();
+      await act(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      const betaDetails = page.locator('.instance-row[data-profile-key="beta-instance"] [data-ui-site$=":ProfileCard-view"]');
+      await betaDetails.scrollIntoViewIfNeeded(); await betaDetails.focus();
+      assert.equal(await betaDetails.evaluate(element => document.activeElement === element), true, 'actual beta details keyboard action owns focus after the route settles');
+      await page.keyboard.press('Enter');
+      await wait(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'custom.instance-details' && window.suiteBuiltinsFixture.snapshot.navigation.params.profileKey === 'beta-instance' && window.suiteBuiltinsFixture.snapshot.content.selectedProfileKey === 'beta-instance');
+      assert.ok(await page.locator('.instance-context-sidebar[data-task4-component="component.app-sidebar"]').count());
+      assert.match(await page.locator('.sidebar-instance').innerText(), /Beta world/);
+      assert.equal(await act(() => window.suiteBuiltinsFixture.snapshot.profiles.activeKey), 'original-instance', 'opening B details does not change the launch target A');
+      await (await prepareGlobalRouteControl(page, suite, 'home', 'Play')).click();
       await primary().waitFor();
     } else assert.ok(await page.locator('[data-task4-component="component.app-sidebar"]').count());
     await act(() => window.foundationDesktop.emit('launcher://activity', { action: 'launch', status: 'running', message: 'Source component probe' }));
     await page.locator('[data-task4-component="component.activity-bar"]').waitFor();
     await act(() => window.foundationDesktop.emit('launcher://activity', { action: 'launch', status: 'finished', message: 'Done' }));
     assert.equal(await page.locator('.home-personalize, .immersive-customize-hint').count(), 0);
-    assert.equal(await page.locator('.window-controls').getByRole('button', { name: 'Help and settings' }).count(), 0);
-    await globalRouteControl(page, suite, 'instances', 'Library renamed').waitFor();
-    await globalRouteControl(page, suite, 'custom.probe', 'Registry probe').click();
+    if (suite === 'modern') assert.equal(await page.locator('.window-controls').getByRole('button', { name: 'Help and settings' }).count(), 0);
+    await (await prepareGlobalRouteControl(page, suite, 'instances', 'Library renamed')).waitFor();
+    await (await prepareGlobalRouteControl(page, suite, 'custom.probe', 'Registry probe')).click();
     await page.getByRole('heading', { name: 'Registered route probe' }).waitFor();
-    await globalRouteControl(page, suite, 'home', 'Play').click();
+    await (await prepareGlobalRouteControl(page, suite, 'home', 'Play')).click();
     await primary().waitFor();
+    // A valid suite can replace its account entry with readonly presentation;
+    // the host registry itself must still retain all required builtin routes.
+    await act(async suite => {
+      const c = window.suiteBuiltinsFixture.controller, path = `${suite}/Home.tsx`;
+      const source = c.getSnapshot().draft.files[path].text;
+      if (!source.includes("registered('accounts')")) throw Error('Registered homepage account capability is absent');
+      window.homeReadonlySource = { path, source };
+      c.actions.patchFile(path, source.replace("registered('accounts')", 'false'));
+      if (!await c.actions.preview()) throw Error('Readonly account source customization failed');
+    }, suite);
+    await page.locator('[data-ui-site$=":Home-account-readonly"]').waitFor();
+    assert.equal(await globalRouteControl(page, suite, 'accounts', 'Accounts').count(), 0, 'actual customized readonly account presentation has no action');
+    assert.equal(await act(() => window.suiteBuiltinsFixture.actions === window.homeBoundary.accountOwner), true, 'readonly source presentation retains the original business owner');
+    await act(async () => {
+      const c = window.suiteBuiltinsFixture.controller, { path, source } = window.homeReadonlySource;
+      c.actions.patchFile(path, source);
+      if (!await c.actions.preview()) throw Error('Original registered account source restore failed');
+    });
+    await globalRouteControl(page, suite, 'accounts', 'Accounts').waitFor();
     await page.screenshot({ path: resolve(out, `source-customized-fixture-${suite}-registry.png`) });
     pass('source_components_individually_editable_primary_CSS_identity_hidden_registry_custom_routes');
     // Host states use the same existing loader/reload owner after remount.
@@ -266,7 +359,10 @@ for (const suite of ['immersive', 'modern']) {
     await page.screenshot({ path: resolve(out, `failure-${suite}.png`) });
     report.rows.push({ suite, checks, failure: String(error), errors: fixture.observedPageErrors });
     throw error;
-  } finally { await writeFile(resolve(out, 'report.json'), JSON.stringify(report, null, 2)); await fixture.close(); }
+  } finally {
+    report.errors.push(...fixture.observedPageErrors); report.cspViolations.push(...fixture.observedCspViolations); report.sourceRequests.push(...fixture.observedSourceModuleRequests);
+    await writeFile(resolve(out, 'report.json'), JSON.stringify(report, null, 2)); await fixture.close();
+  }
 }
 
 // Browser-only capability is real public projection, not disabled by local UI logic.
@@ -283,4 +379,9 @@ try {
     assert.equal(await page.locator('.window-controls button:disabled').count(), 3);
   }
   report.rows.push({ suite: 'browser-only', checks: ['desktop_capabilities_and_disabled_window_controls'] });
-} finally { await browserFixture.close(); await writeFile(resolve(out, 'report.json'), JSON.stringify(report, null, 2)); }
+} finally {
+  report.errors.push(...browserFixture.observedPageErrors); report.cspViolations.push(...browserFixture.observedCspViolations); report.sourceRequests.push(...browserFixture.observedSourceModuleRequests);
+  await browserFixture.close(); await writeFile(resolve(out, 'report.json'), JSON.stringify(report, null, 2));
+}
+assert.deepEqual(report.errors, []); assert.deepEqual(report.cspViolations, []);
+if (process.env.PARADOX_TEST_NATIVE_CSP === '1') assert.deepEqual(report.sourceRequests, [], 'compiled+CSP home uses no application source modules');

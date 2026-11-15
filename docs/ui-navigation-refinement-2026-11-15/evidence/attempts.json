@@ -1,0 +1,534 @@
+[
+  {
+    "lane": "compiled-final-csp",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-home-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:50:25.6161651Z",
+    "finishedAt": "2026-11-15T09:50:50.4906863Z",
+    "exitCode": 0,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1442",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/compiled-final/home/execution.json"
+  },
+  {
+    "lane": "compiled-final-csp",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-logs-responsive-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:51:44.7620675Z",
+    "finishedAt": "2026-11-15T09:54:19.4759559Z",
+    "exitCode": 0,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1442",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/compiled-final/logs/execution.json"
+  },
+  {
+    "lane": "compiled-final-csp",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-navigation-refinement-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:50:00.3873696Z",
+    "finishedAt": "2026-11-15T09:51:44.6058139Z",
+    "exitCode": 0,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1442",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/compiled-final/navigation/execution.json"
+  },
+  {
+    "lane": "compiled-final-csp",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-versions-downloads-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:48:28.8902346Z",
+    "finishedAt": "2026-11-15T09:48:49.0355979Z",
+    "exitCode": 0,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1442",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/compiled-final/versions/execution.json"
+  },
+  {
+    "lane": "dev",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-home-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:19:10.7323152Z",
+    "finishedAt": "2026-11-15T09:19:22.9227693Z",
+    "exitCode": 1,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev/home/execution.json",
+    "failure": null
+  },
+  {
+    "lane": "dev",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-navigation-refinement-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:19:10.7340886Z",
+    "finishedAt": "2026-11-15T09:19:14.4596274Z",
+    "exitCode": 1,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev/navigation/execution.json",
+    "failure": {
+      "suite": "modern",
+      "language": "en-US",
+      "message": "page.evaluate: TypeError: action is not a function\n    at eval (eval at evaluate (:311:30), <anonymous>:4:20)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+      "stack": "page.evaluate: TypeError: action is not a function\n    at eval (eval at evaluate (:311:30), <anonymous>:4:20)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at launcherAction (F:\\rust-code\\Paradox Launcher\\ui\\scripts\\lib\\ui-redesign-scenarios.mjs:28:15)\n    at a (F:\\rust-code\\Paradox Launcher\\ui\\scripts\\check-ui-navigation-refinement-browser.mjs:29:47)\n    at F:\\rust-code\\Paradox Launcher\\ui\\scripts\\check-ui-navigation-refinement-browser.mjs:53:11"
+    }
+  },
+  {
+    "lane": "dev-final",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-home-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:32:02.5248029Z",
+    "finishedAt": "2026-11-15T09:32:53.3858492Z",
+    "exitCode": 1,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-final/home/execution.json",
+    "failure": null
+  },
+  {
+    "lane": "dev-final",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-logs-responsive-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:40:05.4542371Z",
+    "finishedAt": "2026-11-15T09:43:20.2225424Z",
+    "exitCode": 0,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-final/logs/execution.json"
+  },
+  {
+    "lane": "dev-final",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-navigation-refinement-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:32:02.5525434Z",
+    "finishedAt": "2026-11-15T09:32:07.9530975Z",
+    "exitCode": 1,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-final/navigation/execution.json",
+    "failure": {
+      "suite": "modern",
+      "language": "en-US",
+      "message": "Expected values to be strictly equal:\n\n'' !== '1.21.1'\n",
+      "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'' !== '1.21.1'\n\n    at file:///F:/rust-code/Paradox%20Launcher/ui/scripts/check-ui-navigation-refinement-browser.mjs:78:12"
+    }
+  },
+  {
+    "lane": "dev-final",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-versions-downloads-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:39:28.3225922Z",
+    "finishedAt": "2026-11-15T09:39:31.0674364Z",
+    "exitCode": 1,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-final/versions/execution.json",
+    "failure": null
+  },
+  {
+    "lane": "dev-final-verified",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-navigation-refinement-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:43:42.3136923Z",
+    "finishedAt": "2026-11-15T09:44:19.9572417Z",
+    "exitCode": 1,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-final-verified/navigation/execution.json",
+    "failure": {
+      "suite": "immersive",
+      "language": "en-US",
+      "message": "account input geometry is usable at the current window and scale: {\"row\":{\"suite\":\"immersive\",\"language\":\"en-US\",\"theme\":\"dark\",\"scale\":85,\"viewport\":{\"width\":640,\"height\":480},\"checks\":[\"no_top_horizontal_scroll_stable_chrome\",\"global_menu_escape_real_focus_no_duplicate_download_entries\",\"corner_indicator_and_launch_actions_uncovered\"],\"chrome\":{\"documentWidth\":640,\"viewportWidth\":640,\"barWidth\":640,\"barScrollWidth\":640,\"navigationWidth\":0,\"navigationScrollWidth\":0,\"sidebarHeight\":0,\"sidebarScrollHeight\":0,\"controlsInside\":true},\"indicator\":{\"x\":591.25,\"y\":431.25,\"width\":39,\"height\":39,\"inside\":true,\"hit\":true},\"dock\":[{\"x\":10.75,\"y\":409.046875,\"width\":535.96875,\"height\":61.515625,\"inside\":true,\"hit\":true},{\"x\":546.71875,\"y\":409.046875,\"width\":36.390625,\"height\":61.515625,\"inside\":true,\"hit\":true}],\"accountButton\":{\"x\":16.890625,\"y\":62.375,\"width\":606.21875,\"height\":35.03125,\"inside\":true,\"hit\":true},\"accountInputs\":[]},\"geometry\":{\"x\":33,\"y\":351.984375,\"width\":567,\"height\":33.1875,\"inside\":true,\"hit\":false}}",
+      "stack": "AssertionError [ERR_ASSERTION]: account input geometry is usable at the current window and scale: {\"row\":{\"suite\":\"immersive\",\"language\":\"en-US\",\"theme\":\"dark\",\"scale\":85,\"viewport\":{\"width\":640,\"height\":480},\"checks\":[\"no_top_horizontal_scroll_stable_chrome\",\"global_menu_escape_real_focus_no_duplicate_download_entries\",\"corner_indicator_and_launch_actions_uncovered\"],\"chrome\":{\"documentWidth\":640,\"viewportWidth\":640,\"barWidth\":640,\"barScrollWidth\":640,\"navigationWidth\":0,\"navigationScrollWidth\":0,\"sidebarHeight\":0,\"sidebarScrollHeight\":0,\"controlsInside\":true},\"indicator\":{\"x\":591.25,\"y\":431.25,\"width\":39,\"height\":39,\"inside\":true,\"hit\":true},\"dock\":[{\"x\":10.75,\"y\":409.046875,\"width\":535.96875,\"height\":61.515625,\"inside\":true,\"hit\":true},{\"x\":546.71875,\"y\":409.046875,\"width\":36.390625,\"height\":61.515625,\"inside\":true,\"hit\":true}],\"accountButton\":{\"x\":16.890625,\"y\":62.375,\"width\":606.21875,\"height\":35.03125,\"inside\":true,\"hit\":true},\"accountInputs\":[]},\"geometry\":{\"x\":33,\"y\":351.984375,\"width\":567,\"height\":33.1875,\"inside\":true,\"hit\":false}}\n    at file:///F:/rust-code/Paradox%20Launcher/ui/scripts/check-ui-navigation-refinement-browser.mjs:270:16",
+      "actual": {
+        "navigation": {
+          "routeId": "accounts",
+          "params": {},
+          "search": "",
+          "routesReady": true,
+          "routes": [
+            {
+              "id": "home",
+              "entry": "immersive/Home.tsx",
+              "title": "nav.home",
+              "description": "pages.home.description",
+              "navigation": true,
+              "startupSelectable": true,
+              "order": 0,
+              "icon": "House"
+            },
+            {
+              "id": "instances",
+              "entry": "immersive/pages/InstancesPage.tsx",
+              "title": "nav.instances",
+              "description": "pages.instances.description",
+              "navigation": true,
+              "startupSelectable": true,
+              "order": 10,
+              "icon": "Layers"
+            },
+            {
+              "id": "custom.instance-details",
+              "entry": "immersive/pages/InstanceDetailPage.tsx",
+              "title": "instancePages.title",
+              "description": "instancePages.description",
+              "navigation": false,
+              "startupSelectable": false,
+              "order": 11,
+              "icon": "Box"
+            },
+            {
+              "id": "custom.versions",
+              "entry": "immersive/pages/VersionsPage.tsx",
+              "title": "nav.downloadCenter",
+              "description": "versionDownloads.description",
+              "navigation": true,
+              "startupSelectable": true,
+              "order": 15,
+              "icon": "Boxes"
+            },
+            {
+              "id": "downloads",
+              "entry": "immersive/pages/DownloadsPage.tsx",
+              "title": "nav.downloads",
+              "description": "pages.downloads.description",
+              "navigation": false,
+              "startupSelectable": true,
+              "order": 20,
+              "icon": "Download"
+            },
+            {
+              "id": "accounts",
+              "entry": "immersive/pages/AccountsPage.tsx",
+              "title": "nav.accounts",
+              "description": "pages.accounts.description",
+              "navigation": false,
+              "startupSelectable": true,
+              "order": 30,
+              "icon": "UserRound"
+            },
+            {
+              "id": "content",
+              "entry": "immersive/pages/DiscoverPage.tsx",
+              "title": "nav.content",
+              "description": "content.description",
+              "navigation": false,
+              "startupSelectable": true,
+              "order": 40,
+              "icon": "Compass"
+            },
+            {
+              "id": "logs",
+              "entry": "immersive/pages/LogsPage.tsx",
+              "title": "nav.logs",
+              "description": "pages.logs.description",
+              "navigation": true,
+              "startupSelectable": true,
+              "order": 50,
+              "icon": "ScrollText"
+            },
+            {
+              "id": "settings",
+              "entry": "immersive/pages/SettingsPage.tsx",
+              "title": "nav.settings",
+              "description": "pages.settings.description",
+              "navigation": true,
+              "startupSelectable": true,
+              "order": 60,
+              "icon": "Settings2"
+            }
+          ],
+          "requestedStartupRouteId": "home"
+        },
+        "downloads": {
+          "tasks": [],
+          "pending": [],
+          "active": false
+        },
+        "activeElement": "<body>\n    <div id=\"root\"><div class=\"app-shell immersive-shell immersive keyboard-navigation\" data-theme=\"dark\" data-ui-site=\"site:immersive%2FShell.tsx:Shell-1\" data-ui-source=\"immersive/Shell.tsx\" data-ui-node=\"element.div\" data-ui-scope=\"element.div element.div\" data-ui-root-target=\"element.div\" data-ui-selector=\"s939821039ead3707458137b4060a54e36c6ec3cc96f383790fced9390bbc8105 s0270c920fcded4"
+      }
+    }
+  },
+  {
+    "lane": "dev-final-verified",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-versions-downloads-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:43:42.3141460Z",
+    "finishedAt": "2026-11-15T09:43:48.7270067Z",
+    "exitCode": 1,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-final-verified/versions/execution.json",
+    "failure": null
+  },
+  {
+    "lane": "dev-final-verified-repeat-1",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-navigation-refinement-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:46:19.2491860Z",
+    "finishedAt": "2026-11-15T09:48:41.9427784Z",
+    "exitCode": 0,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-final-verified-repeat-1/navigation/execution.json"
+  },
+  {
+    "lane": "dev-final-verified-repeat-1",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-versions-downloads-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:46:19.2404643Z",
+    "finishedAt": "2026-11-15T09:47:01.4450152Z",
+    "exitCode": 0,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-final-verified-repeat-1/versions/execution.json"
+  },
+  {
+    "lane": "dev-repeat-1",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-home-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:34:55.9336369Z",
+    "finishedAt": "2026-11-15T09:35:44.6188935Z",
+    "exitCode": 1,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-repeat-1/home/execution.json",
+    "failure": null
+  },
+  {
+    "lane": "dev-repeat-1",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-navigation-refinement-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:34:55.9123074Z",
+    "finishedAt": "2026-11-15T09:35:34.8197354Z",
+    "exitCode": 1,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-repeat-1/navigation/execution.json",
+    "failure": {
+      "suite": "modern",
+      "language": "en-US",
+      "message": "page.waitForFunction: Timeout 30000ms exceeded.",
+      "stack": "page.waitForFunction: Timeout 30000ms exceeded.\n    at waitRoute (F:\\rust-code\\Paradox Launcher\\ui\\scripts\\check-ui-navigation-refinement-browser.mjs:31:51)\n    at activate (F:\\rust-code\\Paradox Launcher\\ui\\scripts\\check-ui-navigation-refinement-browser.mjs:33:246)\n    at async file:///F:/rust-code/Paradox%20Launcher/ui/scripts/check-ui-navigation-refinement-browser.mjs:90:5"
+    }
+  },
+  {
+    "lane": "dev-repeat-2",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-home-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:37:46.4262740Z",
+    "finishedAt": "2026-11-15T09:38:21.3408089Z",
+    "exitCode": 0,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-repeat-2/home/execution.json"
+  },
+  {
+    "lane": "dev-repeat-2",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-navigation-refinement-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:37:46.4442767Z",
+    "finishedAt": "2026-11-15T09:38:22.0187101Z",
+    "exitCode": 1,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-repeat-2/navigation/execution.json",
+    "failure": {
+      "suite": "modern",
+      "language": "en-US",
+      "message": "page.waitForFunction: Timeout 30000ms exceeded.",
+      "stack": "page.waitForFunction: Timeout 30000ms exceeded.\n    at F:\\rust-code\\Paradox Launcher\\ui\\scripts\\check-ui-navigation-refinement-browser.mjs:103:16"
+    }
+  },
+  {
+    "lane": "dev-repeat-3",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-navigation-refinement-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:39:18.1391350Z",
+    "finishedAt": "2026-11-15T09:39:56.3387897Z",
+    "exitCode": 1,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434",
+    "record": ".test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-repeat-3/navigation/execution.json",
+    "failure": {
+      "suite": "modern",
+      "language": "en-US",
+      "message": "locator.scrollIntoViewIfNeeded: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-ui-site=\"ModernLaunchTarget-action\"], [data-ui-site$=\":ModernLaunchTarget-action\"]')\u001b[22m\n",
+      "stack": "locator.scrollIntoViewIfNeeded: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-ui-site=\"ModernLaunchTarget-action\"], [data-ui-site$=\":ModernLaunchTarget-action\"]')\u001b[22m\n\n    at hit (F:\\rust-code\\Paradox Launcher\\ui\\scripts\\check-ui-navigation-refinement-browser.mjs:35:48)\n    at F:\\rust-code\\Paradox Launcher\\ui\\scripts\\check-ui-navigation-refinement-browser.mjs:240:34",
+      "actual": {
+        "navigation": {
+          "routeId": "home",
+          "params": {},
+          "search": "",
+          "routesReady": true,
+          "routes": [
+            {
+              "id": "home",
+              "entry": "modern/Home.tsx",
+              "title": "nav.home",
+              "description": "pages.home.description",
+              "navigation": true,
+              "startupSelectable": true,
+              "order": 0,
+              "icon": "House"
+            },
+            {
+              "id": "instances",
+              "entry": "modern/pages/InstancesPage.tsx",
+              "title": "nav.instances",
+              "description": "pages.instances.description",
+              "navigation": true,
+              "startupSelectable": true,
+              "order": 10,
+              "icon": "Layers"
+            },
+            {
+              "id": "custom.instance-details",
+              "entry": "modern/pages/InstanceDetailPage.tsx",
+              "title": "instancePages.title",
+              "description": "instancePages.description",
+              "navigation": false,
+              "startupSelectable": false,
+              "order": 11,
+              "icon": "Box"
+            },
+            {
+              "id": "custom.versions",
+              "entry": "modern/pages/VersionsPage.tsx",
+              "title": "nav.downloadCenter",
+              "description": "versionDownloads.description",
+              "navigation": true,
+              "startupSelectable": true,
+              "order": 15,
+              "icon": "Boxes"
+            },
+            {
+              "id": "downloads",
+              "entry": "modern/pages/DownloadsPage.tsx",
+              "title": "nav.downloads",
+              "description": "pages.downloads.description",
+              "navigation": false,
+              "startupSelectable": true,
+              "order": 20,
+              "icon": "Download"
+            },
+            {
+              "id": "accounts",
+              "entry": "modern/pages/AccountsPage.tsx",
+              "title": "nav.accounts",
+              "description": "pages.accounts.description",
+              "navigation": false,
+              "startupSelectable": true,
+              "order": 30,
+              "icon": "UserRound"
+            },
+            {
+              "id": "content",
+              "entry": "modern/pages/DiscoverPage.tsx",
+              "title": "nav.content",
+              "description": "content.description",
+              "navigation": false,
+              "startupSelectable": true,
+              "order": 40,
+              "icon": "Compass"
+            },
+            {
+              "id": "logs",
+              "entry": "modern/pages/LogsPage.tsx",
+              "title": "nav.logs",
+              "description": "pages.logs.description",
+              "navigation": true,
+              "startupSelectable": true,
+              "order": 50,
+              "icon": "ScrollText"
+            },
+            {
+              "id": "settings",
+              "entry": "modern/pages/SettingsPage.tsx",
+              "title": "nav.settings",
+              "description": "pages.settings.description",
+              "navigation": true,
+              "startupSelectable": true,
+              "order": 60,
+              "icon": "Settings2"
+            }
+          ],
+          "requestedStartupRouteId": "home"
+        },
+        "downloads": {
+          "tasks": [
+            {
+              "id": "geometry-active",
+              "kind": "install",
+              "name": "Download geometry-active",
+              "profile_key": "beta-instance",
+              "java_major": null,
+              "status": "running",
+              "message": "Real boundary fixture running",
+              "progress": null
+            }
+          ],
+          "pending": [],
+          "active": true
+        },
+        "activeElement": "<button type=\"button\" tabindex=\"0\" aria-haspopup=\"menu\" aria-expanded=\"false\" id=\"base-ui-_r_3_\" aria-label=\"Navigation menu\" data-ui-site=\"site:modern%2Fcomponents%2FAppSidebar.tsx:ModernSidebarMenu-trigger\" data-ui-source=\"modern/components/AppSidebar.tsx\" data-ui-node=\"component.menu-trigger\" data-ui-scope=\"element.div element.div component.uiview element.div element.div component.menu-root com"
+      }
+    }
+  }
+]

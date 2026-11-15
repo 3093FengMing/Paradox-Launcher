@@ -1,11 +1,12 @@
 /* One integrated chrome owner, with contextual navigation inside the workspace. */
-.immersive-shell.app-shell { display: flex; height: 100dvh; min-height: 0; padding-top: var(--titlebar-height); overflow: hidden; background: var(--bg); color: var(--text); line-height: 1.5; }
-.immersive-shell .window-bar { position: fixed; inset: 0 0 auto; height: var(--titlebar-height); z-index: 40; display: flex; align-items: center; gap: 1.2em; background: var(--titlebar); color: var(--text); user-select: none; border-bottom: 1px solid var(--border); }
-.immersive-shell .window-title { min-width: 0; display: flex; gap: .65em; align-items: center; padding-left: 1.6em; font-weight: 600; flex: 0 0 auto; }
+.immersive-shell.app-shell { --titlebar-height: 3.6em; display: flex; height: 100dvh; min-height: 0; padding-top: var(--titlebar-height); overflow: hidden; background: var(--bg); color: var(--text); line-height: 1.5; }
+.immersive-shell .window-bar { position: fixed; inset: 0 0 auto; height: var(--titlebar-height); z-index: 40; display: flex; align-items: center; gap: .8em; background: var(--titlebar); color: var(--text); user-select: none; border-bottom: 1px solid var(--border); }
+.immersive-shell .window-title { min-width: 0; display: flex; gap: .65em; align-items: center; padding-left: 1.25em; font-size: 1em; font-weight: 600; flex: 0 1 auto; }
 .immersive-shell .window-title > svg { color: var(--accent-ink); flex-shrink: 0; }
-.immersive-shell .window-title > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.immersive-shell .window-title small { font-weight: 400; color: var(--muted); margin-left: .3em; }
-.immersive-shell .window-navigation { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: safe center; gap: .3em; overflow-x: auto; padding: .5em .25em; overscroll-behavior-x: contain; }
+.immersive-shell .window-title > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.immersive-shell .window-title small { font-size: max(12px,.86em); font-weight: 400; color: var(--muted); margin-left: .6em; }
+.immersive-shell .window-navigation { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: .5em; padding: .5em .25em; }
+.immersive-shell .window-navigation-trigger { min-height: var(--c-control-height); flex-shrink: 0; gap: .45em; padding: .45em .65em; background: transparent; color: var(--muted); }
 .immersive-shell .window-route { flex: 0 0 auto; min-height: var(--c-control-height); padding: .45em .7em; background: transparent; color: var(--muted); border-radius: var(--c-radius); white-space: nowrap; }
 .immersive-shell .window-route[aria-current=page] { background: var(--c-navigation-active); color: var(--text); }
 .immersive-shell .window-route[aria-current=page] svg { color: var(--accent-ink); }
@@ -52,19 +53,21 @@
  .immersive-shell .workspace > main { padding: 1.5em; }
 }
 @media (max-width: 950px) {
- .immersive-shell .window-title > span { display: none; }
+ .immersive-shell .window-title small { display: none; }
  .immersive-shell .window-title { padding-left: .8em; }
  .immersive-shell .window-route { gap: .35em; }
 }
-@media (max-width: 719px) {
- .immersive-shell.app-shell { --titlebar-height: 7.2em; }
- .immersive-shell .window-bar { display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-rows: 3.4em minmax(0,1fr); gap: 0; padding: .25em .5em 0; }
- .immersive-shell .window-title { grid-row: 1; grid-column: 1; padding-left: .3em; font-size: max(13px,.95em); }
- .immersive-shell .window-title > span { display: block; }
- .immersive-shell .window-controls { grid-row: 1; grid-column: 2; padding-right: 0; }
+@media (max-width: 900px) {
+ .immersive-shell.app-shell { --titlebar-height: 3.4em; }
+ .immersive-shell .window-bar { gap: .35em; padding: 0 .35em; }
+ .immersive-shell .window-title { flex: 1; padding-left: .35em; font-size: 1em; }
+ .immersive-shell .window-title small { display: none; }
+ .immersive-shell .window-navigation { display: none; }
+ .immersive-shell .window-navigation-trigger { gap: .35em; padding: .4em .45em; }
+ .immersive-shell .window-controls { padding-right: 0; }
  .immersive-shell .window-controls button { width: 2.3em; }
- .immersive-shell .window-navigation { grid-row: 2; grid-column: 1 / -1; width: 100%; padding: .25em; gap: .3em; }
- .immersive-shell .window-route { padding: .45em .7em; }
+}
+@media (max-width: 719px) {
  .immersive-shell .workspace > main { padding: 1em; }
  .immersive-shell .page-heading h1 { font-size: 1.5em; }
 }
@@ -74,5 +77,4 @@
  .immersive-shell .window-controls button { width: 2.1em; }
 }
 
-.immersive-shell.compact .instance-directory-sidebar { flex-basis: 11.5em; width: 11.5em; padding: 1em .65em; }
 .immersive-shell.compact .instance-context-sidebar { flex-basis: 12em; width: 12em; padding: 1em .7em; }

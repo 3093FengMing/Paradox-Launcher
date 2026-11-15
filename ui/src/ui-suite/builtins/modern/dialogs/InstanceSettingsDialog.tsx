@@ -43,7 +43,7 @@ export default function InstanceSettingsDialog() {
   const editingBlocked = locked || !!s.activity || s.downloads.active || s.downloads.pending.length > 0 || !!s.window.request;
   const source = template?.name ?? t('argumentTemplates.global');
   const patch = (key: keyof ProfileOverrides, value: string | number | null) => a.patchOverride(key, value);
-  return <LauncherDialog title={t('instances.settings')} description={t('instanceDialog.description', { version: draft.game_version })} pending={locked} onClose={a.cancel} initialFocus={name} data-ui-site="ModernInstanceSettings-shell">
+  return <LauncherDialog title={t('instances.settings')} description={t('instanceDialog.description', { version: draft.game_version })} pending={locked} onClose={a.cancel} initialFocus={name} popupProps={{ className: 'modern-instance-settings-dialog' }} data-ui-site="ModernInstanceSettings-shell">
     <form className="business-dialog-form" data-ui-site="ModernInstanceSettings-form" onSubmit={event => { event.preventDefault(); if (s.instanceDraft.canSubmit) void a.submit(); }}>
       <section className="dialog-section" data-ui-site="ModernInstanceSettings-general">
         <h3 data-ui-site="ModernInstanceSettings-general-title">{t('businessDialogs.instanceGeneral')}</h3>

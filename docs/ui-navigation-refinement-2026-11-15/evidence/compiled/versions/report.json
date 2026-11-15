@@ -1,0 +1,48 @@
+{
+  "rows": [
+    {
+      "suite": "modern",
+      "checks": [
+        "versions_route_mount_cache_staleness_refresh_failure_138_versions_local_types_and_real_load_more",
+        "focused_create_loader_pair_debounce_late_result_isolation_failure_retains_draft_explicit_known_instance_install",
+        "rename_name_only_and_explicit_installed_repair_identity",
+        "six_status_four_kind_filters_unknown_bytes_real_file_progress_retry_new_id_original_retained_cancel_pending",
+        "real_bytes_speed_reused_failed_current_message_facts_and_small_window_detail"
+      ],
+      "errors": [],
+      "csp": []
+    },
+    {
+      "suite": "immersive",
+      "checks": [
+        "versions_route_mount_cache_staleness_refresh_failure_138_versions_local_types_and_real_load_more",
+        "focused_create_loader_pair_debounce_late_result_isolation_failure_retains_draft_explicit_known_instance_install",
+        "rename_name_only_and_explicit_installed_repair_identity",
+        "six_status_four_kind_filters_unknown_bytes_real_file_progress_retry_new_id_original_retained_cancel_pending",
+        "real_bytes_speed_reused_failed_current_message_facts_and_small_window_detail"
+      ],
+      "errors": [],
+      "csp": []
+    }
+  ],
+  "sourceHashes": {
+    "src/ui-suite/builtins/modern/pages/VersionsPage.tsx": "ba32bcb990f3c8280d3bb5c13a22bb7d6b2812d09bd93938752fddc6aeb38f5c",
+    "src/ui-suite/builtins/modern/pages/DownloadsPage.tsx": "af36665e402040ae9d6aca1e73803b6c062f0909e72d5e674a710c4285045c2e",
+    "src/ui-suite/builtins/modern/components/DownloadQueue.tsx": "2168465213c139863853a5d1aa31fb7337a1f547c7f59b843045ba60cf5ec757",
+    "src/ui-suite/builtins/modern/dialogs/ProfileDialog.tsx": "a0c7dbf1c40968f382ff0030ea1642778f29d27288c795dbe5542c4974a003cf",
+    "src/ui-suite/builtins/modern/styles/versions.css": "75d97703c0ed54592fc2ce688974059b31010763e87d1ffc502831c5f9468db0",
+    "src/ui-suite/builtins/modern/styles/downloads.css": "73996b55e4fa44175eaf5f2780b7518aaf92c54efa48565c82933f39305525d5",
+    "src/ui-suite/builtins/modern/styles/profile-dialog.css": "64b66a7cbee84b9aa37620a421ce499f7772c74cdfb09cb302f19558f262e112",
+    "src/ui-suite/builtins/immersive/pages/VersionsPage.tsx": "ab8ca37739ca10fbb34bdcf3c7502b1fe9816eed9896bc75de2eb531667e8050",
+    "src/ui-suite/builtins/immersive/pages/DownloadsPage.tsx": "77124d9e693ade348aeccb57ac766e87dfe4c78859321a5b20a966bd81ef3dc0",
+    "src/ui-suite/builtins/immersive/components/DownloadQueue.tsx": "849946bf0d08756644a31de1ada54eea9f124c1e2392b9d06f70ff7b77ea0500",
+    "src/ui-suite/builtins/immersive/dialogs/ProfileDialog.tsx": "3ef92548dcd59849da01851d430f96edb75e5d14fe3302d608b71a436148fa46",
+    "src/ui-suite/builtins/immersive/styles/versions.css": "6639d52315a1d58f6990e9065e6b97db7161db23f49cb3686594519cb5c4e470",
+    "src/ui-suite/builtins/immersive/styles/downloads.css": "6fc398db31eeb2e40a9c13d0e61d8360549483dfe93ca9cd63fcac85f3538491",
+    "src/ui-suite/builtins/immersive/styles/profile-dialog.css": "e05fa5e5796c46b07722b2dc711e96ed3838127cb09fcd83b97d9a39d54f75b4",
+    "src/ui-suite/builtins/common/lib/download-display.ts": "f7109768477864e1384bb6c15eab3a156999fde5cfeed261807e679a82b766e0"
+  },
+  "errors": [],
+  "cspViolations": [],
+  "sourceRequests": []
+}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownToLine, Search, Terminal } from 'lucide-react';
+import { ArrowDownToLine, Search, Terminal, Trash2 } from 'lucide-react';
 import { Button, Input, Panel, Toggle, UiIdentity } from '@paradox/ui';
 import { useLauncherActions, useLauncherSnapshot } from '@paradox/launcher';
 import { exportLogs } from '../../common/lib/download';
@@ -30,7 +30,7 @@ export default function LogsPage() {
         <Button className="secondary" disabled={!lines.length} onClick={() => exportLogs(lines)} data-ui-site="ImmersiveLogs-export">
           <ArrowDownToLine size={16} aria-hidden="true" data-ui-site="ImmersiveLogs-export-icon"/>{t('common.export')}
         </Button>
-        <Button className="secondary" onClick={() => void a.logs.clear()} data-ui-site="ImmersiveLogs-clear">{t('logs.clear')}</Button>
+        <Button className="secondary" onClick={() => void a.logs.clear()} data-ui-site="ImmersiveLogs-clear"><Trash2 size={16} aria-hidden="true" data-ui-site="ImmersiveLogs-clear-icon"/>{t('logs.clear')}</Button>
       </div>
     </header>
     <div className="logs-workspace" data-ui-site="ImmersiveLogs-workspace">
@@ -63,7 +63,7 @@ export default function LogsPage() {
           </header>
           <div className="logs-console" ref={consoleRef} role="region" tabIndex={0} aria-label={t('logDisplay.content')} data-ui-site="ImmersiveLogs-console">
             {shown.length ? shown.map(({ key, line }) => <UiIdentity key={key} namespace="log" value={key}>
-              <div className="logs-line" data-level={line.level} data-ui-site="ImmersiveLogs-line">
+              <div className="logs-line" data-level={line.level.toLowerCase()} data-ui-site="ImmersiveLogs-line">
                 <div className="logs-line-meta" data-ui-site="ImmersiveLogs-meta">
                   <time data-ui-site="ImmersiveLogs-time">{line.time}</time>
                   <b data-ui-site="ImmersiveLogs-line-level">{line.level.toUpperCase()}</b>

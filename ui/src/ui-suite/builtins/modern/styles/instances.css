@@ -5,7 +5,7 @@
 .modern-instances .instances-search input { border: 0; border-radius: 0; background: transparent; box-shadow: none; min-width: 0; width: 100%; padding: .55rem 0; font-size: max(13px,1em); }
 .modern-instances .instances-filters { color: var(--muted); font-size: max(12px,.86em); }
 .modern-instances .instances-filters label { display: flex; align-items: center; gap: .5rem; min-width: 0; white-space: nowrap; }
-.modern-instances .instances-filters select { min-height: var(--control-height); max-width: 13rem; min-width: 7rem; padding: .4rem .6rem; font-size: max(12px,.93em); }
+.modern-instances .instances-filters select { min-height: var(--control-height); width: 13em; max-width: 19em; min-width: 11em; padding: .4rem .6rem; font-size: max(13px,1em); }
 .modern-instances .instances-count { margin-left: auto; }
 .modern-shell .instance-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
 .modern-shell .instance-actions > button { min-height: var(--control-height); font-size: max(13px,.93em); padding: .4rem .6rem; }
@@ -76,4 +76,9 @@
 @media (max-width:380px) {
   .modern-shell .modern-instance-row { grid-template-columns: minmax(0,1fr); }
   .modern-shell .modern-instance-row :is(.instance-status,.instance-version,.instance-loader,.instance-actions) { grid-column: 1; grid-row: auto; }
+}
+
+@media (max-width: 640px) {
+  .modern-instances .instances-filters label { flex: 1 1 100%; display: grid; grid-template-columns: minmax(6em,auto) minmax(0,1fr); }
+  .modern-instances .instances-filters select { width: 100%; max-width: none; min-width: 0; }
 }

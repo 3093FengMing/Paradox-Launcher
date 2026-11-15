@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownToLine, Search, Terminal } from 'lucide-react';
+import { ArrowDownToLine, Search, Terminal, Trash2 } from 'lucide-react';
 import { Button, Input, Panel, Select, Toggle, UiIdentity } from '@paradox/ui';
 import { useLauncherActions, useLauncherSnapshot } from '@paradox/launcher';
 import { exportLogs } from '../../common/lib/download';
@@ -41,7 +41,7 @@ export default function LogsPage() {
         <Button className="secondary" disabled={!lines.length} onClick={() => exportLogs(lines)} data-ui-site="ModernLogs-export">
           <ArrowDownToLine size={16} aria-hidden="true" data-ui-site="ModernLogs-export-icon"/>{t('common.export')}
         </Button>
-        <Button className="secondary" onClick={() => void a.logs.clear()} data-ui-site="ModernLogs-clear">{t('logs.clear')}</Button>
+        <Button className="secondary" onClick={() => void a.logs.clear()} data-ui-site="ModernLogs-clear"><Trash2 size={16} aria-hidden="true" data-ui-site="ModernLogs-clear-icon"/>{t('logs.clear')}</Button>
       </div>
     </div>
     <div className="logs-summary" data-ui-site="ModernLogs-summary">
@@ -56,7 +56,7 @@ export default function LogsPage() {
       </header>
       <div className="logs-console" ref={consoleRef} role="region" tabIndex={0} aria-label={t('logDisplay.content')} data-ui-site="ModernLogs-console">
         {shown.length ? shown.map(({ key, line }) => <UiIdentity key={key} namespace="log" value={key}>
-          <div className="logs-line" data-level={line.level} data-ui-site="ModernLogs-line">
+          <div className="logs-line" data-level={line.level.toLowerCase()} data-ui-site="ModernLogs-line">
             <time data-ui-site="ModernLogs-time">{line.time}</time>
             <b data-ui-site="ModernLogs-line-level">{line.level.toUpperCase()}</b>
             <span data-ui-site="ModernLogs-message">{line.message}</span>

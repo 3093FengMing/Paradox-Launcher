@@ -1,0 +1,42 @@
+{
+  "startedAt": "2026-11-15T09:30:17.655Z",
+  "screenshots": [
+    "immersive-home.png",
+    "immersive-instances.png",
+    "immersive-versions.png",
+    "immersive-logs.png",
+    "immersive-instance-settings.png",
+    "immersive-home-640.png",
+    "immersive-home-320.png",
+    "immersive-home-light.png",
+    "immersive-instances-light.png",
+    "immersive-versions-light.png",
+    "immersive-logs-light.png",
+    "modern-home.png",
+    "modern-instances.png",
+    "modern-versions.png",
+    "modern-logs.png",
+    "modern-instance-settings.png",
+    "modern-home-640.png",
+    "modern-home-320.png",
+    "modern-home-light.png",
+    "modern-instances-light.png",
+    "modern-versions-light.png",
+    "modern-logs-light.png"
+  ],
+  "rows": [
+    {
+      "suite": "immersive",
+      "errors": [],
+      "csp": [],
+      "smoothCorners": true
+    },
+    {
+      "suite": "modern",
+      "errors": [],
+      "csp": [],
+      "smoothCorners": true
+    }
+  ],
+  "finishedAt": "2026-11-15T09:30:31.756Z"
+}

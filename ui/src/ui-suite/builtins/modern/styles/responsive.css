@@ -1,5 +1,6 @@
 /* Final rules stay within the player and its business overlays. */
 .modern-shell .mobile-navigation { display: none; }
+.modern-shell .home-workspace-grid { grid-template-columns: minmax(0,1fr); }
 .modern-shell :is(button,input,textarea,select,a,summary,[tabindex]):focus-visible,
 .modern-dialog-theme :is(button,input,textarea,select,a,summary,[tabindex]):focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 .modern-shell :is(input:not([type=range]):not([type=color]),textarea,select,.ui-select-trigger,button.secondary),
@@ -76,6 +77,14 @@
 .modern-navigation-menu [role^=menuitem] { display: flex; align-items: center; gap: .65rem; padding: .7rem; min-height: 2.45rem; font-size: max(13px,.93em); overflow-wrap: anywhere; border-radius: var(--radius, 4px); }
 .modern-navigation-menu [role^=menuitem][data-highlighted] { background: var(--hover); outline: 2px solid var(--accent-ink); outline-offset: -2px; }
 /* Suite-owned menu parts carry modern-portal and use the same semantic tokens. */
+@media (min-width:720px) {
+  .modern-shell > .mobile-navigation.has-extra-routes { position: fixed; z-index: 41; top: .35em; left: 12em; display: flex; align-items: center; padding: 0; background: transparent; border: 0; }
+  .modern-shell > .mobile-navigation.has-extra-routes .mobile-navigation-label { display: none; }
+}
+@media (min-width:720px) and (max-height:600px) {
+  .modern-shell > .mobile-navigation { position: fixed; z-index: 41; top: .35em; left: 12em; display: flex; align-items: center; padding: 0; background: transparent; border: 0; }
+  .modern-shell > .mobile-navigation .mobile-navigation-label { display: none; }
+}
 @media (max-width:719px) {
   .modern-shell { flex-direction: column; }
   .modern-shell > .sidebar { display: none; }
@@ -96,6 +105,7 @@
   .modern-dialog-theme :is(.dialog-actions,.profile-dialog-actions,.account-login-footer) { display: flex; flex-direction: column; align-items: stretch; }
   .modern-dialog-theme :is(.dialog-actions,.profile-dialog-actions,.account-login-footer) > button { width: 100%; min-width: 0; white-space: normal; overflow-wrap: normal; word-break: normal; }
 }
+.modern-shell :is(.nav-item,.mobile-navigation-trigger,.window-controls button):active { transition-duration: 0s; }
 .modern-shell.reduce-motion *, .modern-shell.reduce-motion *::before, .modern-shell.reduce-motion *::after,
 .modern-dialog-theme.reduce-motion *, .modern-dialog-theme.reduce-motion *::before, .modern-dialog-theme.reduce-motion *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 @media (prefers-reduced-motion:reduce) {

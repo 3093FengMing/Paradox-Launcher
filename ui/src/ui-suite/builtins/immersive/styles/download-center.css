@@ -1,0 +1,31 @@
+/* Navigation composes the original version, resource, and task page sources. */
+.immersive-shell { --download-indicator-width: 3em; }
+.immersive-shell .download-navigation { display: flex; align-items: center; flex-wrap: wrap; gap: .6em; margin: 0 0 1.2em; padding-bottom: .6em; border-bottom: 1px solid var(--border); }
+.immersive-shell .download-navigation-tabs { display: flex; flex: 1 1 auto; min-width: 0; gap: .4em; }
+.immersive-shell :is(.download-navigation-tab,.download-navigation-history) { min-width: 0; min-height: max(34px,2.6em); padding: .45em .75em; border: 1px solid transparent; border-radius: var(--c-radius); background: transparent; color: var(--muted); font-size: inherit; line-height: 1.4; }
+.immersive-shell :is(.download-navigation-tab,.download-navigation-history) > svg { flex: 0 0 auto; }
+.immersive-shell .download-navigation-tab[aria-current=page] { background: var(--c-navigation-active); color: var(--text); }
+.immersive-shell .download-navigation-tab[aria-current=page] > svg { color: var(--accent-ink); }
+.immersive-shell .download-navigation-history { flex: 0 0 auto; margin-left: auto; }
+.immersive-shell .download-navigation-history[aria-current=page] { color: var(--text); border-color: var(--control-border); }
+.immersive-shell .download-indicator { position: fixed; right: .75em; bottom: max(.75em,env(safe-area-inset-bottom)); z-index: 36; display: inline-flex; align-items: center; justify-content: center; width: clamp(34px,var(--download-indicator-width),42px); min-width: 0; height: clamp(34px,var(--download-indicator-width),42px); min-height: 0; padding: .4em; border: 1px solid var(--control-border); border-radius: var(--c-radius); background: var(--surface); color: var(--accent-ink); font-size: inherit; }
+.immersive-shell .download-indicator[data-state=finished] { color: var(--muted); }
+.immersive-shell .download-indicator-count { position: absolute; top: -.35em; right: -.3em; min-width: 1.4em; padding: .1em .3em; border: 1px solid var(--control-border); border-radius: var(--c-radius); background: var(--surface); color: var(--text); font-size: max(12px,.86em); line-height: 1.2; font-variant-numeric: tabular-nums; text-align: center; }
+.immersive-shell :is(.download-navigation-tab,.download-navigation-history,.download-indicator):focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.immersive-shell.has-download-tasks:not(.is-home) .workspace > main:not(.detail-workspace) { padding-bottom: 4.5em; }
+@media (hover:hover) and (pointer:fine) {
+  .immersive-shell :is(.download-navigation-tab,.download-navigation-history,.download-indicator):hover { background: var(--hover); color: var(--text); border-color: var(--control-border); }
+}
+@media (max-width:420px) {
+  .immersive-shell .download-navigation { gap: .35em; margin-bottom: .8em; }
+  .immersive-shell .download-navigation-tabs { flex-basis: 100%; }
+  .immersive-shell .download-navigation-tab { flex: 1 1 0; padding: .4em .55em; }
+  .immersive-shell .download-navigation-history { min-height: 30px; padding: .25em .55em; }
+}
+@media (max-width:360px) {
+  .immersive-shell .download-navigation-tab > svg { display: none; }
+}
+@media (max-height:340px) {
+  .immersive-shell .download-navigation { margin-bottom: .55em; padding-bottom: .35em; }
+  .immersive-shell .download-indicator { bottom: max(.55em,env(safe-area-inset-bottom)); }
+}

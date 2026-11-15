@@ -52,3 +52,9 @@
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-queue .queue-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-queue .queue-identities { display: flex; flex-wrap: wrap; gap: 25px; }
 @media (max-width: 700px) { :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-queue .queue-task { padding: 17px; } :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-queue .queue-task-actions { margin-left: auto; } :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-queue .queue-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Task totals are one compact summary above the single task list. */
+:where(.immersive-shell,.immersive-dialog-theme,.immersive-portal) .immersive-downloads .downloads-counts { display: flex; flex-wrap: wrap; gap: .65em 1.4em; }
+:where(.immersive-shell,.immersive-dialog-theme,.immersive-portal) .immersive-downloads .downloads-counts > div { display: flex; flex-direction: row; align-items: baseline; gap: .45em; padding: 0; border: 0; background: transparent; }
+:where(.immersive-shell,.immersive-dialog-theme,.immersive-portal) .immersive-downloads .downloads-counts strong { font-size: 1em; font-weight: 600; }
+:where(.immersive-shell,.immersive-dialog-theme,.immersive-portal) .immersive-downloads .downloads-counts span { font-size: max(12px,.86em); }

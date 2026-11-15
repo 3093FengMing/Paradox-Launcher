@@ -1,0 +1,49 @@
+/* Shared geometry and feedback stay inside the two player surfaces. */
+:is(.modern-shell,.modern-dialog-theme,.modern-portal,.immersive-shell,.immersive-dialog-theme,.immersive-portal) {
+  --feedback-ease: cubic-bezier(.16,1,.3,1);
+  caret-color: var(--accent-ink);
+}
+:is(.modern-shell,.modern-dialog-theme,.modern-portal,.immersive-shell,.immersive-dialog-theme,.immersive-portal) ::selection {
+  color: var(--text); background: var(--selected);
+}
+.route-stage { min-width: 0; }
+:is(.modern-shell,.modern-dialog-theme,.immersive-shell,.immersive-dialog-theme) button {
+  transition: background-color 150ms var(--feedback-ease), color 150ms var(--feedback-ease), border-color 150ms var(--feedback-ease), box-shadow 150ms var(--feedback-ease), filter 150ms var(--feedback-ease);
+}
+:is(.modern-shell,.modern-dialog-theme,.immersive-shell,.immersive-dialog-theme) button:active:not(:disabled) {
+  filter: brightness(.94); transition-duration: 45ms;
+}
+:is(.modern-shell,.modern-dialog-theme,.immersive-shell,.immersive-dialog-theme) :is(.icon-button,.text-button) {
+  border-radius: var(--radius,6px);
+}
+:is(.modern-shell,.modern-dialog-theme,.immersive-shell,.immersive-dialog-theme) .icon-button {
+  border: 1px solid var(--control-border);
+}
+:is(.modern-shell,.immersive-shell) :is(.instance-row,.home-library-row,.home-instance-row) {
+  transition: background-color 150ms var(--feedback-ease);
+}
+@media (hover:hover) and (pointer:fine) {
+  :is(.modern-shell,.modern-dialog-theme,.immersive-shell,.immersive-dialog-theme) :is(.secondary,.icon-button,.ui-select-trigger):hover:not(:disabled) {
+    border-color: var(--accent-ink);
+  }
+  :is(.modern-shell,.immersive-shell) :is(.instance-row,.home-library-row,.home-instance-row):hover {
+    background-color: color-mix(in srgb,var(--hover) 62%,var(--surface));
+  }
+}
+/* Progressive continuous corners retain the user's public radius, including 0. */
+@supports (corner-shape: squircle) {
+  :is(.modern-shell,.modern-dialog-theme,.modern-portal,.immersive-shell,.immersive-dialog-theme,.immersive-portal)
+  :is(.primary,.secondary,.icon-button,.text-button,.download-navigation-tab,.download-navigation-history,.window-nav-link,.sidebar-nav-item,input:not([type=range]):not([type=checkbox]),textarea,select,.ui-select-trigger,.panel,.modal,.instances-list-region,.instances-inspector,.logs-panel,.queue-list,.queue-task,.queue-details,.download-indicator,.immersive-launch-split,.home-play-panel,.home-workspace-grid,.home-overview,.home-account,.instance-tools-menu,.window-navigation-menu),
+  :is(.ui-select-popup,.ui-select-option,.immersive-launch-menu,.sidebar-nav-menu,.modern-nav-menu) {
+    corner-shape: squircle;
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  :is(.modern-shell,.modern-dialog-theme,.modern-portal,.immersive-shell,.immersive-dialog-theme,.immersive-portal) *,
+  :is(.ui-select-popup,.immersive-launch-menu,.sidebar-nav-menu,.modern-nav-menu) {
+    transition: none !important;
+  }
+}
+:is(.modern-shell,.modern-dialog-theme,.modern-portal,.immersive-shell,.immersive-dialog-theme,.immersive-portal).reduce-motion * {
+  transition: none !important;
+}

@@ -1,0 +1,48 @@
+import {mkdir,writeFile,readFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import {createBrowserFixture} from '../../../../ui/scripts/lib/ui-browser-fixture.mjs';
+import {initialConfig} from '../../../../ui/scripts/lib/hook-test-host.mjs';
+const out=resolve(import.meta.dirname,'render');
+await mkdir(out,{recursive:true});
+const report={startedAt:new Date().toISOString(),screenshots:[],rows:[]};
+for(const suite of ['immersive','modern']) {
+ const config=structuredClone(initialConfig);
+ config.settings.language='zh-CN';
+ config.settings.appearance.theme='dark';
+ config.profiles[0].name='生存世界';
+ config.profiles.push({...config.profiles[0],instance_key:'creative-world',name:'创意建造'});
+ const f=await createBrowserFixture({desktopBoundary:true,config,url:(process.env.PARADOX_UI_URL||'http://127.0.0.1:1434')+'/?shellHome='+suite});
+ try {
+  const {page}=f; await page.setViewportSize({width:1240,height:780});
+  await page.waitForFunction(()=>window.suiteBuiltinsFixture?.ready);
+  await page.evaluate(async suite=>window.suiteBuiltinsFixture.controller.actions.selectSuite('builtin.'+suite),suite);
+  await page.waitForFunction(()=>!window.suiteBuiltinsFixture.controller.getSnapshot().initialSelectionRequired);
+  await page.evaluate(()=>{
+   const native=window.__TAURI_INTERNALS__, original=native.invoke;
+   native.invoke=async(command,args)=>command==='catalog'?{versions:Array.from({length:84},(_,i)=>({id:i<55?`1.${21-Math.floor(i/10)}.${9-i%10}`:`24w${40-i%20}a`,kind:i<55?'release':'snapshot'})),fetched_at:1794735000,source:'cache',stale:false,warning:null,error_kind:null}:original(command,args);
+   ['info','warn','error','debug'].forEach((level,i)=>window.foundationDesktop.emit('launcher://log',{id:{session:'design-review-fixture',sequence:String(i)},time:1794735000+i,level,message:['配置已读取，准备启动实例。','Java 内存限制接近可用内存，请检查实例设置。','下载连接暂时中断，可在任务记录中重试。','Loaded cached version metadata for the selected instance.'][i]}));
+  });
+  const shot=async name=>{await page.waitForTimeout(210);const filename=suite+'-'+name+'.png';await page.screenshot({path:resolve(out,filename)});report.screenshots.push(filename);};
+  await shot('home');
+  for(const [route,name] of [['instances','instances'],['custom.versions','versions'],['logs','logs']]) {
+   await page.evaluate(id=>window.suiteBuiltinsFixture.actions.navigation.navigate(id),route);
+   if(route==='custom.versions')await page.evaluate(()=>window.suiteBuiltinsFixture.actions.catalog.refresh(true));
+   await shot(name);
+  }
+  await page.evaluate(()=>window.suiteBuiltinsFixture.actions.instanceDraft.open('original-instance'));
+  await page.locator('.business-dialog-form').waitFor();
+  await shot('instance-settings');
+  await page.keyboard.press('Escape');
+  await page.evaluate(()=>window.suiteBuiltinsFixture.actions.navigation.navigate('home'));
+  await page.setViewportSize({width:640,height:480});await shot('home-640');
+  await page.setViewportSize({width:320,height:300});await shot('home-320');
+  await page.setViewportSize({width:1240,height:780});
+  await page.evaluate(async()=>{const a=window.suiteBuiltinsFixture.actions;a.navigation.navigate('settings');a.settings.patchAppearance('theme','light');await a.settings.save();a.navigation.navigate('home');});
+  await shot('home-light');
+  for(const [route,name] of [['instances','instances-light'],['custom.versions','versions-light'],['logs','logs-light']]){await page.evaluate(id=>window.suiteBuiltinsFixture.actions.navigation.navigate(id),route);await shot(name);}
+  report.rows.push({suite,errors:f.observedPageErrors,csp:f.observedCspViolations,smoothCorners:await page.evaluate(()=>CSS.supports('corner-shape','squircle'))});
+ } finally {await f.close();}
+}
+report.finishedAt=new Date().toISOString();
+await writeFile(resolve(out,'report.json'),JSON.stringify(report,null,2)+'\n');
+console.log(JSON.stringify(report));

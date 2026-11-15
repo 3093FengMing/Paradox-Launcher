@@ -21,6 +21,8 @@
     "component.activity-bar": "immersive/components/ActivityBar.tsx",
     "component.profile-card": "immersive/components/ProfileCard.tsx",
     "component.download-queue": "immersive/components/DownloadQueue.tsx",
+    "component.download-navigation": "immersive/components/DownloadNavigation.tsx",
+    "component.download-indicator": "immersive/components/DownloadIndicator.tsx",
     "component.account-avatar": "immersive/components/AccountAvatar.tsx",
     "component.java-settings": "immersive/components/JavaSettings.tsx",
     "component.argument-templates": "immersive/components/ArgumentTemplates.tsx",
@@ -84,7 +86,7 @@
     {
       "id": "custom.versions",
       "entry": "immersive/pages/VersionsPage.tsx",
-      "title": "versionDownloads.title",
+      "title": "nav.downloadCenter",
       "description": "versionDownloads.description",
       "navigation": true,
       "startupSelectable": true,
@@ -96,7 +98,7 @@
       "entry": "immersive/pages/DownloadsPage.tsx",
       "title": "nav.downloads",
       "description": "pages.downloads.description",
-      "navigation": true,
+      "navigation": false,
       "startupSelectable": true,
       "order": 20,
       "icon": "Download"
@@ -106,7 +108,7 @@
       "entry": "immersive/pages/AccountsPage.tsx",
       "title": "nav.accounts",
       "description": "pages.accounts.description",
-      "navigation": true,
+      "navigation": false,
       "startupSelectable": true,
       "order": 30,
       "icon": "UserRound"
@@ -116,7 +118,7 @@
       "entry": "immersive/pages/DiscoverPage.tsx",
       "title": "nav.content",
       "description": "content.description",
-      "navigation": true,
+      "navigation": false,
       "startupSelectable": true,
       "order": 40,
       "icon": "Compass"
@@ -255,8 +257,8 @@
     {
       "path": "common/lib/navigation.ts",
       "kind": "ts",
-      "bytes": 469,
-      "sha256": "c6c12f4b3292dd08a0c0770f54fe76bbd2eeb3ae2d2718ecc6feabaf28681a2c"
+      "bytes": 714,
+      "sha256": "3224683c1b2040d3251ad171a80cd5e12c6398d2cafd16ceeb2494c056798a6d"
     },
     {
       "path": "common/lib/runtime-message.ts",
@@ -271,6 +273,12 @@
       "sha256": "67ca738cdeba2190d5df1ecc74f0802d107f9e09281bfec6af7c622200529c10"
     },
     {
+      "path": "common/lib/use-route-motion.ts",
+      "kind": "ts",
+      "bytes": 1039,
+      "sha256": "3ba1705e2d2a7aa6bf7be70782b7e51767c19c5414eba2ffb2e7581100cb6f24"
+    },
+    {
       "path": "common/lib/version.ts",
       "kind": "ts",
       "bytes": 127,
@@ -283,6 +291,12 @@
       "sha256": "316a418bb75e1eebfbf6072187744e0e4d7b5bce348056386ee9f0440803708e"
     },
     {
+      "path": "common/player-interaction.css",
+      "kind": "css",
+      "bytes": 3124,
+      "sha256": "47140c5596b8d5a40f5022fb1f6da60c26e5460fd637cc5aa3d34d23da671d1f"
+    },
+    {
       "path": "immersive/Error.tsx",
       "kind": "tsx",
       "bytes": 736,
@@ -291,8 +305,8 @@
     {
       "path": "immersive/Home.tsx",
       "kind": "tsx",
-      "bytes": 17738,
-      "sha256": "95ecf141c14bc56a7ada83ce85077e07c6851050d949c36f9ac5dcbcd491c2de"
+      "bytes": 17794,
+      "sha256": "76a52f438a1109d21eb8c5ebdda282a08ee4d42e67806901e071233c9193e6f2"
     },
     {
       "path": "immersive/Loading.tsx",
@@ -309,8 +323,8 @@
     {
       "path": "immersive/Shell.tsx",
       "kind": "tsx",
-      "bytes": 4002,
-      "sha256": "c038f51356fa106194182265e0c87ce282b3d097b41aa2810aeae4372a919d01"
+      "bytes": 5288,
+      "sha256": "a4d7df3d47a40003868aa406f9838e12889501a15843f32bd7c31164ae6842a6"
     },
     {
       "path": "immersive/components/AccountAvatar.tsx",
@@ -327,8 +341,8 @@
     {
       "path": "immersive/components/AppSidebar.tsx",
       "kind": "tsx",
-      "bytes": 13187,
-      "sha256": "a0dfef9722f3c6e888f80497a82cb1c52b84b8886dfa94678d1aaf2bbf7edca6"
+      "bytes": 13267,
+      "sha256": "c43b554a7ba235f755b02b2fb14cc476641f62e5d8c60589c60af74943178c90"
     },
     {
       "path": "immersive/components/AppearancePresets.tsx",
@@ -349,6 +363,18 @@
       "sha256": "2d9c27a5608ad9596745bebb84ac02145af8a807e514b606044a57fb227ec612"
     },
     {
+      "path": "immersive/components/DownloadIndicator.tsx",
+      "kind": "tsx",
+      "bytes": 1808,
+      "sha256": "e54872a5520d490869c776e2316e684e0eabce51800f99dc4313106e3147feb8"
+    },
+    {
+      "path": "immersive/components/DownloadNavigation.tsx",
+      "kind": "tsx",
+      "bytes": 2074,
+      "sha256": "1b1c5fab197868db31e7e93c13081492888b9ee54384fb99e5d19c0c51ffaa7e"
+    },
+    {
       "path": "immersive/components/DownloadQueue.tsx",
       "kind": "tsx",
       "bytes": 9823,
@@ -363,8 +389,8 @@
     {
       "path": "immersive/components/InstanceDetail.tsx",
       "kind": "tsx",
-      "bytes": 13175,
-      "sha256": "52631c79f9534ac06727d70dfb6c75268b6e3031918869c754a30076a0014edb"
+      "bytes": 13191,
+      "sha256": "4bf31ecc1355eec4f13a4c0f2d73e0724a141cb88a0c7b77ab6e037b7c2f6ae8"
     },
     {
       "path": "immersive/components/JavaSettings.tsx",
@@ -393,8 +419,8 @@
     {
       "path": "immersive/components/WindowBar.tsx",
       "kind": "tsx",
-      "bytes": 3075,
-      "sha256": "125cd2dd440a43571b409d14d9f5d19a90f29465b53e724d85cfa884fd56a7a3"
+      "bytes": 6209,
+      "sha256": "79629ece3369ba8171f62b666ff164e2cc0457a92d05b20e7d5255538d347a7d"
     },
     {
       "path": "immersive/dialogs/AccountLoginDialog.tsx",
@@ -501,14 +527,14 @@
     {
       "path": "immersive/pages/InstancesPage.tsx",
       "kind": "tsx",
-      "bytes": 7382,
-      "sha256": "6e7f05eb941524a7a22847f09f0dca7b1ae9af21e3ede76f2c52517d656857ec"
+      "bytes": 7372,
+      "sha256": "06c5a6cccac6e9033454f4f5e45d9975f69cb2a8d51e10600459e0981bfcd6fb"
     },
     {
       "path": "immersive/pages/LogsPage.tsx",
       "kind": "tsx",
-      "bytes": 5767,
-      "sha256": "2040e08c8a4c38f92392b8129d3562984a8b0d67ae290c78da78769d7ac20f9c"
+      "bytes": 5867,
+      "sha256": "6cc478792dccf61946dde3ad16c54a2eb25716f0fcd75dae1e2893a03fec1ad6"
     },
     {
       "path": "immersive/pages/SettingsPage.tsx",
@@ -519,8 +545,8 @@
     {
       "path": "immersive/pages/VersionsPage.tsx",
       "kind": "tsx",
-      "bytes": 6549,
-      "sha256": "93d845f91641c1fcc0de1f66e602d20422a403145834f29011c4efc52bbe6881"
+      "bytes": 7643,
+      "sha256": "ab8ca37739ca10fbb34bdcf3c7502b1fe9816eed9896bc75de2eb531667e8050"
     },
     {
       "path": "immersive/style.css",
@@ -565,16 +591,22 @@
       "sha256": "6b1dd30642665ac0c518a0a1a88efbc8268d4f74b77ec30ffb5699ec3f7f955d"
     },
     {
+      "path": "immersive/styles/download-center.css",
+      "kind": "css",
+      "bytes": 3378,
+      "sha256": "9595acc3a9f1546cf1dfca57358855d2043d1f1bfee816b102700d547abd4d9e"
+    },
+    {
       "path": "immersive/styles/downloads.css",
       "kind": "css",
-      "bytes": 10786,
-      "sha256": "30ab1a0deac2fe7b685954a883281b2d69d2c55f8d290ffc36e001efc41bae96"
+      "bytes": 11546,
+      "sha256": "6fc398db31eeb2e40a9c13d0e61d8360549483dfe93ca9cd63fcac85f3538491"
     },
     {
       "path": "immersive/styles/home.css",
       "kind": "css",
-      "bytes": 10012,
-      "sha256": "9832ef46d752b5fc937e772e166a6c62baf619aba79fb4a56d416c37c9655db4"
+      "bytes": 10232,
+      "sha256": "591398e93a556e6e7d237136dfe41f333bf982ca554e0efad48b426bfdc9b8f1"
     },
     {
       "path": "immersive/styles/host-components.css",
@@ -591,8 +623,8 @@
     {
       "path": "immersive/styles/instances.css",
       "kind": "css",
-      "bytes": 11536,
-      "sha256": "e348f79f6cba12c53a6a1aeb860e810f9ee40358d5ccc622f3acd65c6b9f241d"
+      "bytes": 11927,
+      "sha256": "6e85e1ecbc7abc4d82ee4fd2ba278feeba4b520c9c216522137b187022254e36"
     },
     {
       "path": "immersive/styles/java-settings.css",
@@ -603,14 +635,14 @@
     {
       "path": "immersive/styles/layout.css",
       "kind": "css",
-      "bytes": 7031,
-      "sha256": "7da29ef23f1c0c46593545a57466e08ef38a2b20d2b6a0485f3062a39f1a12bf"
+      "bytes": 6962,
+      "sha256": "a8b9ae5f7b313101acadf057eb24caa5af05db59c251af1c73d8d1131dcb3022"
     },
     {
       "path": "immersive/styles/logs.css",
       "kind": "css",
-      "bytes": 7890,
-      "sha256": "fbcc75d071f6fa39e1f3c92768aeb0d13f77daa97c5972e97116b0e6b5b1129d"
+      "bytes": 8851,
+      "sha256": "000655f44c0409cfd308eca9d63c9f404a246b46967b2301e0e8ff241d7734ab"
     },
     {
       "path": "immersive/styles/notifications.css",
@@ -651,8 +683,8 @@
     {
       "path": "immersive/styles/versions.css",
       "kind": "css",
-      "bytes": 6119,
-      "sha256": "22105f16732441046f72b24b1d8e783bf7e373190c33d4b592c81eb60aa1e389"
+      "bytes": 6911,
+      "sha256": "6639d52315a1d58f6990e9065e6b97db7161db23f49cb3686594519cb5c4e470"
     }
   ],
   "overrides": []

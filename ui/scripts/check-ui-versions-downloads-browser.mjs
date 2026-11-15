@@ -7,7 +7,7 @@ import { initialConfig } from './lib/hook-test-host.mjs';
 
 const out = resolve('.test-data/default-ui-task6', process.env.PARADOX_TASK6_EVIDENCE || 'focused');
 await mkdir(out, { recursive: true });
-const report = { rows: [], sourceHashes: {} };
+const report = { rows: [], sourceHashes: {}, errors: [], cspViolations: [], sourceRequests: [] };
 const config = structuredClone(initialConfig);
 config.settings.language = 'en-US';
 config.settings.show_snapshots = false;
@@ -84,28 +84,47 @@ for (const suite of ['modern', 'immersive']) {
     await act(() => window.suiteBuiltinsFixture.actions.navigation.navigate('downloads'));
     await site('DownloadsPage-root').waitFor();
     assert.equal(await act(() => window.task6Boundary.catalogCalls.length), 0, 'downloads route does not load the version catalog');
-    await site('DownloadsPage-versions').click();
+    await site('DownloadNavigation-versions').focus();
+    await page.keyboard.press('Enter');
+    await wait(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'custom.versions');
     await wait(() => window.suiteBuiltinsFixture.snapshot.catalog.versions.length === 138);
-    assert.equal(await site('VersionsPage-version').count(), 100);
+    assert.equal(await site('VersionsPage-version').count(), 30, 'initial catalog renders one progressive batch');
+    assert.equal(await site('VersionsPage-root').getByRole('searchbox').count(), 1, 'version search is the unique public free-text entry');
+    assert.equal(await site('VersionsPage-root').getByRole('textbox').count(), 0, 'there is no additional public text entry beside version search');
+    assert.equal(await site('VersionsPage-manual').count(), 0, 'no duplicate manual-version input entry');
     assert.equal(await site('VersionsPage-cache').innerText().then(text => /cache/i.test(text)), true);
     assert.match(await site('VersionsPage-cache').innerText(), /outdated|stale|expired|过期/i);
-    if (suite === 'modern') assert.equal(await page.locator('.versions-cache-copy').evaluate(e => getComputedStyle(e).display), 'grid');
-    await site('VersionsPage-more').click();
-    assert.equal(await site('VersionsPage-version').count(), 135);
+    for (const count of [60, 90, 120, 135]) {
+      await site('VersionsPage-more').focus();
+      await page.keyboard.press('Enter');
+      assert.equal(await site('VersionsPage-version').count(), count, 'real load-more activation grows the same catalog by one batch');
+    }
+    assert.equal(await site('VersionsPage-more').count(), 0, 'load more disappears after all release rows are rendered');
     await site('VersionsPage-snapshots').check();
     await wait(() => window.suiteBuiltinsFixture.snapshot.config.value.settings.show_snapshots);
-    await site('VersionsPage-kind').filter({ hasText: 'Snapshot' }).click();
+    const kind = page.getByRole('combobox', { name: 'Type', exact: true });
+    const openKind = async () => { await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))); await kind.focus(); await page.keyboard.press('Enter'); await page.getByRole('listbox').waitFor(); };
+    await openKind();
+    assert.equal(await page.getByRole('listbox').getByRole('option').count(), 4, 'snapshot preference exposes all real type choices');
+    await page.keyboard.press('Escape');
+    assert.equal(await kind.evaluate(element => element === document.activeElement), true, 'type dropdown Escape restores actual trigger focus');
+    await openKind();
+    await page.getByRole('option', { name: /^Snapshot/ }).click();
     assert.equal(await site('VersionsPage-version').count(), 2);
-    await site('VersionsPage-kind').filter({ hasText: 'Historical' }).click();
+    await openKind();
+    await page.getByRole('option', { name: /^Historical/ }).click();
     assert.equal(await site('VersionsPage-version').count(), 1);
     await site('VersionsPage-snapshots').uncheck();
     await wait(() => !window.suiteBuiltinsFixture.snapshot.config.value.settings.show_snapshots);
-    assert.equal(await site('VersionsPage-version').count(), 100, 'hidden snapshots force release regardless of previous local group');
+    assert.equal(await site('VersionsPage-version').count(), 30, 'hidden snapshots force release and reset pagination regardless of previous local group');
+    await openKind();
+    assert.equal(await page.getByRole('listbox').getByRole('option').count(), 1, 'disabled snapshot preference leaves only release as an effective type');
+    await page.keyboard.press('Escape');
     await act(() => { window.task6Boundary.failCatalog = true; });
     await site('VersionsPage-refresh').click();
     await site('VersionsPage-error').waitFor();
     assert.match(await site('VersionsPage-error').innerText(), /refresh failed/);
-    assert.equal(await site('VersionsPage-version').count(), 100, 'last catalog retained after refresh failure');
+    assert.equal(await site('VersionsPage-version').count(), 30, 'last catalog retained after refresh failure');
     assert.equal(await act(() => window.task6Boundary.catalogCalls.at(-1).forceRefresh), true);
     pass('versions_route_mount_cache_staleness_refresh_failure_138_versions_local_types_and_real_load_more');
     await act(() => { window.task6Boundary.failCatalog = false; });
@@ -253,10 +272,13 @@ for (const suite of ['modern', 'immersive']) {
     report.rows.push({ suite, checks, error: error.stack, pageErrors: fixture.observedPageErrors });
     throw error;
   } finally {
+    report.errors.push(...fixture.observedPageErrors); report.cspViolations.push(...fixture.observedCspViolations); report.sourceRequests.push(...fixture.observedSourceModuleRequests);
     await writeFile(resolve(out, 'report.json'), JSON.stringify(report, null, 2));
     await fixture.close();
   }
 }
+assert.deepEqual(report.errors, []); assert.deepEqual(report.cspViolations, []);
+if (process.env.PARADOX_TEST_NATIVE_CSP === '1') assert.deepEqual(report.sourceRequests, [], 'compiled+CSP versions/downloads uses no application source modules');
 for (const suite of ['modern', 'immersive']) for (const file of ['pages/VersionsPage.tsx', 'pages/DownloadsPage.tsx', 'components/DownloadQueue.tsx', 'dialogs/ProfileDialog.tsx', 'styles/versions.css', 'styles/downloads.css', 'styles/profile-dialog.css']) {
   const path = 'src/ui-suite/builtins/' + suite + '/' + file;
   report.sourceHashes[path] = createHash('sha256').update(await readFile(path)).digest('hex');

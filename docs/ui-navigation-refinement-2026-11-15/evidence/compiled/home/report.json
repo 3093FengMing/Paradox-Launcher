@@ -1,0 +1,47 @@
+{
+  "rows": [
+    {
+      "suite": "immersive",
+      "checks": [
+        "both_themes_canonical_default_screenshots_1240_640_320",
+        "active_microsoft_name_cached_avatar_identity_and_offline_fallback",
+        "appearance_deep_link_and_registry_home_return",
+        "keyboard_account_and_window_actions",
+        "downward_split_menu_geometry_keyboard_typeahead_selection_escape_focus",
+        "launch_selection_dialog_return_focus_B_owned_started_running_unknown_cancelling_320_stop",
+        "queued_B_indicator_clears_compact_split_and_preserves_A_target",
+        "actual_loader_repair_install_unrelated_queue_allowed_same_instance_queue_disabled",
+        "active_key_absent_choose_and_empty_create_original_draft",
+        "source_components_individually_editable_primary_CSS_identity_hidden_registry_custom_routes",
+        "source_loading_fatal_and_existing_config_reload_retry"
+      ],
+      "errors": [],
+      "cspViolations": []
+    },
+    {
+      "suite": "modern",
+      "checks": [
+        "both_themes_canonical_default_screenshots_1240_640_320",
+        "active_microsoft_name_cached_avatar_identity_and_offline_fallback",
+        "appearance_deep_link_and_registry_home_return",
+        "keyboard_account_and_window_actions",
+        "launch_selection_dialog_return_focus_B_owned_started_running_unknown_cancelling_320_stop",
+        "actual_loader_repair_install_unrelated_queue_allowed_same_instance_queue_disabled",
+        "active_key_absent_choose_and_empty_create_original_draft",
+        "source_components_individually_editable_primary_CSS_identity_hidden_registry_custom_routes",
+        "source_loading_fatal_and_existing_config_reload_retry"
+      ],
+      "errors": [],
+      "cspViolations": []
+    },
+    {
+      "suite": "browser-only",
+      "checks": [
+        "desktop_capabilities_and_disabled_window_controls"
+      ]
+    }
+  ],
+  "errors": [],
+  "cspViolations": [],
+  "sourceRequests": []
+}

@@ -1,0 +1,54 @@
+[
+  {
+    "lane": "dev-repeat-2",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-home-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:37:46.4262740Z",
+    "finishedAt": "2026-11-15T09:38:21.3408089Z",
+    "exitCode": 0,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434"
+  },
+  {
+    "lane": "dev-final-verified-repeat-1",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-navigation-refinement-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:46:19.2491860Z",
+    "finishedAt": "2026-11-15T09:48:41.9427784Z",
+    "exitCode": 0,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434"
+  },
+  {
+    "lane": "dev-final-verified-repeat-1",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-versions-downloads-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:46:19.2404643Z",
+    "finishedAt": "2026-11-15T09:47:01.4450152Z",
+    "exitCode": 0,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434"
+  },
+  {
+    "lane": "dev-final",
+    "command": "node",
+    "args": [
+      "scripts/check-ui-logs-responsive-browser.mjs"
+    ],
+    "startedAt": "2026-11-15T09:40:05.4542371Z",
+    "finishedAt": "2026-11-15T09:43:20.2225424Z",
+    "exitCode": 0,
+    "inputCount": 888,
+    "inputDrift": [],
+    "url": "http://127.0.0.1:1434"
+  }
+]

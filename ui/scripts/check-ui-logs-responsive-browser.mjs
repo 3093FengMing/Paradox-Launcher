@@ -4,7 +4,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createBrowserFixture } from './lib/ui-browser-fixture.mjs';
 import { initialConfig, loadApp } from './lib/hook-test-host.mjs';
-import { globalRouteControl, renderedRouteLabelSelector } from './lib/ui-redesign-navigation.mjs';
+import { globalRouteFocusReturn, prepareGlobalRouteControl, renderedRouteLabelAttribute, renderedRouteLabelSelector, renderedRouteTitleKey } from './lib/ui-redesign-navigation.mjs';
 
 // Run this destination script only after root integrates and freezes Task10 sources.
 const artifacts = resolve(import.meta.dirname, '../../.test-data/default-ui-task10', process.env.PARADOX_TASK10_EVIDENCE || 'current-default');
@@ -17,7 +17,7 @@ config.settings.language = language;
 config.profiles[0].name = '很长的中文实例名 — A long English instance name with spaces — '.repeat(3);
 config.settings.game_directory = 'C:/long directory with spaces/很长的中文路径/'.repeat(5);
 const viewports = [{ width: 1240, height: 780 }, { width: 960, height: 640 }, { width: 800, height: 600 }, { width: 640, height: 480 }, { width: 320, height: 240 }];
-const report = { startedAt: new Date().toISOString(), checks: [], screenshots: [], layouts: [], keyboard: [], contrast: [], reachability: [], appearance: [], savePersistence: [], languageTransitions: [], languageCoverage: [], provenance: {}, sourceHashes: {}, sourceOwnership: [], errors: [], cspErrors: [] };
+const report = { startedAt: new Date().toISOString(), checks: [], screenshots: [], layouts: [], keyboard: [], contrast: [], reachability: [], appearance: [], savePersistence: [], languageTransitions: [], languageCoverage: [], provenance: {}, sourceHashes: {}, sourceOwnership: [], errors: [], cspErrors: [], sourceRequests: [] };
 const pass = name => { report.checks.push(name); console.log(`PASS ${name}`); };
 const editorNames = ['AssetManager.tsx', 'base.css', 'Editor.tsx', 'FileTree.tsx', 'SourceEditor.tsx', 'style.css', 'TargetCatalog.tsx', 'TargetDetails.tsx', 'TargetPreview.tsx'];
 const editorHashes = Object.fromEntries(await Promise.all(editorNames.map(async name => [name, createHash('sha256').update(await readFile(new URL(`../src/ui-suite/builtins/common/editor/${name}`, import.meta.url))).digest('hex')])));
@@ -187,10 +187,14 @@ for (const suite of ['modern', 'immersive']) {
     await emit('info', 'INFO first line\n  preserved indentation');
     await emit('error', 'ERROR 中文路径 C:/long path/a=b');
     await emit('debug', 'DEBUG compatibility detail');
-    await page.waitForFunction(() => window.suiteBuiltinsFixture.snapshot.logs.lines.length === 3);
+    await emit('warn', 'WARN actionable warning');
+    await page.waitForFunction(() => window.suiteBuiltinsFixture.snapshot.logs.lines.length === 4);
     const real = await page.evaluate(() => structuredClone(window.suiteBuiltinsFixture.snapshot.logs.lines));
     assert.deepEqual(await logs().locator('.logs-line time').allTextContents(), real.map(line => line.time));
     assert.deepEqual(await logs().locator('.logs-line > span').allTextContents(), real.map(line => line.message));
+    const levels = await logs().locator('.logs-line').evaluateAll(elements => elements.map(element => ({ level: element.dataset.level, label: element.querySelector('b').textContent.trim(), badge: getComputedStyle(element.querySelector('b')).color, message: getComputedStyle(element.querySelector(':scope > span')).color })));
+    assert.deepEqual(levels.map(row => row.label), ['INFO', 'ERROR', 'DEBUG', 'WARN'], 'severity remains an explicit textual cue alongside color');
+    assert.equal(new Set(levels.map(row => row.badge)).size, 4, 'INFO/WARN/ERROR and debug have distinguishable default severity colors');
     await search().fill('a=b'); assert.equal(await logs().locator('.logs-line').count(), 1);
     await search().fill(real[0].time); assert.ok(await logs().locator('.logs-line').count() >= 1);
     await search().fill('');
@@ -234,10 +238,15 @@ for (const suite of ['modern', 'immersive']) {
     await page.evaluate(() => window.task10Boundary.pending.shift()({ session: 'task10-native-fixture', sequence: String(window.task10Boundary.sequence - 1) }));
     await page.waitForFunction(() => window.suiteBuiltinsFixture.snapshot.logs.lines.length === 1);
     assert.equal(await logs().locator('.logs-line > span').textContent(), 'after retained clear boundary');
+    await emit('warn', 'WARN theme and scale sample');
+    await emit('error', 'ERROR theme and scale sample');
+    await emit('debug', 'DEBUG theme and scale sample');
     pass(`${suite}:follow_pause_resume_storage_failure_retry_and_new_log_retention`);
 
-    const routeIds = provenance.routes.filter(route => route.navigation).map(route => route.id);
-    routeIds.push('custom.instance-details');
+    // The download group retains all three real public routes even though two
+    // of them no longer occupy standalone global-navigation entries.
+    const routeIds = [...new Set(provenance.routes.map(route => route.id))];
+    assert.deepEqual([...routeIds].sort(), ['home', 'instances', 'custom.versions', 'downloads', 'accounts', 'content', 'logs', 'settings', 'custom.instance-details'].sort(), 'All nine public routes remain in layout, keyboard and language coverage');
     for (const theme of ['dark', 'light']) {
       await commitAppearance('theme', theme);
       for (const scale of [85, 100, 120]) {
@@ -257,7 +266,7 @@ for (const suite of ['modern', 'immersive']) {
               const control = controls[routeId];
               if (control) await reachable(control.first(), { suite, theme, scale, viewport, routeId, control: 'primary accessible role/label' });
             }
-            if (routeId === 'logs') { await reachable(logs().getByRole('button', { name: text('logs.clear'), exact: true }), { suite, theme, scale, viewport, routeId, control: 'logs.clear' }); if (viewport.width === 1240 || viewport.width === 320) await screenshot(`${suite}-${theme}-${scale}-logs-${viewport.width}`, { suite, theme, scale, viewport, routeId }); }
+            if (routeId === 'logs') { assert.equal(await logs().locator('.logs-line b').evaluateAll(elements => new Set(elements.map(e => getComputedStyle(e).color)).size), 4, 'severity color distinctions remain in both themes and every tested scale'); await reachable(logs().getByRole('button', { name: text('logs.clear'), exact: true }), { suite, theme, scale, viewport, routeId, control: 'logs.clear' }); if (viewport.width === 1240 || viewport.width === 320) await screenshot(`${suite}-${theme}-${scale}-logs-${viewport.width}`, { suite, theme, scale, viewport, routeId }); }
             if (viewport.width === 320 && routeId === 'settings') {
               await action('settings.setTab', ['game']);
               const beforeSave = await page.evaluate(() => ({ memory: window.foundationDesktop.config.settings.memory_mb, saveCalls: window.foundationDesktop.calls.filter(call => call.command === 'save_config').length }));
@@ -288,21 +297,26 @@ for (const suite of ['modern', 'immersive']) {
 
     await page.setViewportSize({ width: 640, height: 480 }); await route('logs');
     if (suite === 'immersive') {
-      const instances = globalRouteControl(page, suite, 'instances', text('nav.instances'));
+      const instances = await prepareGlobalRouteControl(page, suite, 'instances', text('nav.instances'));
+      const instancesReturn = await globalRouteFocusReturn(page, suite, instances);
       await reachable(instances, { suite, routeId: 'logs', control: 'top navigation instances' });
       await instances.focus(); await page.keyboard.press('Enter');
       await page.waitForFunction(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'instances');
-      assert.equal(await instances.evaluate(element => element === document.activeElement), true, 'top navigation retains actual keyboard focus across route changes');
+      assert.equal(await instancesReturn.evaluate(element => element === document.activeElement), true, 'global navigation returns actual keyboard focus to its stable control across route changes');
       const details = page.locator('.instance-row[data-profile-key="original-instance"] button[data-ui-site$=":ProfileCard-view"]');
       await reachable(details, { suite, routeId: 'instances', control: 'explicit instance details for contextual menu' });
       await details.focus(); await page.keyboard.press('Enter');
       await page.waitForFunction(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'custom.instance-details' && window.suiteBuiltinsFixture.snapshot.navigation.params.profileKey === 'original-instance');
     }
-    const navigation = page.locator('.mobile-navigation').getByRole('button', { name: text('responsiveUi.navigation'), exact: true });
+    const navigation = page.locator('.mobile-navigation').getByRole('button', { name: text(suite === 'immersive' ? 'shellHome.instanceSections' : 'responsiveUi.navigation'), exact: true });
     await navigation.focus(); await page.keyboard.press('Enter');
     const menu = page.getByRole('menu'); await menu.waitFor();
     if (suite === 'modern') await page.keyboard.press('End');
-    else await menu.getByRole('menuitem', { name: text('shellHome.sections.settings'), exact: true }).and(menu.locator('[data-ui-site$="SidebarMenu-section"]')).focus();
+    else {
+      assert.equal(await menu.locator('[data-ui-site$="SidebarMenu-route"]').count(), 0, 'Instance sections menu does not duplicate global navigation');
+      assert.equal(await menu.locator('[data-ui-site$="SidebarMenu-section"]').count(), 6, 'All real instance sections remain available');
+      await menu.getByRole('menuitem', { name: text('shellHome.sections.settings'), exact: true }).and(menu.locator('[data-ui-site$="SidebarMenu-section"]')).focus();
+    }
     await page.keyboard.press('Enter'); await menu.waitFor({ state: 'hidden' });
     await page.waitForFunction(element => element === document.activeElement, await navigation.elementHandle());
     if (suite === 'immersive') {
@@ -314,11 +328,12 @@ for (const suite of ['modern', 'immersive']) {
     await navigation.focus(); await page.keyboard.press('Enter'); await page.keyboard.press('Escape'); await menu.waitFor({ state: 'hidden' });
     assert.equal(await navigation.evaluate(element => element === document.activeElement), true);
     if (suite === 'immersive') {
-      const logsRoute = globalRouteControl(page, suite, 'logs', text('nav.logs'));
+      const logsRoute = await prepareGlobalRouteControl(page, suite, 'logs', text('nav.logs'));
+      const logsReturn = await globalRouteFocusReturn(page, suite, logsRoute);
       await reachable(logsRoute, { suite, routeId: 'instances', control: 'top navigation logs' });
       await logsRoute.focus(); await page.keyboard.press('Enter');
       await page.waitForFunction(() => window.suiteBuiltinsFixture.snapshot.navigation.routeId === 'logs');
-      assert.equal(await logsRoute.evaluate(element => element === document.activeElement), true);
+      assert.equal(await logsReturn.evaluate(element => element === document.activeElement), true, 'Menu navigation restores focus to the actual global trigger');
     }
     await commitAppearance('reduce_motion', true);
     await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -332,10 +347,11 @@ for (const suite of ['modern', 'immersive']) {
     for (const routeId of routeIds) {
       if (routeId === 'custom.instance-details') await route(routeId, { profileKey: 'original-instance' });
       else await route(routeId);
-      const expectedTitle = text(provenance.routes.find(route => route.id === routeId).title);
+      const expectedTitle = text(renderedRouteTitleKey(routeId, provenance.routes.find(route => route.id === routeId).title));
       const labelSelector = renderedRouteLabelSelector(suite, routeId);
-      await page.waitForFunction(({ title, labelSelector }) => { const s = window.suiteBuiltinsFixture.snapshot, label = document.querySelector(labelSelector); return window.foundationDesktop.config.settings.language === 'zh-CN' && s.config.value.settings.language === 'zh-CN' && s.settings.draft.language === 'zh-CN' && document.documentElement.lang === 'zh-CN' && label?.getClientRects().length && label.textContent.trim() === title; }, { title: expectedTitle, labelSelector });
-      const actual = await page.locator('.workspace').evaluate((element, labelSelector) => { const s = window.suiteBuiltinsFixture.snapshot; return { actualRouteId: s.navigation.routeId, publicProfileKey: s.navigation.params.profileKey ?? null, renderedProfileKey: document.querySelector('.instance-detail-page .instance-detail')?.getAttribute('data-profile-key') ?? null, committedLanguage: window.foundationDesktop.config.settings.language, publicConfigLanguage: s.config.value.settings.language, publicDraftLanguage: s.settings.draft.language, documentLanguage: document.documentElement.lang, renderedRouteLabel: document.querySelector(labelSelector).textContent.trim(), publicScale: s.appearance.value.ui_scale, committedScale: window.foundationDesktop.config.settings.appearance.ui_scale, clientWidth: element.clientWidth, scrollWidth: element.scrollWidth, viewportWidth: innerWidth, documentWidth: document.documentElement.scrollWidth }; }, labelSelector);
+      const labelAttribute = renderedRouteLabelAttribute(suite, routeId);
+      await page.waitForFunction(({ title, labelSelector, labelAttribute }) => { const s = window.suiteBuiltinsFixture.snapshot, label = document.querySelector(labelSelector), rendered = labelAttribute ? label?.getAttribute(labelAttribute) : label?.textContent; return window.foundationDesktop.config.settings.language === 'zh-CN' && s.config.value.settings.language === 'zh-CN' && s.settings.draft.language === 'zh-CN' && document.documentElement.lang === 'zh-CN' && label?.getClientRects().length && rendered?.trim() === title; }, { title: expectedTitle, labelSelector, labelAttribute });
+      const actual = await page.locator('.workspace').evaluate((element, { labelSelector, labelAttribute }) => { const s = window.suiteBuiltinsFixture.snapshot, label = document.querySelector(labelSelector); return { actualRouteId: s.navigation.routeId, publicProfileKey: s.navigation.params.profileKey ?? null, renderedProfileKey: document.querySelector('.instance-detail-page .instance-detail')?.getAttribute('data-profile-key') ?? null, committedLanguage: window.foundationDesktop.config.settings.language, publicConfigLanguage: s.config.value.settings.language, publicDraftLanguage: s.settings.draft.language, documentLanguage: document.documentElement.lang, renderedRouteLabel: (labelAttribute ? label.getAttribute(labelAttribute) : label.textContent).trim(), publicScale: s.appearance.value.ui_scale, committedScale: window.foundationDesktop.config.settings.appearance.ui_scale, clientWidth: element.clientWidth, scrollWidth: element.scrollWidth, viewportWidth: innerWidth, documentWidth: document.documentElement.scrollWidth }; }, { labelSelector, labelAttribute });
       assert.equal(actual.actualRouteId, routeId, 'Chinese capture uses the actual requested route');
       assert.equal(actual.publicScale, 120); assert.equal(actual.committedScale, 120);
       assert.equal(actual.renderedRouteLabel, expectedTitle, 'Chinese route label is actually rendered');
@@ -351,13 +367,14 @@ for (const suite of ['modern', 'immersive']) {
     report.failure = { suite, message: error.message, stack: error.stack };
     throw error;
   } finally {
-    report.errors.push(...fixture.observedPageErrors); report.cspErrors.push(...fixture.observedCspViolations);
+    report.errors.push(...fixture.observedPageErrors); report.cspErrors.push(...fixture.observedCspViolations); report.sourceRequests.push(...fixture.observedSourceModuleRequests);
     await writeFile(resolve(artifacts, 'report.json'), JSON.stringify(report, null, 2) + '\n');
     await fixture.close();
   }
 }
 for (const name of editorNames) assert.equal(createHash('sha256').update(await readFile(new URL(`../src/ui-suite/builtins/common/editor/${name}`, import.meta.url))).digest('hex'), editorHashes[name], `Ordinary editor bytes unchanged: ${name}`);
 assert.deepEqual(report.errors, []); assert.deepEqual(report.cspErrors, []);
+if (process.env.PARADOX_TEST_NATIVE_CSP === '1') assert.deepEqual(report.sourceRequests, [], 'compiled+CSP logs/responsive uses no application source modules');
 report.nativeBoundaries = ['DPI 100/125/150/200% requires the native Task11 gate; deviceScaleFactor is not OS DPI proof.', 'The boundary fixture injects real public launcher events; live game/native auth remain the final native gate.'];
 report.finishedAt = new Date().toISOString();
 await writeFile(resolve(artifacts, 'report.json'), JSON.stringify(report, null, 2) + '\n');

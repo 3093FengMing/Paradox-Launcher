@@ -1,0 +1,13 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.waitForFunction: Timeout 30000ms exceeded.
+    at waitRoute (F:\rust-code\Paradox Launcher\ui\scripts\check-ui-navigation-refinement-browser.mjs:31:51)
+    at activate (F:\rust-code\Paradox Launcher\ui\scripts\check-ui-navigation-refinement-browser.mjs:33:246)
+    at async file:///F:/rust-code/Paradox%20Launcher/ui/scripts/check-ui-navigation-refinement-browser.mjs:90:5 {
+  log: [],
+  name: 'TimeoutError'
+}
+
+Node.js v24.20.0

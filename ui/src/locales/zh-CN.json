@@ -65,6 +65,8 @@
     "home": "开始游戏",
     "instances": "我的实例",
     "downloads": "下载任务",
+    "downloadCenter": "下载",
+    "more": "更多",
     "accounts": "账户管理",
     "logs": "运行日志",
     "settings": "设置与个性化",
@@ -75,6 +77,15 @@
     "rustVersion": "Rust 驱动 · v{{version}}",
     "desktopRequired": "安装与启动请打开桌面应用",
     "content": "资源发现"
+  },
+  "downloadCenter": {
+    "description": "浏览游戏版本与资源，查看下载任务。",
+    "sections": "下载",
+    "versions": "游戏版本",
+    "resources": "资源",
+    "taskRecords": "任务记录",
+    "activeTasks": "下载任务进行中（{{count}}）",
+    "preparing": "正在处理下载任务"
   },
   "pages": {
     "home": {

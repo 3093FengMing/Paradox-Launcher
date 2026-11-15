@@ -36,17 +36,17 @@ export default function AppSidebar(input?: SidebarProps & { props?: Readonly<Rec
   const currentRoute = s.navigation.routes.find(route => route.id === s.navigation.routeId);
   const mobileNavigation = <div className="mobile-navigation" data-ui-site="ImmersiveSidebarMenu-bar">
     <Menu.Root data-ui-site="ImmersiveSidebarMenu-root">
-      <Menu.Trigger className="secondary mobile-navigation-trigger" aria-label={t('responsiveUi.navigation')} data-ui-site="ImmersiveSidebarMenu-trigger"><MenuIcon size={16} aria-hidden="true" data-ui-site="ImmersiveSidebarMenu-icon"/>{t('responsiveUi.navigation')}</Menu.Trigger>
+      <Menu.Trigger className="secondary mobile-navigation-trigger" aria-label={t(contextual ? 'shellHome.instanceSections' : 'responsiveUi.navigation')} data-ui-site="ImmersiveSidebarMenu-trigger"><MenuIcon size={16} aria-hidden="true" data-ui-site="ImmersiveSidebarMenu-icon"/>{t(contextual ? 'shellHome.instanceSections' : 'responsiveUi.navigation')}</Menu.Trigger>
       <Menu.Portal data-ui-site="ImmersiveSidebarMenu-portal">
         <Menu.Positioner side="bottom" align="start" sideOffset={4} className="immersive-navigation-positioner immersive-portal" data-ui-site="ImmersiveSidebarMenu-positioner" style={{ fontSize: Math.max(13, 14 * (s.appearance.value?.ui_scale ?? 100) / 100) }}>
           <Menu.Popup className="immersive-navigation-menu immersive-portal" data-ui-site="ImmersiveSidebarMenu-popup" style={{ fontSize: 'inherit' }}>
-            {visible.map(route => { const Icon = routeIcon(route.icon), label = t(route.title, { defaultValue: route.title }); return <UiIdentity key={route.id} namespace="route" value={route.id}>
+            {!contextual && visible.map(route => { const Icon = routeIcon(route.icon), label = t(route.title, { defaultValue: route.title }); return <UiIdentity key={route.id} namespace="route" value={route.id}>
               <Menu.Item label={label} onClick={() => { if (route.id === 'settings') a.settings.setTab('appearance'); a.navigation.navigate(route.id); }} data-ui-site="ImmersiveSidebarMenu-route" style={{ fontSize: 'inherit' }}>
                 {Icon && <Icon size={16} aria-hidden="true" data-ui-site="ImmersiveSidebarMenu-route-icon"/>}<span data-ui-site="ImmersiveSidebarMenu-route-label">{label}</span>
               </Menu.Item>
             </UiIdentity>; })}
             {contextual && entry && <UiIdentity namespace="profile" value={entry.profile.instance_key}>
-              <Menu.Separator className="mobile-navigation-separator" data-ui-site="ImmersiveSidebarMenu-separator"/>
+              {!contextual && <Menu.Separator className="mobile-navigation-separator" data-ui-site="ImmersiveSidebarMenu-separator"/>}
               {['overview', 'settings', 'mods', 'resourcepacks', 'shaderpacks', 'saves'].map(section => <UiIdentity key={section} namespace="section" value={section}>
                 <Menu.Item label={t(`shellHome.sections.${section}`)} onClick={() => props.onDetailSectionChange?.(section)} data-ui-site="ImmersiveSidebarMenu-section" style={{ fontSize: 'inherit' }}>{t(`shellHome.sections.${section}`)}</Menu.Item>
               </UiIdentity>)}
@@ -64,7 +64,7 @@ export default function AppSidebar(input?: SidebarProps & { props?: Readonly<Rec
     <span className="mobile-navigation-label" data-ui-site="ImmersiveSidebarMenu-current">{currentRoute ? t(currentRoute.title, { defaultValue: currentRoute.title }) : t('nav.workspace')}</span>
   </div>;
 
-  if (!contextual && s.navigation.routeId !== 'instances') return null;
+  if (!contextual) return null;
   if (contextual) return <Fragment>{mobileNavigation}<aside data-ui-site="AppSidebar-context" className="sidebar instance-context-sidebar" aria-label={t('shellHome.instanceSections')}>
     <button data-ui-site="AppSidebar-back" className="text-button" onClick={() => a.navigation.navigate('instances')}>{t('instancePages.back')}</button>
     {entry ? <UiIdentity namespace="profile" value={entry.profile.instance_key}>

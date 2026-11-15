@@ -1,0 +1,15 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.evaluate: TypeError: action is not a function
+    at eval (eval at evaluate (:311:30), <anonymous>:4:20)
+    at UtilityScript.evaluate (<anonymous>:313:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at launcherAction (F:\rust-code\Paradox Launcher\ui\scripts\lib\ui-redesign-scenarios.mjs:28:15)
+    at a (F:\rust-code\Paradox Launcher\ui\scripts\check-ui-navigation-refinement-browser.mjs:29:47)
+    at F:\rust-code\Paradox Launcher\ui\scripts\check-ui-navigation-refinement-browser.mjs:53:11 {
+  log: []
+}
+
+Node.js v24.20.0

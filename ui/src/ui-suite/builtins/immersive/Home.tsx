@@ -13,7 +13,7 @@ import './style.css';
 
 import { useEffect, useRef, useState } from 'react';
 import { Menu } from '@paradox/ui';
-import { ArrowUpRight, Box, Check, ChevronUp, Import, Palette, Play, Plus, Search, Settings2, X } from 'lucide-react';
+import { ArrowUpRight, Box, Check, ChevronDown, Import, Palette, Play, Plus, Search, Settings2, X } from 'lucide-react';
 export default function Home() {
   const [hint, setHint] = useState(true), [menuOpen, setMenuOpen] = useState(false), [search, setSearch] = useState('');
 
@@ -57,15 +57,15 @@ export default function Home() {
   return <section data-ui-site="Home-1" className="immersive-home" aria-label={t('nav.home')}>
     <div data-ui-site="Home-12" className="immersive-launch-area">
       <div data-ui-site="Home-54" className="immersive-launch-meta">
-        {visible('accounts') ? <button data-ui-site="Home-55" className="immersive-account-link" onClick={() => a.navigation.navigate('accounts')}>{accountContent}</button> : <div data-ui-site="Home-account-readonly" className="immersive-account-link">{accountContent}</div>}
-        {profile && <button data-ui-site="Home-59" className="immersive-instance-settings" aria-label={t('immersive.manageInstance')} title={t('immersive.manageInstance')}
-          disabled={!registered('custom.instance-details') && !entry?.capabilities.edit.allowed}
-          onClick={() => registered('custom.instance-details') ? a.navigation.navigate('custom.instance-details', { profileKey: profile.instance_key }) : a.instanceDraft.open(profile.instance_key)}><Settings2 data-ui-site="Home-60" size={16} /></button>}
+        {registered('accounts') ? <button data-ui-site="Home-55" className="immersive-account-link" onClick={() => a.navigation.navigate('accounts')}>{accountContent}</button> : <div data-ui-site="Home-account-readonly" className="immersive-account-link">{accountContent}</div>}
       </div>
       <UiView data-ui-site="Home-global-activity" id="component.activity-bar" />
       <div data-ui-site="Home-identity" className="immersive-launch-identity">
-        <span data-ui-site="Home-current-caption" className="home-current-caption">{t('shellHome.currentInstance')}</span>
+        <span data-ui-site="Home-current-caption" className="home-current-caption sr-only">{t('shellHome.currentInstance')}</span>
         <h1 data-ui-site="Home-current-name" title={profile?.name}>{profile?.name ?? t(s.profiles.items.length ? 'immersive.chooseWorld' : 'immersive.firstWorld')}</h1>
+        {profile && <button data-ui-site="Home-59" className="immersive-instance-settings" aria-label={t('immersive.manageInstance')} title={t('immersive.manageInstance')}
+          disabled={!registered('custom.instance-details') && !entry?.capabilities.edit.allowed}
+          onClick={() => registered('custom.instance-details') ? a.navigation.navigate('custom.instance-details', { profileKey: profile.instance_key }) : a.instanceDraft.open(profile.instance_key)}><Settings2 data-ui-site="Home-60" size={16} aria-hidden="true" /></button>}
       </div>
       {profile && <div data-ui-site="Home-instance-state" className="home-instance-state" data-profile-key={profile.instance_key}>
         <span data-ui-site="Home-status">{t(state)}</span><small data-ui-site="Home-loader">Minecraft {entry?.actualInstance?.game_version ?? profile.game_version} · {loader}</small>
@@ -82,8 +82,8 @@ export default function Home() {
           <span data-ui-site="Home-26" className="immersive-launch-copy"><strong data-ui-site="Home-27">{actionTitle}</strong><small data-ui-site="Home-28" title={profile?.name}>{profile?.name ?? t(s.profiles.items.length ? 'immersive.chooseWorld' : 'immersive.firstWorld')}</small></span>
         </Button>
         <Menu.Root data-ui-site="Home-29" open={menuOpen} onOpenChange={setMenuOpen}>
-          <Menu.Trigger data-ui-site="Home-30" className="immersive-launch-select" aria-label={t('immersive.selectInstance')} title={t('immersive.selectInstance')}><ChevronUp data-ui-site="Home-31" size={20} /></Menu.Trigger>
-          <Menu.Portal data-ui-site="Home-32"><Menu.Positioner data-ui-site="Home-33" side="top" align="end" sideOffset={8} className="immersive-menu-positioner immersive-portal" style={{ fontSize: Math.max(13, 14 * (s.appearance.value?.ui_scale ?? 100) / 100) }}>
+          <Menu.Trigger data-ui-site="Home-30" className="immersive-launch-select" aria-label={t('immersive.selectInstance')} title={t('immersive.selectInstance')}><ChevronDown data-ui-site="Home-31" size={20} aria-hidden="true" /></Menu.Trigger>
+          <Menu.Portal data-ui-site="Home-32"><Menu.Positioner data-ui-site="Home-33" side="bottom" align="end" sideOffset={8} className="immersive-menu-positioner immersive-portal" style={{ fontSize: Math.max(13, 14 * (s.appearance.value?.ui_scale ?? 100) / 100) }}>
             <Menu.Popup data-ui-site="Home-34" className="immersive-instance-menu immersive-portal" style={{ fontSize: 'inherit' }}>
               <div data-ui-site="Home-35" className="immersive-menu-heading">{t('immersive.instances')}<span data-ui-site="Home-36">{s.profiles.items.length}</span></div>
               <div data-ui-site="Home-37" className="immersive-menu-instances">

@@ -1,0 +1,220 @@
+{
+  "generatedAt": "2026-11-15T09:57:06.361221+00:00",
+  "sourceStage": "navigation-refinement-final",
+  "sourceFingerprint": "b9c0dd1c29c61bd6231369c579bbd37af4723bc86ccff61e0a7cc6999edc99e4",
+  "sourceCount": 156,
+  "lanes": {
+    "dev": [
+      {
+        "command": "node",
+        "args": [
+          "scripts/check-ui-home-browser.mjs"
+        ],
+        "startedAt": "2026-11-15T09:37:46.4262740Z",
+        "finishedAt": "2026-11-15T09:38:21.3408089Z",
+        "exitCode": 0,
+        "inputCount": 888,
+        "inputDrift": [],
+        "url": "http://127.0.0.1:1434",
+        "kind": "home",
+        "record": "dev/home/report.json",
+        "sourceRequests": 1306,
+        "pageErrors": 0,
+        "cspViolations": 0,
+        "rows": 3
+      },
+      {
+        "command": "node",
+        "args": [
+          "scripts/check-ui-navigation-refinement-browser.mjs"
+        ],
+        "startedAt": "2026-11-15T09:46:19.2491860Z",
+        "finishedAt": "2026-11-15T09:48:41.9427784Z",
+        "exitCode": 0,
+        "inputCount": 888,
+        "inputDrift": [],
+        "url": "http://127.0.0.1:1434",
+        "kind": "navigation",
+        "record": "dev/navigation/report.json",
+        "sourceRequests": 1300,
+        "pageErrors": 0,
+        "cspViolations": 0,
+        "featureJourneys": 4,
+        "layoutContexts": 48
+      },
+      {
+        "command": "node",
+        "args": [
+          "scripts/check-ui-versions-downloads-browser.mjs"
+        ],
+        "startedAt": "2026-11-15T09:46:19.2404643Z",
+        "finishedAt": "2026-11-15T09:47:01.4450152Z",
+        "exitCode": 0,
+        "inputCount": 888,
+        "inputDrift": [],
+        "url": "http://127.0.0.1:1434",
+        "kind": "versions",
+        "record": "dev/versions/report.json",
+        "sourceRequests": 650,
+        "pageErrors": 0,
+        "cspViolations": 0,
+        "rows": 2
+      },
+      {
+        "command": "node",
+        "args": [
+          "scripts/check-ui-logs-responsive-browser.mjs"
+        ],
+        "startedAt": "2026-11-15T09:40:05.4542371Z",
+        "finishedAt": "2026-11-15T09:43:20.2225424Z",
+        "exitCode": 0,
+        "inputCount": 888,
+        "inputDrift": [],
+        "url": "http://127.0.0.1:1434",
+        "kind": "logs",
+        "record": "dev/logs/report.json",
+        "sourceRequests": 650,
+        "pageErrors": 0,
+        "cspViolations": 0,
+        "groups": 12,
+        "layoutContexts": 540,
+        "keyboardContexts": 90,
+        "contrastChecks": 72
+      }
+    ],
+    "compiled": [
+      {
+        "command": "node",
+        "args": [
+          "scripts/check-ui-home-browser.mjs"
+        ],
+        "startedAt": "2026-11-15T09:50:25.6161651Z",
+        "finishedAt": "2026-11-15T09:50:50.4906863Z",
+        "exitCode": 0,
+        "inputCount": 888,
+        "inputDrift": [],
+        "url": "http://127.0.0.1:1442",
+        "kind": "home",
+        "record": "compiled/home/report.json",
+        "sourceRequests": 0,
+        "pageErrors": 0,
+        "cspViolations": 0,
+        "rows": 3
+      },
+      {
+        "command": "node",
+        "args": [
+          "scripts/check-ui-navigation-refinement-browser.mjs"
+        ],
+        "startedAt": "2026-11-15T09:50:00.3873696Z",
+        "finishedAt": "2026-11-15T09:51:44.6058139Z",
+        "exitCode": 0,
+        "inputCount": 888,
+        "inputDrift": [],
+        "url": "http://127.0.0.1:1442",
+        "kind": "navigation",
+        "record": "compiled/navigation/report.json",
+        "sourceRequests": 0,
+        "pageErrors": 0,
+        "cspViolations": 0,
+        "featureJourneys": 4,
+        "layoutContexts": 48
+      },
+      {
+        "command": "node",
+        "args": [
+          "scripts/check-ui-versions-downloads-browser.mjs"
+        ],
+        "startedAt": "2026-11-15T09:48:28.8902346Z",
+        "finishedAt": "2026-11-15T09:48:49.0355979Z",
+        "exitCode": 0,
+        "inputCount": 888,
+        "inputDrift": [],
+        "url": "http://127.0.0.1:1442",
+        "kind": "versions",
+        "record": "compiled/versions/report.json",
+        "sourceRequests": 0,
+        "pageErrors": 0,
+        "cspViolations": 0,
+        "rows": 2
+      },
+      {
+        "command": "node",
+        "args": [
+          "scripts/check-ui-logs-responsive-browser.mjs"
+        ],
+        "startedAt": "2026-11-15T09:51:44.7620675Z",
+        "finishedAt": "2026-11-15T09:54:19.4759559Z",
+        "exitCode": 0,
+        "inputCount": 888,
+        "inputDrift": [],
+        "url": "http://127.0.0.1:1442",
+        "kind": "logs",
+        "record": "compiled/logs/report.json",
+        "sourceRequests": 0,
+        "pageErrors": 0,
+        "cspViolations": 0,
+        "groups": 12,
+        "layoutContexts": 540,
+        "keyboardContexts": 90,
+        "contrastChecks": 72
+      }
+    ]
+  },
+  "staticAndBuilds": "Passed TypeScript, ESLint, locales, npm test static suite, final builtin source test, compiled fixture build, and Windows debug native build; details in build-provenance.json.",
+  "impeccableDetector": {
+    "executions": 1,
+    "exitCode": 0,
+    "issues": []
+  },
+  "independentReview": {
+    "newAgent": "/root/independent_ui_review",
+    "record": "../independent-review.md",
+    "findings": {
+      "P2": 2,
+      "P3": 2
+    },
+    "fixedAndRechecked": 4,
+    "remainingInReviewedScope": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 0
+    }
+  },
+  "nativeBoundary": "Actual account authentication, real network downloads, game launch and Windows DPI interaction were not exercised. Browser data/events are controlled fixtures; executable build succeeded.",
+  "testScripts": [
+    {
+      "path": "ui/scripts/lib/ui-redesign-navigation.mjs",
+      "bytes": 4487,
+      "sha256": "73507a85d5d70ad6a14c85c8895488c4d95cdce2d117275c3d0932dfcc676953"
+    },
+    {
+      "path": "ui/scripts/check-ui-home-browser.mjs",
+      "bytes": 33967,
+      "sha256": "c4bfe07ca542c2cdf6db08d7d82e1b47f503363ae97bf42c08fd0203f1dcd51f"
+    },
+    {
+      "path": "ui/scripts/check-ui-versions-downloads-browser.mjs",
+      "bytes": 22753,
+      "sha256": "0596a0add776771090a671d0583ee7a91e58fcf9e3ac5b3de05e77bb17ad2cdd"
+    },
+    {
+      "path": "ui/scripts/check-ui-logs-responsive-browser.mjs",
+      "bytes": 42998,
+      "sha256": "8e795721ff7de629f21e6b205bf95d7050efdc9472d52d1a4e6233f0eb7973b4"
+    },
+    {
+      "path": "ui/scripts/check-ui-navigation-refinement-browser.mjs",
+      "bytes": 27597,
+      "sha256": "e5cabd52996c7a0bfafdbd760db1dac2f33a6ab5d8ee8248dfad209a2c874c64"
+    },
+    {
+      "path": "ui/scripts/check-ui-redesign-browser.mjs",
+      "bytes": 21970,
+      "sha256": "cdf4d656b6a94f119493dfef45f999d433d245457eb54bb320ac31ff2ae5ed22"
+    }
+  ],
+  "attemptsRecord": "attempts.json",
+  "evidenceLogEncoding": "Committed log copies use LF with trailing whitespace removed; original runner output remains in the recorded .test-data attempt directories.",
+  "largeReportStorage": "Full DEV and compiled logs reports are preserved in deterministic report.json.gz with uncompressed byte/SHA metadata; report.json contains readable counts and the checks."
+}

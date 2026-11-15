@@ -1,14 +1,11 @@
-/* The workspace header owns window controls; the rail and main scroll separately. */
+/* The fixed title bar is independent from page headings and scrolling content. */
 .modern-shell { display: flex; height: 100dvh; min-height: 0; padding-top: var(--titlebar-height); overflow: hidden; background: var(--bg); color: var(--text); }
-.modern-shell.workspace-ready { padding-top: 0; }
 .modern-shell .window-bar { position: fixed; inset: 0 0 auto; height: var(--titlebar-height); z-index: 40; display: flex; align-items: center; justify-content: space-between; background: var(--titlebar); color: var(--text); user-select: none; border-bottom: 1px solid var(--border); }
 .modern-shell .window-title { min-width: 0; display: flex; gap: .6rem; align-items: center; padding-left: 1rem; font-size: var(--meta-size); font-weight: 600; }
 .modern-shell .window-title > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .modern-shell .window-title small { font-size: inherit; font-weight: 400; margin-left: .5rem; color: var(--muted); }
 .modern-shell .window-controls { display: flex; align-self: stretch; flex-shrink: 0; }
 .modern-shell .window-controls button { width: 2.9rem; min-height: var(--control-height); padding: 0; border-radius: 0; background: transparent; color: inherit; }
-.modern-shell.workspace-ready .window-bar { position: static; inset: auto; background: transparent; border: 0; height: 3.6rem; }
-.modern-shell.workspace-ready .window-title { display: none; }
 .modern-shell .sidebar { flex: 0 0 var(--rail-width); width: var(--rail-width); min-height: 0; display: flex; flex-direction: column; gap: .6rem; padding: 1rem .5rem .75rem; overflow: auto; border-right: 1px solid var(--border); background: var(--sidebar); }
 .modern-shell .sidebar > * { flex-shrink: 0; }
 .modern-shell .sidebar-brand { display: flex; align-items: center; justify-content: center; gap: .5rem; padding: .5rem 0 1rem; color: var(--text); }
@@ -31,8 +28,8 @@
 .modern-shell .detail-sections { padding-top: .5rem; border-top: 1px solid var(--border); }
 .modern-shell .workspace { min-width: 0; min-height: 0; flex: 1; display: flex; flex-direction: column; container-type: inline-size; }
 .modern-shell .workspace > main { flex: 1; min-width: 0; min-height: 0; width: 100%; overflow: auto; padding: 0 1.8rem 1.5rem; scrollbar-gutter: stable; }
-.modern-shell .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 6.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
-.modern-shell .page-heading > div:first-child { min-width: 0; padding: 1.15rem 0; }
+.modern-shell .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 1em; min-height: 4.75em; margin-bottom: 1em; border-bottom: 1px solid var(--border); }
+.modern-shell .page-heading > div:first-child { min-width: 0; padding: .9em 0; }
 .modern-shell .page-heading h1 { margin: 0 0 .3rem; font-size: max(19px,1.5em); font-weight: 600; line-height: 1.3; }
 .modern-shell .page-heading p { margin: 0; font-size: max(12px,.86em); line-height: 1.5; color: var(--muted); overflow-wrap: anywhere; }
 .modern-shell .current-launch-target { display: none; }
@@ -52,10 +49,8 @@
   .modern-shell .current-launch-target > button { flex: 0 0 auto; }
 }
 @media (max-width: 719px) {
-  .modern-shell.workspace-ready { padding-top: 0; }
-  .modern-shell .page-heading { min-height: 5.4rem; gap: .35rem; margin-bottom: .8rem; }
-  .modern-shell .page-heading > div:first-child { padding: .85rem 0; }
-  .modern-shell.workspace-ready .window-bar { height: 3rem; }
+  .modern-shell .page-heading { min-height: 4em; gap: .35em; margin-bottom: .8em; }
+  .modern-shell .page-heading > div:first-child { padding: .65em 0; }
   .modern-shell .window-controls button { width: 2.4rem; }
   .modern-shell .page-heading p { display: none; }
   .modern-shell .current-launch-target { padding: .65rem .85rem; }
@@ -64,4 +59,15 @@
   .modern-shell .window-controls button { width: 2rem; }
   .modern-shell .window-title small { display: none; }
   .modern-shell .page-heading h1 { font-size: 18px; }
+}
+@media (max-height:600px) {
+  .modern-shell .sidebar { flex-basis: 3.9em; width: 3.9em; padding: .5em .35em; gap: .25em; overflow: hidden; }
+  .modern-shell .sidebar nav,.modern-shell .sidebar-bottom { gap: .25em; }
+  .modern-shell .sidebar .nav-item { min-height: 2.65em; padding: .45em .25em; gap: 0; }
+  .modern-shell .sidebar :is(.nav-label,.nav-item b,.detail-sections) { display: none; }
+  .modern-shell .window-title small { display: none; }
+  .modern-shell .page-heading { min-height: 3.8em; margin-bottom: .7em; }
+}
+@media (max-height:340px) {
+  .modern-shell > .sidebar { display: none; }
 }

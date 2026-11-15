@@ -1,0 +1,37 @@
+{
+  "startedAt": "2026-11-15T09:51:44.989Z",
+  "finishedAt": "2026-11-15T09:54:19.426Z",
+  "checks": [
+    "modern:all_default_player_bindings_and_common_cleanup",
+    "modern:real_time_level_message_filter_full_export_selection_and_shortcut_guard",
+    "modern:follow_pause_resume_storage_failure_retry_and_new_log_retention",
+    "modern:all_pages_five_viewports_themes_scales_keyboard_and_text_contrast",
+    "modern:mobile_menu_keyboard_return_focus_and_reduced_motion",
+    "modern:Chinese_320_long_names_paths_and_keyboard",
+    "immersive:all_default_player_bindings_and_common_cleanup",
+    "immersive:real_time_level_message_filter_full_export_selection_and_shortcut_guard",
+    "immersive:follow_pause_resume_storage_failure_retry_and_new_log_retention",
+    "immersive:all_pages_five_viewports_themes_scales_keyboard_and_text_contrast",
+    "immersive:mobile_menu_keyboard_return_focus_and_reduced_motion",
+    "immersive:Chinese_320_long_names_paths_and_keyboard"
+  ],
+  "errors": [],
+  "cspErrors": [],
+  "sourceRequests": [],
+  "layoutsCount": 540,
+  "keyboardCount": 90,
+  "contrastCount": 72,
+  "reachabilityCount": 159,
+  "appearanceCount": 22,
+  "savePersistenceCount": 12,
+  "languageTransitionsCount": 4,
+  "languageCoverageCount": 18,
+  "sourceOwnershipCount": 2,
+  "nativeBoundariesCount": 2,
+  "fullReport": {
+    "path": "report.json.gz",
+    "uncompressedBytes": 1387210,
+    "sha256": "db37f851eef5f4354952c60bdea7253a4dbb2986b733700a47e75f24ed7e1010",
+    "encoding": "Original full JSON report compressed with deterministic gzip; includes every layout row and source provenance."
+  }
+}

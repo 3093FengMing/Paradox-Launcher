@@ -65,6 +65,8 @@
     "home": "Play",
     "instances": "Instances",
     "downloads": "Download tasks",
+    "downloadCenter": "Downloads",
+    "more": "More",
     "accounts": "Accounts",
     "logs": "Logs",
     "settings": "Settings",
@@ -75,6 +77,15 @@
     "rustVersion": "Powered by Rust · v{{version}}",
     "desktopRequired": "Open the desktop app to install and play",
     "content": "Discover resources"
+  },
+  "downloadCenter": {
+    "description": "Browse game versions and resources, or review your download tasks.",
+    "sections": "Downloads",
+    "versions": "Game versions",
+    "resources": "Resources",
+    "taskRecords": "Task records",
+    "activeTasks": "Downloads in progress: {{count}}",
+    "preparing": "Processing download tasks"
   },
   "pages": {
     "home": {

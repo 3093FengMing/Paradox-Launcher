@@ -1,0 +1,42 @@
+
+> paradox-launcher-workspace@0.4.0-dev build
+> cd apps/desktop && tauri build --debug --no-bundle
+
+        Info `tauri-build` dependency has workspace inheritance enabled. The features array won't be automatically rewritten. Expected features: []
+        Info `tauri` dependency has workspace inheritance enabled. The features array won't be automatically rewritten. Expected features: []
+        Info Looking up installed tauri packages to check mismatched versions...
+     Running beforeBuildCommand `npm --prefix ../ui run build`
+
+> paradox-launcher-ui@0.4.0-dev build
+> tsc -b && vite build
+
+vite v8.3.6 building client environment for production...
+transforming...
+✓ 2897 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                            0.62 kB │ gzip:   0.34 kB
+dist/assets/index-EBZf3umG.css                            11.07 kB │ gzip:   2.80 kB
+dist/assets/rolldown-runtime-COiEfhsA.js                   1.11 kB │ gzip:   0.62 kB
+dist/assets/module-graph-DIfg7MoO.js                       3.26 kB │ gzip:   1.52 kB
+dist/assets/site-transform-FuzpsGg8.js                     6.45 kB │ gzip:   2.56 kB
+dist/assets/suite-ktTkxjJo.js                             22.51 kB │ gzip:   5.86 kB
+dist/assets/suite-00x4JDPe.js                             22.67 kB │ gzip:   5.81 kB
+dist/assets/builtin-source-common-Bl8eV9ak.js             66.18 kB │ gzip:  17.51 kB
+dist/assets/compiler-BedL5UTb.js                         226.92 kB │ gzip:  67.21 kB
+dist/assets/prepared-D0t4-BPB.js                         231.05 kB │ gzip:  66.50 kB
+dist/assets/builtin-source-modern-BGZU9hdC.js            352.30 kB │ gzip:  64.48 kB
+dist/assets/builtin-source-immersive-D25PqBdD.js         428.09 kB │ gzip:  67.48 kB
+dist/assets/index-BmeRUEsb.js                          1,633.57 kB │ gzip: 485.36 kB
+dist/assets/_virtual_ui-suite-graph-plans-Cd3YqKAF.js  2,212.77 kB │ gzip: 285.84 kB
+dist/assets/typescript-BPbHYXjA.js                     3,522.83 kB │ gzip: 992.73 kB
+
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2.81s
+   Compiling paradox-launcher v0.4.0-dev (F:\rust-code\Paradox Launcher\apps\desktop)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 12.53s
+       Built application at: F:\rust-code\Paradox Launcher\target\debug\paradox-launcher.exe

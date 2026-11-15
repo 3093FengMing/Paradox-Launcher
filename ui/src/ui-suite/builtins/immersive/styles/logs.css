@@ -1,11 +1,11 @@
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs { display: grid; gap: 18px; min-width: 0; container-type: inline-size; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs { display: grid; gap: 14px; min-width: 0; container-type: inline-size; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-intro { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start; gap: 14px; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-intro > div:first-child { display: grid; gap: 7px; min-width: 0; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-intro h2 { font-size: max(13px, 1.1em); margin: 0; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-intro p { font-size: max(13px, .8em); color: var(--muted); margin: 0; overflow-wrap: anywhere; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-actions button { white-space: nowrap; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-workspace { display: grid; grid-template-columns: 135px minmax(0, 1fr); gap: 18px; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-workspace { display: grid; grid-template-columns: 135px minmax(0, 1fr); gap: 14px; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-levels { display: flex; flex-direction: column; align-items: stretch; gap: 4px; min-width: 0; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-caption { color: var(--muted); font-size: max(13px, .75em); margin: 5px 9px 8px; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-level-choice { justify-content: start; text-align: left; background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: var(--radius,6px); padding: 10px; overflow-wrap: anywhere; }
@@ -20,8 +20,8 @@
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-panel { overflow: hidden; padding: 0; border: 1px solid var(--border); border-radius: var(--radius,6px); background: var(--surface); min-width: 0; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-console-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 11px 13px; border-bottom: 1px solid var(--border); font-size: max(13px, .78em); }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-console-heading small { margin-left: auto; color: var(--muted); font-size: max(13px, .93em); }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-console { height: clamp(12em, 54dvh, 38em); overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding: 7px 13px; user-select: text; -webkit-app-region: no-drag; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: max(13px, .77em); line-height: 1.8; color: var(--text); }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-line { display: grid; grid-template-columns: minmax(10em, auto) minmax(0, 1fr); gap: 4px 13px; padding: 6px 0; border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent); }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-console { height: clamp(12em, 54dvh, 38em); overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding: 7px 13px; user-select: text; -webkit-app-region: no-drag; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: max(13px, .77em); line-height: 1.4; color: var(--text); }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-line { display: grid; grid-template-columns: minmax(12em, auto) minmax(0, 1fr); gap: 2px 12px; padding: 2px 0; border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent); }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-line-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-line time { color: var(--muted); overflow-wrap: anywhere; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-line b { font-size: max(13px, .92em); overflow-wrap: anywhere; }
@@ -46,3 +46,11 @@
   :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-actions button { flex: 1 1 auto; }
   :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-console, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-logs .logs-console-heading { padding-left: 10px; padding-right: 10px; }
 }
+
+/* Severity keeps its written label and a theme-aware ink color. */
+:where(.immersive-shell,.immersive-dialog-theme,.immersive-portal) .immersive-logs .logs-line[data-level=info] b { color: var(--accent-ink); }
+:where(.immersive-shell,.immersive-dialog-theme,.immersive-portal) .immersive-logs .logs-line:is([data-level=debug],[data-level=trace]) b { color: var(--muted); font-weight: 400; }
+:where(.immersive-shell,.immersive-dialog-theme,.immersive-portal) .immersive-logs .logs-line[data-level=warn] > span { color: var(--warning); }
+:where(.immersive-shell,.immersive-dialog-theme,.immersive-portal) .immersive-logs .logs-line:is([data-level=error],[data-level=fatal]) > span,
+:where(.immersive-shell,.immersive-dialog-theme,.immersive-portal) .immersive-logs .logs-line[data-level=fatal] b { color: var(--danger); }
+:where(.immersive-shell,.immersive-dialog-theme,.immersive-portal) .immersive-logs .logs-line time { font-variant-numeric: tabular-nums; }

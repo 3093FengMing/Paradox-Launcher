@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-14T23:01:33Z",
+  "generatedAt": "2026-11-15T09:35:34.728Z",
   "title": "Design System: Paradox Launcher",
   "extensions": {
     "colorMeta": {
@@ -394,9 +394,19 @@
     ],
     "motion": [
       {
-        "name": "modern-control",
-        "value": "120ms cubic-bezier(.2,.8,.2,1)",
-        "purpose": "Modern 控件表面与边界变化；键盘导航与减少动效关闭过渡。"
+        "name": "player-hover",
+        "value": "150ms cubic-bezier(.16,1,.3,1)",
+        "purpose": "共享玩家按钮表面、文字、边界和连续行的悬停反馈；应用与系统减少动效关闭过渡。"
+      },
+      {
+        "name": "player-active",
+        "value": "45ms cubic-bezier(.16,1,.3,1)",
+        "purpose": "共享玩家按钮按下反馈，轻微降低亮度；既有键盘导航规则保留。"
+      },
+      {
+        "name": "route-opacity",
+        "value": "opacity .88 to 1; 170ms cubic-bezier(.16,1,.3,1)",
+        "purpose": "既有 route-stage 上的反馈；不为动效重新挂载 UiRouteViewport 或 LauncherProvider；设置、系统偏好与清理可取消。"
       },
       {
         "name": "modern-dialog",
@@ -446,24 +456,275 @@
       {
         "name": "immersive-home-low-height",
         "value": "400px"
+      },
+      {
+        "name": "immersive-navigation-menu",
+        "value": "900px"
+      },
+      {
+        "name": "modern-low-height-rail",
+        "value": "600px height"
+      },
+      {
+        "name": "modern-low-height-menu-only",
+        "value": "340px height"
       }
     ],
     "provenance": {
-      "sourceStage": "final-v4",
-      "sourceFingerprint": "8688318cc7db1a2b48767db03e6c1f2d2112e5291d40969ff9714e40fc81e124",
-      "sourceFiles": 125,
-      "sourceFingerprintAlgorithm": "JavaScript files.sort() of repository-relative forward-slash paths; UTF-8 path + NUL + raw file bytes + NUL; SHA-256; no newline normalization.",
-      "sourceRecord": "docs/ui-redesign-2026-11-15/evidence/application/provenance.json",
-      "verificationRecord": "docs/ui-redesign-2026-11-15/implementation-review.md",
-      "buildRecord": "docs/ui-redesign-2026-11-15/evidence/application/build-provenance.json",
+      "sourceStage": "navigation-refinement-final",
+      "gitBaseline": "e3e880f397ad3d22dc5301819b8832d9f672cb86",
+      "sourceFingerprint": "b9c0dd1c29c61bd6231369c579bbd37af4723bc86ccff61e0a7cc6999edc99e4",
+      "sourceFiles": 156,
+      "sourceFingerprintAlgorithm": "JavaScript files.sort() of repository-relative forward-slash paths; UTF-8 path + NUL + raw file bytes + NUL; SHA-256; no newline normalization. Includes common, modern and immersive TS/TSX/CSS; manifests separately fingerprinted.",
+      "sourceRecord": "docs/ui-navigation-refinement-2026-11-15/evidence/provenance.json",
+      "evidenceDirectory": "docs/ui-navigation-refinement-2026-11-15/evidence/",
+      "buildRecord": "docs/ui-navigation-refinement-2026-11-15/evidence/build-provenance.json",
+      "renderRecord": "docs/ui-navigation-refinement-2026-11-15/evidence/report.json",
+      "verificationRecord": "docs/ui-navigation-refinement-2026-11-15/implementation-review.md",
+      "verificationSummary": "docs/ui-navigation-refinement-2026-11-15/evidence/verification-summary.json",
+      "independentReviewRecord": "docs/ui-navigation-refinement-2026-11-15/independent-review.md",
       "applicationScreenshots": [
-        "docs/ui-redesign-2026-11-15/evidence/application/immersive-home.png",
-        "docs/ui-redesign-2026-11-15/evidence/application/immersive-instances.png",
-        "docs/ui-redesign-2026-11-15/evidence/application/modern-home.png",
-        "docs/ui-redesign-2026-11-15/evidence/application/modern-instances.png"
+        "docs/ui-navigation-refinement-2026-11-15/evidence/immersive-home.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/immersive-instances.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/immersive-versions.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/immersive-logs.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/immersive-instance-settings.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/immersive-home-640.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/immersive-home-320.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/immersive-home-light.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/immersive-instances-light.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/immersive-versions-light.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/immersive-logs-light.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/modern-home.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/modern-instances.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/modern-versions.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/modern-logs.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/modern-instance-settings.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/modern-home-640.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/modern-home-320.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/modern-home-light.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/modern-instances-light.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/modern-versions-light.png",
+        "docs/ui-navigation-refinement-2026-11-15/evidence/modern-logs-light.png"
       ],
-      "verificationSummary": "docs/ui-redesign-2026-11-15/evidence/application/verification-summary.json",
-      "automaticVerification": "completed; native interactions pending"
+      "screenshotCount": 22,
+      "render": {
+        "startedAt": "2026-11-15T09:30:17.655Z",
+        "finishedAt": "2026-11-15T09:30:31.756Z",
+        "rows": [
+          {
+            "suite": "immersive",
+            "errors": [],
+            "csp": [],
+            "smoothCorners": true
+          },
+          {
+            "suite": "modern",
+            "errors": [],
+            "csp": [],
+            "smoothCorners": true
+          }
+        ]
+      },
+      "manifests": [
+        {
+          "suite": "modern",
+          "path": "ui/src/ui-suite/builtins/modern/suite.json",
+          "bytes": 22483,
+          "sha256": "79bb9ec0a9d1ecda59e55e99b0eb8464ef97d960c63283275a7598b60c2f435d",
+          "files": 91,
+          "views": 45,
+          "routes": 9
+        },
+        {
+          "suite": "immersive",
+          "path": "ui/src/ui-suite/builtins/immersive/suite.json",
+          "bytes": 22647,
+          "sha256": "9906793aad6f2840ad7cca14d7d27a74d39b36faa30cb851dbc72e5cd8ef7af3",
+          "files": 90,
+          "views": 45,
+          "routes": 9
+        }
+      ],
+      "buildSummary": {
+        "production": {
+          "status": "succeeded",
+          "files": 15
+        },
+        "compiledFixture": {
+          "status": "succeeded",
+          "files": 16
+        },
+        "windowsDebug": {
+          "status": "succeeded",
+          "kind": "windows-debug-executable",
+          "path": "target/debug/paradox-launcher.exe",
+          "bytes": 45004800,
+          "sha256": "bf786e5bd61b72c95fe2641614a4451713764d0a76baf7e4da907cbca4381530"
+        },
+        "commands": [
+          {
+            "command": "npm test --prefix ui",
+            "exitCode": 0,
+            "scope": "public owner and suite/static contracts; before final presentation-only refinements"
+          },
+          {
+            "command": "npm --prefix ui run lint",
+            "exitCode": 0
+          },
+          {
+            "command": "npm --prefix ui run check:i18n",
+            "exitCode": 0,
+            "keys": 1108,
+            "usages": 1952,
+            "languages": 2
+          },
+          {
+            "command": "npm --prefix ui run check",
+            "exitCode": 0
+          },
+          {
+            "command": "npx vite build --mode suite-builtins-test --outDir compiled-final-dist",
+            "exitCode": 0
+          },
+          {
+            "command": "npm run build -- --debug --no-bundle",
+            "exitCode": 0
+          }
+        ]
+      },
+      "detector": {
+        "runs": 1,
+        "result": [],
+        "scope": "Single detector run, as reported by integration; does not replace final runtime checks."
+      },
+      "automaticVerification": "completed: DEV and compiled+CSP targeted checks passed; native interactions remain unverified",
+      "pending": [
+        "native functional acceptance beyond build and fixture evidence"
+      ],
+      "boundary": "Browser fixture with permanent LauncherProvider, actual built-in suite source, desktop invoke/event boundary and test account/instance/catalog data. Not native authentication, download or game acceptance.",
+      "historical": {
+        "commit": "e3e880f397ad3d22dc5301819b8832d9f672cb86",
+        "generatedAt": "2026-11-14T23:01:33Z",
+        "sourceStage": "final-v4",
+        "sourceFingerprint": "8688318cc7db1a2b48767db03e6c1f2d2112e5291d40969ff9714e40fc81e124",
+        "sourceFiles": 125,
+        "sourceFingerprintAlgorithm": "JavaScript files.sort() of repository-relative forward-slash paths; UTF-8 path + NUL + raw file bytes + NUL; SHA-256; no newline normalization.",
+        "sourceRecord": "docs/ui-redesign-2026-11-15/evidence/application/provenance.json",
+        "verificationRecord": "docs/ui-redesign-2026-11-15/implementation-review.md",
+        "buildRecord": "docs/ui-redesign-2026-11-15/evidence/application/build-provenance.json",
+        "applicationScreenshots": [
+          "docs/ui-redesign-2026-11-15/evidence/application/immersive-home.png",
+          "docs/ui-redesign-2026-11-15/evidence/application/immersive-instances.png",
+          "docs/ui-redesign-2026-11-15/evidence/application/modern-home.png",
+          "docs/ui-redesign-2026-11-15/evidence/application/modern-instances.png"
+        ],
+        "verificationSummary": "docs/ui-redesign-2026-11-15/evidence/application/verification-summary.json",
+        "automaticVerification": "completed; native interactions pending",
+        "scope": "Historical Fold/Graphite final-v4 source and evidence; does not verify the navigation refinement."
+      },
+      "verifiedAt": "2026-11-15T09:57:06.361221+00:00"
+    },
+    "geometry": {
+      "source": "ui/src/ui-suite/builtins/common/player-interaction.css",
+      "enhancement": "@supports (corner-shape: squircle)",
+      "radius": "Existing public --radius / --c-radius, including saved 0; existing border-radius is the unsupported-engine fallback.",
+      "scope": "Listed player controls, panels, portals, and core home workspace/overview/account surfaces; ordinary editor appearance is preserved.",
+      "verification": "Final capture environment reports squircle support; limited independent review observed computed squircle on core Modern home surfaces and type Select. Broader native engine/DPI coverage pending."
+    },
+    "navigationRefinement": {
+      "sourceStatus": "navigation-refinement-final sources frozen; DEV and compiled+CSP targeted checks passed",
+      "downloads": {
+        "entry": "custom.versions",
+        "businessRoutes": [
+          "custom.versions",
+          "content",
+          "downloads"
+        ],
+        "labels": [
+          "版本",
+          "资源",
+          "任务记录"
+        ],
+        "ownership": "Existing independent pages and controllers; no new business owner."
+      },
+      "accounts": {
+        "route": "accounts",
+        "navigation": false,
+        "homeAvailability": "registered route; otherwise readonly account presentation"
+      },
+      "immersive": {
+        "primary": [
+          "home",
+          "instances",
+          "custom.versions",
+          "settings"
+        ],
+        "secondary": "More for other navigation routes; all navigable routes in the menu at <=900px",
+        "brand": "1em, weight 600; 13px text at <=360px; version text max(12px,.86em) and hidden in narrower windows",
+        "instanceDirectory": "Normal Instances omits directory sidebar; instance-details context remains."
+      },
+      "modern": {
+        "titlebar": "Separate permanent component.window-bar at 3.4em, including the ready workspace",
+        "rail": "6.1em normally; 3.9em at height <=600px with full menu; hidden at height <=340px with menu navigation retained",
+        "home": "Memory summary and duplicate shortcut/task sections omitted; account and launch target remain. Desktop current-instance card groups information and account/CTA internally side by side; 640px window returns to one column. Limited independent review measured 141.5px card height at a 1085px workspace; this is not a fixed height rule.",
+        "inspector": "Compact Inspector does not render directory nodes; full instance details retain directories and memory settings."
+      },
+      "instances": {
+        "filters": "13em width, 11em minimum, 19em maximum; responsive rules allow available-width fields",
+        "directory": "Normal list directory tools omitted"
+      },
+      "versions": {
+        "presentation": "Continuous list, one toolbar search and public type Select",
+        "batchSize": 30,
+        "pagination": "UI progressive rendering over the complete cached catalog index; no server pagination",
+        "batchReset": "Search, kind, snapshot setting, or catalog index changes",
+        "typeSelectLayout": "Modern public Select trigger uses justify-content: space-between; value and arrow remain at opposite sides, with existing keyboard protocol."
+      },
+      "logs": {
+        "lineHeight": 1.4,
+        "rowPadding": "2px 0",
+        "severity": {
+          "info": "--accent-ink",
+          "debug": "--muted",
+          "trace": "--muted",
+          "warn": "--warning",
+          "error": "--danger",
+          "fatal": "--danger"
+        },
+        "meaning": "Written severity labels and real log actions retained; time uses tabular numbers"
+      },
+      "verification": "Final source/build/screenshot provenance recorded; all eight DEV and compiled+CSP targeted checks passed; historical e3e880f evidence preserved separately."
+    },
+    "independentReview": {
+      "record": "docs/ui-navigation-refinement-2026-11-15/independent-review.md",
+      "checkedAt": "2026-11-15 09:29 UTC",
+      "findings": {
+        "P2": 2,
+        "P3": 2,
+        "rechecked": 4,
+        "remainingTestedP0P1P2": 0
+      },
+      "finalCorrections": [
+        {
+          "name": "Modern home internal groups",
+          "observed": "753.8px / 266px columns at 1085px workspace; 141.5px card; one column at 640px window"
+        },
+        {
+          "name": "Compact Inspector directories",
+          "observed": "Directory nodes 0 in compact, 1 in full details"
+        },
+        {
+          "name": "Core home squircle surfaces",
+          "observed": "home-workspace-grid, home-overview, home-account computed cornerShape=squircle"
+        },
+        {
+          "name": "Modern type Select alignment",
+          "observed": "justifyContent=space-between, cornerShape=squircle; Enter opens and Escape returns focus to trigger"
+        }
+      ],
+      "reducedMotion": "In the tested system-reduce scene: route-stage animation count 0, launch button transitionDuration 0s.",
+      "scope": "Limited layout, computed-style, hit-target and focus checks. Does not replace final targeted browser regression or native acceptance."
     }
   },
   "components": [
@@ -503,9 +764,9 @@
       "name": "Immersive top navigation",
       "kind": "nav",
       "refersTo": "immersive-top-nav",
-      "description": "顶部主导航中的当前路由；窄窗口保留可横向滚动的导航。",
-      "html": "<nav class=\"ds-immersive-nav\" aria-label=\"Workspace\"><button type=\"button\" class=\"ds-immersive-route\" aria-current=\"page\"><svg width=\"21\" height=\"21\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z\"/><path d=\"m3.3 7 8.7 5 8.7-5\"/><path d=\"M12 22V12\"/></svg><span>Instances</span></button></nav>",
-      "css": ".ds-immersive-nav{display:flex;align-items:center;gap:.3em;min-width:0;overflow-x:auto;padding:.5em .25em;background:var(--surface,#30353d);font:14px/1.5 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif}.ds-immersive-route{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;gap:.55em;min-height:2.43em;padding:.45em .7em;border:1px solid transparent;border-radius:var(--radius,6px);background:transparent;color:var(--muted,#bac5d4);font:14px/1.35 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif;white-space:nowrap;cursor:pointer}.ds-immersive-route[aria-current=page]{background:var(--selected,#3d465c);color:var(--text,#edf1f7)}.ds-immersive-route[aria-current=page] svg{color:var(--accent-ink,#b0bcff)}.ds-immersive-route:focus-visible{outline:2px solid var(--accent-ink,#b0bcff);outline-offset:3px}@media(hover:hover) and (pointer:fine){.ds-immersive-route:hover{background:var(--hover,#3d465c);color:var(--text,#edf1f7)}}"
+      "description": "四个顶部主入口和 More 的来源样式示意；<=900px 使用完整导航菜单。展示片段不执行真实导航或菜单协议，不是本轮验收证据。",
+      "html": "<div class=\"ds-immersive-chrome\"><nav class=\"ds-immersive-nav\" aria-label=\"Workspace\"><button type=\"button\" class=\"ds-immersive-route\">Home</button><button type=\"button\" class=\"ds-immersive-route\" aria-current=\"page\">Instances</button><button type=\"button\" class=\"ds-immersive-route\">Downloads</button><button type=\"button\" class=\"ds-immersive-route\">Settings</button></nav><button type=\"button\" class=\"ds-immersive-more\" aria-label=\"More navigation\"><svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"5\" cy=\"12\" r=\"1\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"19\" cy=\"12\" r=\"1\"/></svg><span class=\"ds-more-label\">More</span><span class=\"ds-menu-label\">Navigation</span></button></div>",
+      "css": ".ds-immersive-chrome{display:flex;align-items:center;gap:.5em;min-width:0;background:var(--surface,#30353d);color:var(--text,#edf1f7);font:14px/1.5 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif}.ds-immersive-nav{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:.5em;padding:.5em .25em}.ds-immersive-route,.ds-immersive-more{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;gap:.55em;min-height:2.43em;padding:.45em .7em;border:1px solid transparent;border-radius:var(--radius,6px);background:transparent;color:var(--muted,#bac5d4);font:14px/1.35 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif;white-space:nowrap;cursor:pointer;transition:background-color 150ms cubic-bezier(.16,1,.3,1),color 150ms cubic-bezier(.16,1,.3,1),filter 150ms cubic-bezier(.16,1,.3,1)}.ds-immersive-route[aria-current=page]{background:var(--selected,#3d465c);color:var(--text,#edf1f7)}.ds-immersive-chrome button:focus-visible{outline:2px solid var(--accent-ink,#b0bcff);outline-offset:3px}.ds-immersive-chrome button:active{filter:brightness(.94);transition-duration:45ms}.ds-menu-label{display:none}@media(hover:hover) and (pointer:fine){.ds-immersive-chrome button:hover{background:var(--hover,#3d465c);color:var(--text,#edf1f7)}}@media(max-width:900px){.ds-immersive-nav,.ds-more-label{display:none}.ds-menu-label{display:inline}}@supports(corner-shape:squircle){.ds-immersive-chrome button{corner-shape:squircle}}@media(prefers-reduced-motion:reduce){.ds-immersive-chrome button{transition:none}}"
     },
     {
       "name": "Modern status tag",
@@ -535,7 +796,7 @@
       "name": "Modern Inspector",
       "kind": "card",
       "refersTo": "modern-inspector",
-      "description": "可收起的查看栏显示明确的查看对象；查看不静默切换当前启动目标。示例展示查看栏切换器与容器。",
+      "description": "可收起的查看栏显示明确的查看对象；查看不静默切换当前启动目标。compact 不渲染目录，完整详情保留目录。示例只展示查看栏概要与容器。",
       "html": "<div class=\"ds-inspector-demo\"><button type=\"button\" class=\"ds-inspector-toggle\" aria-expanded=\"true\" aria-controls=\"ds-inspector-panel\"><svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M15 3v18\"/><path d=\"m8 9 3 3-3 3\"/></svg><span>Inspector</span></button><aside id=\"ds-inspector-panel\" class=\"ds-inspector\" aria-label=\"Instance inspector\"><h2>Instance name</h2><span class=\"ds-inspector-caption\">Inspector</span><p>Configured version and loader</p><button type=\"button\" class=\"ds-inspector-set\">Set as current instance</button><dl><div><dt>Memory</dt><dd>Configured value</dd></div></dl></aside></div>",
       "css": ".ds-inspector-demo{width:22em;max-width:100%;font:14px/1.45 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif}.ds-inspector-toggle,.ds-inspector-set{display:inline-flex;align-items:center;justify-content:center;gap:8.8px;min-height:2.45em;padding:8px 14.4px;border:1px solid var(--control-border,#8997ab);border-radius:var(--radius,6px);background:var(--surface,#30353d);color:var(--text,#edf1f7);font:500 14px/1.45 \"Segoe UI Variable\", \"Microsoft YaHei UI\", \"Segoe UI\", \"PingFang SC\", sans-serif;cursor:pointer}.ds-inspector-toggle{margin-bottom:16px}.ds-inspector{min-width:0;padding:19.2px;border:1px solid var(--border,#48515e);border-radius:var(--radius,6px);background:var(--surface,#30353d);color:var(--text,#edf1f7)}.ds-inspector h2{margin:0 0 4.8px;font-size:max(18px,1.25em);line-height:1.4;font-weight:600;overflow-wrap:anywhere}.ds-inspector-caption{display:block;margin:6.4px 0 10.4px;color:var(--muted,#bac5d4);font-size:12.04px}.ds-inspector p{margin:0 0 12px;color:var(--muted,#bac5d4);font-size:max(13px,.93em);line-height:1.6}.ds-inspector dl{margin:16px 0 0;padding-top:16px;border-top:1px solid var(--border,#48515e)}.ds-inspector dl div{display:grid;gap:4px;font-size:max(13px,.93em)}.ds-inspector dt{color:var(--muted,#bac5d4);line-height:1.7}.ds-inspector dd{margin:0;line-height:1.7;overflow-wrap:anywhere}.ds-inspector-demo button:focus-visible{outline:2px solid var(--accent-ink,#b0bcff);outline-offset:2px}@media(hover:hover) and (pointer:fine){.ds-inspector-demo button:hover{background:var(--hover,#383e49)}}"
     },
@@ -550,7 +811,7 @@
   ],
   "narrative": {
     "northStar": "折页＋石墨",
-    "overview": "折页式工作面把目标、状态与可执行动作集中在连续的区域中；石墨纯色表面用明暗、分隔线和紫蓝强调建立层次。默认密度采用 Operate：紧凑但可读，优先保证实例名称、真实状态和关键动作可扫读。\n\n两套默认来源使用同一业务能力与质量要求。沉浸式以顶部主导航、上下文侧导航和折页启动概览组织日常操作；Modern 以窄侧导航、连续实例表和可收起查看栏组织多实例操作。新增页面沿用所在套件的结构，不要求两套套用同一个页面模板。",
+    "overview": "折页式工作面把目标、状态与可执行动作集中在连续的区域中；石墨纯色表面用明暗、分隔线和紫蓝强调建立层次。默认密度采用 Operate：紧凑但可读，优先保证实例名称、真实状态和关键动作可扫读。\n\n两套默认来源使用同一业务能力与质量要求。沉浸式以四个顶部主入口、More 菜单、上下文侧导航和折页启动概览组织日常操作；Modern 以独立顶栏、窄侧导航、连续实例表和可收起查看栏组织多实例操作。两套通过统一下载入口访问版本、资源与任务记录，保留三个独立业务 route。新增页面沿用所在套件的结构，不要求两套套用同一个页面模板。",
     "keyCharacteristics": [
       "纯色画布与面板；默认不使用背景图片、游戏封面或装饰性照片。",
       "连续实例集合与明确分隔，选中状态使用表面色和文字标记。",
@@ -584,7 +845,8 @@
       "将查看对象、当前启动目标和启动动作分别表达；每个实例动作携带精确 profileKey。",
       "用 primitive → semantic → component 层级引用颜色和尺寸，并保留公开外观设置。",
       "保留 UiView、UiIdentity、data-ui-site、Original props/refs/callbacks，以及现有草稿、CAS、预览和保存协议。",
-      "用可见焦点、明确标签、文字状态和可选择日志支持键盘与中英文操作。"
+      "用可见焦点、明确标签、文字状态和可选择日志支持键盘与中英文操作。",
+      "统一下载导航时保留版本、资源和任务记录的独立 route；首页账户入口按 route 是否注册判断。"
     ],
     "donts": [
       "不新增没有业务支持的游玩时长、收藏、云同步、多个离线账户、暂停/重排下载或兼容徽标。",
@@ -592,7 +854,7 @@
       "不以查看某个实例静默改变当前启动目标，不在缺少 profileKey 时回退到当前实例。",
       "不挂载第二个 LauncherProvider，不从套件直接调用私有 IPC、业务 Hook 或 Modrinth 请求。",
       "不将普通编辑器改成新的石墨页面；保持其既有来源和控制器，不改动 Recovery 快捷键或 --ui-safe。",
-      "不把旧截图、中间截图、静态检查或设计片段当作最终浏览器与 Windows 原生验收。"
+      "不把旧截图、中间截图、静态检查或设计片段当作本轮浏览器与 Windows 原生验收；本轮未验项目保持待检查。"
     ]
   }
 }

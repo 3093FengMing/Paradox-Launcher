@@ -48,3 +48,9 @@
 .modern-queue .queue-detail-heading { display: grid; gap: 10px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
 .modern-queue .queue-detail-heading h3 { font-size: 1em; overflow-wrap: anywhere; }
 @media (max-width: 1050px) { .modern-queue .queue-layout { grid-template-columns: 1fr; } .modern-queue .queue-details { position: static; } }
+
+/* Task totals are one compact summary above the single task list. */
+.modern-downloads .downloads-counts { display: flex; flex-wrap: wrap; gap: .65em 1.4em; }
+.modern-downloads .downloads-counts > div { display: flex; flex-direction: row; align-items: baseline; gap: .45em; padding: 0; border: 0; background: transparent; }
+.modern-downloads .downloads-counts strong { font-size: 1em; font-weight: 600; }
+.modern-downloads .downloads-counts span { font-size: max(12px,.86em); }

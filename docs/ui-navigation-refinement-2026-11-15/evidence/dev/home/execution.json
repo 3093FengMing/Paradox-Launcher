@@ -1,0 +1,18 @@
+{
+  "lane": "dev-repeat-2",
+  "command": "node",
+  "args": [
+    "scripts/check-ui-home-browser.mjs"
+  ],
+  "cwd": "F:\\rust-code\\Paradox Launcher\\ui",
+  "startedAt": "2026-11-15T09:37:46.4262740Z",
+  "finishedAt": "2026-11-15T09:38:21.3408089Z",
+  "exitCode": 0,
+  "signal": null,
+  "inputCount": 888,
+  "inputDrift": [],
+  "url": "http://127.0.0.1:1434",
+  "playwrightModule": "C:/Users/FengMing/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+  "report": "F:/rust-code/Paradox Launcher/.test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-repeat-2/home/report.json",
+  "log": "F:/rust-code/Paradox Launcher/.test-data/ui-navigation-refinement/2026-11-15/20261115T091244Z/dev-repeat-2/home/execution.log"
+}

@@ -49,6 +49,14 @@
 .modern-business-dialog .profile-dialog-actions { position: sticky; bottom: 0; z-index: 1; background: var(--surface); padding: 12px 0 2px; }
 .modern-business-dialog .profile-dialog-actions button { white-space: normal; }
 .modern-business-dialog .account-login-footer { padding-bottom: 2px; }
+/* Instance overrides use the available field width with a compact outer gutter. */
+.modern-dialog-theme .modern-business-dialog.modern-instance-settings-dialog { width: min(580px,calc(100vw - 24px)); padding: 1em; }
+.modern-instance-settings-dialog :is(.business-dialog-content,.business-dialog-form,.dialog-section,.dialog-override,.field) { width: 100%; max-width: 100%; min-width: 0; }
+.modern-instance-settings-dialog .business-dialog-form { grid-template-columns: minmax(0,1fr); gap: 1em; }
+.modern-instance-settings-dialog .dialog-section { gap: .7em; padding-bottom: .9em; }
+.modern-instance-settings-dialog .dialog-override { grid-template-columns: minmax(0,1fr); }
+.modern-instance-settings-dialog :is(input:not([type=checkbox]):not([type=radio]),textarea,.ui-select-trigger) { display: block; width: 100%; max-width: 100%; min-width: 0; justify-self: stretch; box-sizing: border-box; }
+.modern-instance-settings-dialog .dialog-paired-fields { gap: .85em; }
 @media (max-width: 520px) {
   .modern-business-dialog { padding: 18px; width: calc(100vw - 24px); max-height: calc(100dvh - 24px); }
   .modern-business-dialog .dialog-paired-fields, .modern-environment-editor .environment-row { grid-template-columns: minmax(0, 1fr); }

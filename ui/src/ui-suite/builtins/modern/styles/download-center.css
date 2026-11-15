@@ -1,0 +1,36 @@
+/* The existing public pages share navigation, while tasks keep their own view. */
+.modern-shell { --download-indicator-width: 3em; }
+.modern-shell .download-navigation { display: flex; align-items: center; flex-wrap: wrap; gap: .6em; margin: 0 0 1.2em; padding-bottom: .6em; border-bottom: 1px solid var(--border); }
+.modern-shell .download-navigation-tabs { display: flex; flex: 1 1 auto; min-width: 0; gap: .4em; }
+.modern-shell :is(.download-navigation-tab,.download-navigation-history) { min-width: 0; min-height: max(34px,2.6em); padding: .45em .75em; border: 1px solid transparent; border-radius: var(--radius,6px); background: transparent; color: var(--muted); font-size: inherit; line-height: 1.4; }
+.modern-shell :is(.download-navigation-tab,.download-navigation-history) > svg { flex: 0 0 auto; }
+.modern-shell .download-navigation-tab[aria-current=page] { background: var(--selected); color: var(--text); }
+.modern-shell .download-navigation-tab[aria-current=page] > svg { color: var(--accent-ink); }
+.modern-shell .download-navigation-history { flex: 0 0 auto; margin-left: auto; }
+.modern-shell .download-navigation-history[aria-current=page] { color: var(--text); border-color: var(--control-border); }
+.modern-shell .download-indicator { position: fixed; right: .75em; bottom: max(.75em,env(safe-area-inset-bottom)); z-index: 36; display: inline-flex; align-items: center; justify-content: center; width: clamp(34px,var(--download-indicator-width),42px); min-width: 0; height: clamp(34px,var(--download-indicator-width),42px); min-height: 0; padding: .4em; border: 1px solid var(--control-border); border-radius: var(--radius,6px); background: var(--surface); color: var(--accent-ink); font-size: inherit; }
+.modern-shell .download-indicator[data-state=finished] { color: var(--muted); }
+.modern-shell .download-indicator-count { position: absolute; top: -.35em; right: -.3em; min-width: 1.4em; padding: .1em .3em; border: 1px solid var(--control-border); border-radius: var(--radius,4px); background: var(--surface); color: var(--text); font-size: max(12px,.86em); line-height: 1.2; font-variant-numeric: tabular-nums; text-align: center; }
+.modern-shell :is(.download-navigation-tab,.download-navigation-history,.download-indicator):focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+@media (hover:hover) and (pointer:fine) {
+  .modern-shell :is(.download-navigation-tab,.download-navigation-history,.download-indicator):hover { background: var(--hover); color: var(--text); border-color: var(--control-border); }
+}
+@media (min-width:1051px) {
+  .modern-shell.has-download-tasks .workspace > main { padding-bottom: 4.5em; }
+}
+@media (max-width:1050px) {
+  .modern-shell.has-download-tasks .current-launch-target { padding-right: calc(1.5em + var(--download-indicator-width)); }
+}
+@media (max-width:420px) {
+  .modern-shell .download-navigation { gap: .35em; margin-bottom: .8em; }
+  .modern-shell .download-navigation-tabs { flex-basis: 100%; }
+  .modern-shell .download-navigation-tab { flex: 1 1 0; padding: .4em .55em; }
+  .modern-shell .download-navigation-history { min-height: 30px; padding: .25em .55em; }
+}
+@media (max-width:360px) {
+  .modern-shell .download-navigation-tab > svg { display: none; }
+}
+@media (max-height:340px) {
+  .modern-shell .download-navigation { margin-bottom: .55em; padding-bottom: .35em; }
+  .modern-shell .download-indicator { bottom: max(.55em,env(safe-area-inset-bottom)); }
+}

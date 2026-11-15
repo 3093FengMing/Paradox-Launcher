@@ -17,11 +17,11 @@ export default function WindowBar(input?: WindowBarProps & { props?: Readonly<Re
       <span data-ui-site="WindowBar-4">Paradox Launcher <small data-ui-site="WindowBar-5">v{appVersion}</small></span>
     </div>
     <div data-ui-site="WindowBar-6" className="window-controls">
-      {settings && <button data-ui-site="WindowBar-7" aria-label={t('window.help')} title={t('window.help')}
+      {settings && <button type="button" data-ui-site="WindowBar-7" aria-label={t('window.help')} title={t('window.help')}
         onClick={() => { a.settings.setTab('appearance'); a.navigation.navigate('settings'); }}><CircleHelp data-ui-site="WindowBar-8" size={17}  aria-hidden="true"/></button>}
-      <button data-ui-site="WindowBar-9" disabled={!s.window.desktop} aria-label={t('window.minimize')} title={t('window.minimizeTitle')} onClick={() => run('minimize')}><Minus data-ui-site="WindowBar-10" size={17}  aria-hidden="true"/></button>
-      <button data-ui-site="WindowBar-11" disabled={!s.window.desktop} aria-label={t('window.maximize')} title={t('window.maximizeTitle')} onClick={() => run('maximize')}><Square data-ui-site="WindowBar-12" size={13}  aria-hidden="true"/></button>
-      <button data-ui-site="WindowBar-13" disabled={!s.window.desktop} className="window-close" aria-label={t('window.close')} title={t('window.closeTitle')} onClick={() => run('requestClose')}><X data-ui-site="WindowBar-14" size={19}  aria-hidden="true"/></button>
+      <button type="button" data-ui-site="WindowBar-9" disabled={!s.window.desktop} aria-label={t('window.minimize')} title={t('window.minimizeTitle')} onClick={() => run('minimize')}><Minus data-ui-site="WindowBar-10" size={17}  aria-hidden="true"/></button>
+      <button type="button" data-ui-site="WindowBar-11" disabled={!s.window.desktop} aria-label={t('window.maximize')} title={t('window.maximizeTitle')} onClick={() => run('maximize')}><Square data-ui-site="WindowBar-12" size={13}  aria-hidden="true"/></button>
+      <button type="button" data-ui-site="WindowBar-13" disabled={!s.window.desktop} className="window-close" aria-label={t('window.close')} title={t('window.closeTitle')} onClick={() => run('requestClose')}><X data-ui-site="WindowBar-14" size={19}  aria-hidden="true"/></button>
     </div>
   </Root>;
 }

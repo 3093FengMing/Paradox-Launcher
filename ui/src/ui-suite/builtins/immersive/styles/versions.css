@@ -1,29 +1,58 @@
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions { display: grid; gap: 18px; min-width: 0; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-intro { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 24px; border-radius: var(--c-radius); background: var(--surface); border: 1px solid var(--border); }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-eyebrow { font-size: max(13px, .67em); color: var(--accent-ink); letter-spacing: .2em; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-intro h2 { font-size: max(13px, 1.6em); margin: 6px 0; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-intro p { font-size: max(13px, .83em); max-width: 460px; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-search { display: flex; flex: 1; min-width: 180px; position: relative; align-items: center; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-search svg { position: absolute; left: 15px; color: var(--muted); }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-search input { padding-left: 42px; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-snapshots { display: flex; gap: 9px; align-items: center; color: var(--muted); font-size: max(13px, .8em); }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-kind-filters { display: flex; flex-wrap: wrap; gap: 9px; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-kind-filters button { background: var(--sidebar); color: var(--muted); border: 1px solid var(--border); padding: 10px 15px; border-radius: var(--c-radius); font-size: max(13px, .85em); }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-kind-filters button[aria-pressed="true"] { color: var(--text); background: var(--surface); border-color: var(--accent-ink); }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-kind-filters button span:last-child { margin-left: 8px; font-variant-numeric: tabular-nums; font-size: max(13px, .85em); }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-cache { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; font-size: max(13px, .75em); color: var(--muted); }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-cache > span:last-child { margin-left: auto; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-card { display: grid; gap: 18px; padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--c-radius); min-width: 0; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--muted); }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-card.is-release .versions-card-top svg { color: var(--accent-ink); }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-tag { font-size: max(13px, .74em); border: 1px solid var(--border); padding: 4px 9px; border-radius: var(--c-radius); }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-card-id { font-size: max(13px, 1.35em); overflow-wrap: anywhere; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-card button { justify-content: space-between; font-size: max(13px, .8em); }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-footer { display: flex; justify-content: center; align-items: center; gap: 18px; color: var(--muted); font-size: max(13px, .83em); padding: 10px; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-message { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--c-radius); background: var(--surface); font-size: max(13px, .85em); overflow-wrap: anywhere; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-message.is-error { border-left: 3px solid var(--danger); }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-empty { padding: 42px 20px; display: grid; gap: 12px; justify-items: center; text-align: center; background: var(--surface); border-radius: var(--c-radius); }
-@media (max-width: 1050px) { :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 650px) { :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-grid { grid-template-columns: 1fr; } :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-intro { align-items: start; flex-direction: column; padding: 18px; } :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-versions .versions-footer { flex-wrap: wrap; } }
+.immersive-shell .immersive-versions { display: grid; gap: 1em; min-width: 0; }
+.immersive-shell .immersive-versions .versions-layout { display: grid; gap: .85em; min-width: 0; }
+.immersive-shell .immersive-versions .versions-intro { padding: .2em 0; }
+.immersive-shell .immersive-versions .versions-intro h2 { margin: 0 0 .35em; font-size: 1.4em; letter-spacing: -.02em; }
+.immersive-shell .immersive-versions .versions-intro p { margin: 0; max-width: 65ch; font-size: max(13px,.93em); color: var(--muted); }
+.immersive-shell .immersive-versions .versions-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .65em; min-width: 0; }
+.immersive-shell .immersive-versions .versions-search { display: flex; align-items: center; flex: 1 1 18em; min-width: 0; position: relative; }
+.immersive-shell .immersive-versions .versions-search > svg { position: absolute; left: .8em; color: var(--muted); pointer-events: none; }
+.immersive-shell .immersive-versions .versions-search input { min-width: 0; padding-left: 2.45em; }
+.immersive-shell .immersive-versions .versions-filter-panel { display: flex; flex-wrap: wrap; align-items: center; gap: .8em; min-width: 0; }
+.immersive-shell .immersive-versions .versions-kind-field { display: flex; flex: 1 1 19em; align-items: center; gap: .5em; min-width: 0; }
+.immersive-shell .immersive-versions .versions-filter-label { display: inline-flex; align-items: center; gap: .4em; color: var(--muted); font-size: max(13px,.93em); flex-shrink: 0; }
+.immersive-shell .immersive-versions .versions-kind-field .ui-select-trigger { flex: 1; width: auto; min-width: 11em; font-size: max(13px,.93em); }
+.immersive-shell .immersive-versions .versions-kind-field [data-ui-site="VersionsPage-kind-count"] { color: var(--muted); font-size: max(12px,.92em); font-variant-numeric: tabular-nums; }
+.immersive-shell .immersive-versions .versions-snapshots { display: inline-flex; align-items: center; gap: .5em; color: var(--muted); font-size: max(13px,.93em); line-height: 1.4; min-height: 2.45em; }
+.immersive-shell .immersive-versions .versions-snapshots input { width: 1.1em; min-height: 0; flex-shrink: 0; margin: 0; }
+.immersive-shell .immersive-versions .versions-loader-note { display: flex; align-items: start; gap: .5em; margin: 0; color: var(--muted); font-size: max(13px,.93em); line-height: 1.45; }
+.immersive-shell .immersive-versions .versions-loader-note svg { flex-shrink: 0; margin-top: .1em; }
+.immersive-shell .immersive-versions .versions-catalog { min-width: 0; border: 1px solid var(--control-border); border-radius: var(--c-radius); background: var(--surface); overflow: hidden; }
+.immersive-shell .immersive-versions .versions-cache { display: flex; flex-wrap: wrap; gap: .6em; align-items: center; padding: .75em 1em; background: var(--bg); border-bottom: 1px solid var(--border); color: var(--muted); font-size: max(12px,.86em); }
+.immersive-shell .immersive-versions .versions-cache > svg { flex-shrink: 0; }
+.immersive-shell .immersive-versions .versions-cache-copy { display: flex; flex: 1 1 16em; flex-wrap: wrap; align-items: baseline; gap: .35em .8em; min-width: 0; }
+.immersive-shell .immersive-versions .versions-cache strong { color: var(--text); }
+.immersive-shell .immersive-versions .versions-cache-time { overflow-wrap: anywhere; }
+.immersive-shell .immersive-versions .versions-cache > span:last-child { font-variant-numeric: tabular-nums; }
+.immersive-shell .immersive-versions .versions-list { display: grid; min-width: 0; }
+.immersive-shell .immersive-versions .versions-row { display: grid; grid-template-columns: minmax(0,1fr) 6.8em auto; align-items: center; gap: .85em; min-height: 3.65em; padding: .55em 1em; border-bottom: 1px solid var(--border); }
+.immersive-shell .immersive-versions .versions-row:hover { background: var(--hover); }
+.immersive-shell .immersive-versions .versions-name { display: flex; align-items: center; gap: .65em; min-width: 0; overflow-wrap: anywhere; }
+.immersive-shell .immersive-versions .versions-name svg { flex-shrink: 0; color: var(--muted); }
+.immersive-shell .immersive-versions .versions-row.is-release .versions-name svg { color: var(--accent-ink); }
+.immersive-shell .immersive-versions .versions-name strong { font-size: max(13px,1em); font-weight: 600; }
+.immersive-shell .immersive-versions .versions-tag { color: var(--muted); font-size: max(12px,.86em); line-height: 1.4; overflow-wrap: anywhere; }
+.immersive-shell .immersive-versions .versions-tag.is-release { color: var(--accent-ink); }
+.immersive-shell .immersive-versions .versions-row button { white-space: normal; font-size: max(13px,.93em); }
+.immersive-shell .immersive-versions .versions-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75em; align-items: center; padding: .75em 1em; color: var(--muted); font-size: max(12px,.86em); }
+.immersive-shell .immersive-versions .versions-message { display: flex; flex-wrap: wrap; gap: .6em; align-items: center; justify-content: space-between; padding: .75em 1em; margin: 0; background: var(--bg); color: var(--text); font-size: max(13px,.93em); line-height: 1.45; overflow-wrap: anywhere; border-bottom: 1px solid var(--border); }
+.immersive-shell .immersive-versions .versions-message.is-error { color: var(--danger); }
+.immersive-shell .immersive-versions .versions-message .text-button { flex-shrink: 0; }
+.immersive-shell .immersive-versions .versions-empty { padding: 2.4em 1em; display: grid; justify-items: center; text-align: center; gap: .7em; }
+.immersive-shell .immersive-versions .versions-empty > svg { color: var(--muted); }
+.immersive-shell .immersive-versions .versions-empty h3 { font-size: 1.1em; margin: 0; }
+.immersive-shell .immersive-versions .versions-empty p { max-width: 55ch; font-size: max(13px,.93em); margin: 0; }
+@media (max-width: 850px) {
+  .immersive-shell .immersive-versions .versions-search { flex-basis: 100%; }
+  .immersive-shell .immersive-versions .versions-filter-panel { flex: 1 1 auto; }
+}
+@media (max-width: 620px) {
+  .immersive-shell .immersive-versions .versions-row { grid-template-columns: minmax(0,1fr) auto; gap: .25em .7em; padding: .6em .8em; }
+  .immersive-shell .immersive-versions .versions-tag { grid-column: 1; grid-row: 2; padding-left: 2.2em; }
+  .immersive-shell .immersive-versions .versions-row button { grid-column: 2; grid-row: 1 / 3; max-width: 10.5em; }
+  .immersive-shell .immersive-versions .versions-cache { padding: .7em .8em; }
+  .immersive-shell .immersive-versions .versions-filter-panel { flex-basis: 100%; gap: .4em .7em; }
+  .immersive-shell .immersive-versions .versions-kind-field { flex-basis: 100%; }
+  .immersive-shell .immersive-versions .versions-kind-field .ui-select-trigger { min-width: 0; }
+  .immersive-shell .immersive-versions .versions-toolbar > button { margin-left: auto; }
+  .immersive-shell .immersive-versions .versions-footer { padding: .7em .8em; }
+}

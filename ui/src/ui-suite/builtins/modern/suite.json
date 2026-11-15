@@ -21,6 +21,8 @@
     "component.activity-bar": "modern/components/ActivityBar.tsx",
     "component.profile-card": "modern/components/ProfileCard.tsx",
     "component.download-queue": "modern/components/DownloadQueue.tsx",
+    "component.download-navigation": "modern/components/DownloadNavigation.tsx",
+    "component.download-indicator": "modern/components/DownloadIndicator.tsx",
     "component.account-avatar": "modern/components/AccountAvatar.tsx",
     "component.java-settings": "modern/components/JavaSettings.tsx",
     "component.argument-templates": "modern/components/ArgumentTemplates.tsx",
@@ -84,7 +86,7 @@
     {
       "id": "custom.versions",
       "entry": "modern/pages/VersionsPage.tsx",
-      "title": "versionDownloads.title",
+      "title": "nav.downloadCenter",
       "description": "versionDownloads.description",
       "navigation": true,
       "startupSelectable": true,
@@ -96,7 +98,7 @@
       "entry": "modern/pages/DownloadsPage.tsx",
       "title": "nav.downloads",
       "description": "pages.downloads.description",
-      "navigation": true,
+      "navigation": false,
       "startupSelectable": true,
       "order": 20,
       "icon": "Download"
@@ -106,7 +108,7 @@
       "entry": "modern/pages/AccountsPage.tsx",
       "title": "nav.accounts",
       "description": "pages.accounts.description",
-      "navigation": true,
+      "navigation": false,
       "startupSelectable": true,
       "order": 30,
       "icon": "UserRound"
@@ -116,7 +118,7 @@
       "entry": "modern/pages/DiscoverPage.tsx",
       "title": "nav.content",
       "description": "content.description",
-      "navigation": true,
+      "navigation": false,
       "startupSelectable": true,
       "order": 40,
       "icon": "Compass"
@@ -255,8 +257,8 @@
     {
       "path": "common/lib/navigation.ts",
       "kind": "ts",
-      "bytes": 469,
-      "sha256": "c6c12f4b3292dd08a0c0770f54fe76bbd2eeb3ae2d2718ecc6feabaf28681a2c"
+      "bytes": 714,
+      "sha256": "3224683c1b2040d3251ad171a80cd5e12c6398d2cafd16ceeb2494c056798a6d"
     },
     {
       "path": "common/lib/runtime-message.ts",
@@ -271,6 +273,12 @@
       "sha256": "67ca738cdeba2190d5df1ecc74f0802d107f9e09281bfec6af7c622200529c10"
     },
     {
+      "path": "common/lib/use-route-motion.ts",
+      "kind": "ts",
+      "bytes": 1039,
+      "sha256": "3ba1705e2d2a7aa6bf7be70782b7e51767c19c5414eba2ffb2e7581100cb6f24"
+    },
+    {
       "path": "common/lib/version.ts",
       "kind": "ts",
       "bytes": 127,
@@ -283,6 +291,12 @@
       "sha256": "316a418bb75e1eebfbf6072187744e0e4d7b5bce348056386ee9f0440803708e"
     },
     {
+      "path": "common/player-interaction.css",
+      "kind": "css",
+      "bytes": 3124,
+      "sha256": "47140c5596b8d5a40f5022fb1f6da60c26e5460fd637cc5aa3d34d23da671d1f"
+    },
+    {
       "path": "modern/Error.tsx",
       "kind": "tsx",
       "bytes": 755,
@@ -291,8 +305,8 @@
     {
       "path": "modern/Home.tsx",
       "kind": "tsx",
-      "bytes": 11701,
-      "sha256": "b1b00a773fd29c15c85511ad98346a0fa2e24e9730956c6c784b94a51a5da676"
+      "bytes": 9330,
+      "sha256": "dba9d05fa6264e10d6b953eb4332610e1835bfd644745e0372ebfaf9f9ad59ad"
     },
     {
       "path": "modern/Loading.tsx",
@@ -309,8 +323,8 @@
     {
       "path": "modern/Shell.tsx",
       "kind": "tsx",
-      "bytes": 4067,
-      "sha256": "68f25c70434b6436017aec70ba121be34168fb34234e9449718c7c171fd3e469"
+      "bytes": 5159,
+      "sha256": "2d880d7951e553571b1cce2e53da7a0643fbc124e4b6d7bb97b94a39754b8300"
     },
     {
       "path": "modern/components/AccountAvatar.tsx",
@@ -327,8 +341,8 @@
     {
       "path": "modern/components/AppSidebar.tsx",
       "kind": "tsx",
-      "bytes": 7600,
-      "sha256": "e21f4538e0aa7def65fa923c1d6742a5cb839d0edeb6e399d65e301d62a386f6"
+      "bytes": 5947,
+      "sha256": "0903a345a58c3a8a711b038c6f40f590914e2ed1ac820fb67bb9f33bf6b7acdc"
     },
     {
       "path": "modern/components/AppearancePresets.tsx",
@@ -349,6 +363,18 @@
       "sha256": "542602d45cb10ea3932e02fca928ee31e5ab0e72e6b491be2f16825d9ec86aa2"
     },
     {
+      "path": "modern/components/DownloadIndicator.tsx",
+      "kind": "tsx",
+      "bytes": 1808,
+      "sha256": "e54872a5520d490869c776e2316e684e0eabce51800f99dc4313106e3147feb8"
+    },
+    {
+      "path": "modern/components/DownloadNavigation.tsx",
+      "kind": "tsx",
+      "bytes": 2074,
+      "sha256": "1b1c5fab197868db31e7e93c13081492888b9ee54384fb99e5d19c0c51ffaa7e"
+    },
+    {
       "path": "modern/components/DownloadQueue.tsx",
       "kind": "tsx",
       "bytes": 10638,
@@ -363,8 +389,8 @@
     {
       "path": "modern/components/InstanceDetail.tsx",
       "kind": "tsx",
-      "bytes": 13442,
-      "sha256": "0d137d682007fb192f637f877bf04829b86c2e4315628de9d37dedb74fea7fc4"
+      "bytes": 13458,
+      "sha256": "2a14c0014d3d3eed299d198dfbd3838eada241dee9a29a86b73404f368bab75f"
     },
     {
       "path": "modern/components/JavaSettings.tsx",
@@ -399,8 +425,8 @@
     {
       "path": "modern/components/WindowBar.tsx",
       "kind": "tsx",
-      "bytes": 2452,
-      "sha256": "6d4c118855eb78d8c1cd9b6beb25d1580994e9588bb5bc716c330b0757d27a31"
+      "bytes": 2508,
+      "sha256": "066846a5f2fa73fc3699c4bf6956b702142a6b9d9a6e837d09493b5510909d89"
     },
     {
       "path": "modern/dialogs/AccountLoginDialog.tsx",
@@ -435,8 +461,8 @@
     {
       "path": "modern/dialogs/InstanceSettingsDialog.tsx",
       "kind": "tsx",
-      "bytes": 10726,
-      "sha256": "551bfa76a651a535ce409f448a1329d8bcc0c5b423fff35cebaf4ecfc825f093"
+      "bytes": 10788,
+      "sha256": "93896f42997e568b70c0b629df225e2d190b76aebb2efd83c164505c3cb25b4b"
     },
     {
       "path": "modern/dialogs/LaunchAccountDialog.tsx",
@@ -507,14 +533,14 @@
     {
       "path": "modern/pages/InstancesPage.tsx",
       "kind": "tsx",
-      "bytes": 9794,
-      "sha256": "26a5a210f08270c2b8808a1690f2e2d079eb17160982ac4932ad5c49debf34e0"
+      "bytes": 9784,
+      "sha256": "f147ea25b6d09dcbcccf31e0b9ecee883dae0e4aec8afb3ef52a207226bef164"
     },
     {
       "path": "modern/pages/LogsPage.tsx",
       "kind": "tsx",
-      "bytes": 4881,
-      "sha256": "fe6def580b0657790f166610d01f4204ff46d43cd2a7e06b52618e794d8b0e71"
+      "bytes": 4978,
+      "sha256": "08bc3cc854ce10fc725744b2d6d444f46ee4b678692467f4d029a75c497398b6"
     },
     {
       "path": "modern/pages/SettingsPage.tsx",
@@ -525,8 +551,8 @@
     {
       "path": "modern/pages/VersionsPage.tsx",
       "kind": "tsx",
-      "bytes": 7060,
-      "sha256": "855d60d7af24c6d73cd03c4819de6968675ec5b814933fe207caf9f3d98b45a1"
+      "bytes": 7537,
+      "sha256": "ba32bcb990f3c8280d3bb5c13a22bb7d6b2812d09bd93938752fddc6aeb38f5c"
     },
     {
       "path": "modern/style.css",
@@ -555,8 +581,8 @@
     {
       "path": "modern/styles/business-dialogs.css",
       "kind": "css",
-      "bytes": 6202,
-      "sha256": "69c4eabca7791cebee9ad9f63ffcfc8cf794e96b2cd7d9d9985e0222de8ef369"
+      "bytes": 7170,
+      "sha256": "b7c998ed2ba0caf19b36ed942588553ad52221b320cc085ff66d5ab4e67ac18d"
     },
     {
       "path": "modern/styles/components.css",
@@ -571,16 +597,22 @@
       "sha256": "635a06924666d846b11d6fb32e227725340f56af83cc43e79e1db5bcec7872f8"
     },
     {
+      "path": "modern/styles/download-center.css",
+      "kind": "css",
+      "bytes": 3458,
+      "sha256": "85f1339eb6f978a0d419bf31e87d70c535bc62b288f47183dbdaa1a5babb57f2"
+    },
+    {
       "path": "modern/styles/downloads.css",
       "kind": "css",
-      "bytes": 5958,
-      "sha256": "f6ac61a3acbeff6f3eb15f8aca8be59d6eb2dc830c3441896f7375d757e9d4ab"
+      "bytes": 6438,
+      "sha256": "73996b55e4fa44175eaf5f2780b7518aaf92c54efa48565c82933f39305525d5"
     },
     {
       "path": "modern/styles/home.css",
       "kind": "css",
-      "bytes": 5907,
-      "sha256": "f932e3b7c237d907c2c713a7cbde58d3300fd387a742254f0810bdf8bf5b1769"
+      "bytes": 6745,
+      "sha256": "6e1eb53e549b1eff54e29c40a5c358c67c0554729e2d639aff453ff3d85ae418"
     },
     {
       "path": "modern/styles/host-components.css",
@@ -597,8 +629,8 @@
     {
       "path": "modern/styles/instances.css",
       "kind": "css",
-      "bytes": 8296,
-      "sha256": "cd416182b7c2240b16e482a40a0f5a7840aaaca5ffe2efb5d625f9a9234d48da"
+      "bytes": 8566,
+      "sha256": "f27432bcc96d5e4313f3e0da8ee467dbae4cebce7c0b84f83983a382fba58ed8"
     },
     {
       "path": "modern/styles/java-settings.css",
@@ -609,14 +641,14 @@
     {
       "path": "modern/styles/layout.css",
       "kind": "css",
-      "bytes": 7042,
-      "sha256": "9247df174f78878414cd084b229b300caae1aa9c958fe01d69d97cbc6f9e30f4"
+      "bytes": 7273,
+      "sha256": "48e63e38cedfec831d6495be90ff447a667df4b0ee66c18134040396ec9e5e46"
     },
     {
       "path": "modern/styles/logs.css",
       "kind": "css",
-      "bytes": 3678,
-      "sha256": "454426f7ca04058a1b3ac6710bdaae6878e4a4d49a4b3ec1895acbdb7bdea988"
+      "bytes": 4244,
+      "sha256": "a00114b8bec87922d7726f542279874daf56430ab921aeb577bd69c994aab88f"
     },
     {
       "path": "modern/styles/notifications.css",
@@ -639,8 +671,8 @@
     {
       "path": "modern/styles/responsive.css",
       "kind": "css",
-      "bytes": 10773,
-      "sha256": "2aa1720d5c8c52de9d5eeaee1c8378c10c452adcb94d8e221820c8d94966d201"
+      "bytes": 11601,
+      "sha256": "a4a09e9d36d2b2972fa4bc659606c82f8292b89635f6e82290202d937d0fddd1"
     },
     {
       "path": "modern/styles/settings.css",
@@ -657,8 +689,8 @@
     {
       "path": "modern/styles/versions.css",
       "kind": "css",
-      "bytes": 3959,
-      "sha256": "0426d0817813bd742668409807b079a41f98f48a6e2b514a4bf67c979a563b5f"
+      "bytes": 6622,
+      "sha256": "75d97703c0ed54592fc2ce688974059b31010763e87d1ffc502831c5f9468db0"
     }
   ],
   "overrides": []

@@ -1,8 +1,12 @@
 import { useState, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DragRegion, UiView, UiRouteViewport, UiIdentity } from '@paradox/ui';
+import { UiView, UiRouteViewport, UiIdentity } from '@paradox/ui';
 import { useLauncherSnapshot, useUiEditorSnapshot } from '@paradox/launcher';
 import { resolveActiveAccount } from '../common/lib/launcher-display';
+import { isDownloadCenterRoute } from '../common/lib/navigation';
+import { useRouteMotion } from '../common/lib/use-route-motion';
+import DownloadNavigation from './components/DownloadNavigation';
+import DownloadIndicator from './components/DownloadIndicator';
 import LaunchTarget from './components/LaunchTarget';
 import './styles/tokens.css';
 import './styles/layout.css';
@@ -12,21 +16,28 @@ import './styles/home.css';
 import './styles/host-components.css';
 import './style.css';
 import './styles/responsive.css';
+import './styles/download-center.css';
+import '../common/player-interaction.css';
 export default function Shell() {
   const s = useLauncherSnapshot(), editor = useUiEditorSnapshot(), { t } = useTranslation();
   const [keyboard, setKeyboard] = useState(false);
+  const [downloadFocused, setDownloadFocused] = useState(false);
   const route = s.navigation.routes.find(r => r.id === s.navigation.routeId);
   const home = route?.id === 'home';
+  const downloadCenter = isDownloadCenterRoute(s.navigation.routeId);
   const account = resolveActiveAccount(s);
-  const title = route ? t(route.title, { defaultValue: route.title }) : '';
+  const title = downloadCenter ? t('nav.downloadCenter') : route ? t(route.title, { defaultValue: route.title }) : '';
   const ready = !!s.config.value && !!editor.draft && !editor.initialSelectionRequired && !editor.suspended;
+  const hasDownloads = s.downloads.active || s.downloads.pending.length > 0 || downloadFocused;
+  const routeStage = useRouteMotion(s.navigation.routeId, !!s.appearance.value?.reduce_motion);
   return <div data-ui-site="Shell-1" className={[
     'app-shell modern-shell', home ? 'is-home' : '', ready ? 'workspace-ready' : '',
+    ready && hasDownloads ? 'has-download-tasks' : '', downloadCenter ? 'is-download-center' : '',
     s.appearance.value?.compact_sidebar ? 'compact' : '',
     s.appearance.value?.reduce_motion ? 'reduce-motion' : '', keyboard ? 'keyboard-navigation' : '',
   ].filter(Boolean).join(' ')} data-theme={s.appearance.theme} style={{ ...s.appearance.variables, fontSize: `${Math.max(13, 14 * (s.appearance.value?.ui_scale ?? 100) / 100)}px` }}
     onKeyDownCapture={() => setKeyboard(true)} onPointerDownCapture={() => setKeyboard(false)}>
-    {!ready && <UiView data-ui-site="Shell-2" id="component.window-bar" />}
+    <UiView data-ui-site="Shell-2" id="component.window-bar" />
     <UiView data-ui-site="Shell-3" id="host.loading" />
     <UiView data-ui-site="Shell-4" id="host.error" />
     {editor.initialSelectionRequired && !editor.suspended && <UiView data-ui-site="Shell-choice" id="onboarding.style-choice" />}
@@ -34,16 +45,17 @@ export default function Shell() {
       <UiView data-ui-site="Shell-5" id="component.app-sidebar" />
       <div data-ui-site="Shell-6" className="workspace">
         <main data-ui-site="Shell-16">
-          <DragRegion data-ui-site="Shell-17" className="page-heading" role="banner">
+          <header data-ui-site="Shell-17" className="page-heading">
             <div data-ui-site="Shell-18"><h1 data-ui-site="Shell-19">{home ? t('app.welcome', { name: account.name }) : title}</h1>
-            <p data-ui-site="Shell-20">{route ? t(route.description, { defaultValue: route.description }) : ''}</p></div>
-            <UiView data-ui-site="Shell-integrated-window-bar" id="component.window-bar" props={{ integrated: true }} />
-          </DragRegion>
+            <p data-ui-site="Shell-20">{downloadCenter ? t('downloadCenter.description') : route ? t(route.description, { defaultValue: route.description }) : ''}</p></div>
+          </header>
+          {downloadCenter && <UiView data-ui-site="Shell-download-navigation" id="component.download-navigation" Original={DownloadNavigation}/>}
           {!home && <UiView data-ui-site="Shell-23" id="component.activity-bar" />}
-          <UiRouteViewport data-ui-site="Shell-24" />
+          <div className="route-stage" ref={routeStage} data-ui-site="Shell-route-stage"><UiRouteViewport data-ui-site="Shell-24" /></div>
         </main>
         <LaunchTarget />
       </div>
+      <UiView data-ui-site="Shell-download-indicator" id="component.download-indicator" Original={DownloadIndicator} props={{ onFocusChange: setDownloadFocused }}/>
       {s.profileDraft.editor && <UiIdentity namespace={s.profileDraft.editor.editKey ? "profile" : "profile-draft"} value={s.profileDraft.editor.editKey ?? "create"}><UiView data-ui-site="Shell-30" id="dialog.profile" /></UiIdentity>}
       {s.instanceDraft.profile && <UiIdentity namespace="profile" value={s.instanceDraft.profile.instance_key}><UiView data-ui-site="Shell-31" id="dialog.instance-settings" props={{ profileKey: s.instanceDraft.profile.instance_key }}/></UiIdentity>}
       {s.importDraft.open && <UiView data-ui-site="Shell-32" id="dialog.import-instances" />}

@@ -1,0 +1,18 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: version search is the unique free-text entry
+
+2 !== 1
+
+    at file:///F:/rust-code/Paradox%20Launcher/ui/scripts/check-ui-versions-downloads-browser.mjs:92:12 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 2,
+  expected: 1,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.20.0
