@@ -85,8 +85,8 @@ pub(crate) fn sdk_runtime() -> anyhow::Result<tokio::runtime::Runtime> {
         .build()?)
 }
 
-// Some Elemental futures hold non-Send driver trait objects. Create and poll
-// those futures inside a worker, rather than moving them onto Tauri's executor.
+// SDK futures are Send. These jobs still contain synchronous filesystem and
+// cache operations, so keep them off Tauri's shared asynchronous executor.
 async fn sdk_job<T: Send + 'static>(
     job: impl FnOnce() -> anyhow::Result<T> + Send + 'static,
 ) -> CommandResult<T> {

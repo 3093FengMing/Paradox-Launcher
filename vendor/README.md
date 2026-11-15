@@ -6,11 +6,29 @@
 
 初始化使用 `git submodule update --init --recursive`。核心开发在子模块的功能分支中进行，先向 fork 推送提交，再在启动器提交新 gitlink。启动器构建读取子模块中的源码，仓库记录的 gitlink 固定实际 SDK 提交。
 
-同步使用的 `upstream` remote 指向 [ElectronicWave/Elemental](https://github.com/ElectronicWave/Elemental)。2026-11-12 的固定 SDK 提交为 [`e32e378`](https://github.com/3093FengMing/QuintElement/commit/e32e3784ebcb00a2caa9e62343d98610f16bed60)，合入上游 [`62bb657`](https://github.com/ElectronicWave/Elemental/commit/62bb657aeba31d115331ef18a4cfd58ca4fba7ce)。SDK 和启动器继续使用 `dev`；`.gitmodules` 的远程更新分支也是 `dev`，构建仍以启动器 gitlink 固定的提交为准。facade package 保持 `elemental-kit 0.2.0`。
+同步使用的 `upstream` remote 指向 [ElectronicWave/Elemental](https://github.com/ElectronicWave/Elemental)。2026-11-16 的固定 SDK 提交为 [`013abda`](https://github.com/3093FengMing/QuintElement/commit/013abda8585d58637cdd1f512b1eea820641f63f)，合入本轮实际 fetch 的最新上游 [`d4c3ab9`](https://github.com/ElectronicWave/Elemental/commit/d4c3ab920bd7ee25b38d37c058623f0e7336453c)。SDK 和启动器继续使用 `dev`；`.gitmodules` 的远程更新分支也是 `dev`，构建仍以启动器 gitlink 固定的提交为准。facade package 升级为 `elemental-kit 0.3.0`，本轮没有修改 `main`。
 
-本次按[上游 0.2 迁移文档](QuintElement/docs/migration/0.2.md)逐项核对 80 个条目，接入公共 `Launcher::builder`、实例加载、`Driver::prepare(&PrepareRequest)`、共同 prepared 类型及 `build_launch_command`。运行时和启动参数改为 `RuntimeOptions` / `LaunchOptions`；认证入口从 `UserCredential` 改为 `Credential`，直接使用旧 SDK API 的调用者需按该文档迁移。应用账户仍由 OS 凭据库和原有刷新事务管理，SDK 新增的账户持久化、Yggdrasil 和离线服务器能力不扩展产品界面。
+### 0.3 接口与兼容边界
 
-SDK 相对上游的 Rust 差异由原来的 12 个文件缩减到 6 个文件（含回归测试）。保留 `DownloadBatch::into_tasks`、Forge / NeoForge 身份校验与必要 family 检测入口，以及 `Distribution::from_validated_root`。该新增构造器导入应用已受控探测的 Java 属性，避免无 `release` 文件时再次启动未受应用取消管理的 SDK 探测；它不读写运行时元数据，上游 provider 和默认 executable 语义保持原样。精确的 Java / javaw 路径与实际 natives 搜索目录由应用适配，Windows 游戏和 Java 探测在执行前绑定 Job，等待、停止与析构覆盖完整进程树。
+本次按[上游 0.3 迁移文档](QuintElement/docs/migration/0.3.md)适配：
+
+- `Driver` / source 改为 `Send + Sync`，异步实现使用 `#[async_trait]`，不再使用 `?Send`。应用 `BoundedProfileFamily` 与 service 的扫描、下载准备和启动命令 future 均有 `Send` 回归。
+- `Launcher::inspect_instances()` 返回 `InspectReport { instances, failures }`。`ElementalService::inspect()` 保持应用 / IPC 的健康实例列表，并按名称、路径与错误记录失败；根目录 IO 错误仍返回失败。损坏 JSON 不改写，健康实例扫描不创建 `.elemental`。
+- 目录 `description` 删除、`stream` / `with_stream` 改为 `channel` / `with_channel`。应用有界目录读取 Mojang / loader 原始结构，不依赖这些旧字段；不恢复无消费者的兼容 API。
+- `MicrosoftAuthorizer` 改为 boxed `Send + Sync` verification handler，构造器为 `MicrosoftAuthorizer::new(...)`。启动器实际认证仍由 `auth.rs` / `AccountsManager` 事务和 OS 凭据库完成，SDK 认证变化不引入新的账户存储、Yggdrasil 或服务器界面。
+- 上游保留 native JAR artifact 在启动 classpath 的修复已合入。SDK 两套 classpath 入口和应用真实 prepare / load / build 流程均有回归，继续验证 rule、module-path 排除、classifier-only 和安全相对路径边界。实际 natives 搜索目录适配仍不可移除。
+- Windows 加载器 worker 复用 `OwnedChild`：挂起创建、绑定 Job 后恢复执行；等待覆盖先退出包装程序的子进程，取消 / 停止 / 析构在返回前完成树回收。移除旧的启动后绑定 Job 重复实现；保留 Unix process group、下载队列、Java 探测与账户事务边界。
+- 两个 workspace 使用现有 Rust 1.92.0 和锁文件。SDK 0.3.0、`jiff 0.2.45` 与 `zip 9.6.0` 已对齐；native-tls / Windows schannel 不变。
+
+本轮继续保留 `DownloadBatch::into_tasks`、`Distribution::from_validated_root`、Forge / NeoForge 身份检查与必要 family 检测入口。上游尚未覆盖这些有消费者的补丁；新增 Rust overlay 仅为 classpath 回归及 Windows 并行测试目录的唯一后缀。当前 UI 的 Graphite、导航 / 密度、自定义公开 Provider、Original、来源套件、草稿 / CAS、编辑器和 Recovery 边界未改动。
+
+### 2026-11-12 历史迁移
+
+上次固定 SDK [`e32e378`](https://github.com/3093FengMing/QuintElement/commit/e32e3784ebcb00a2caa9e62343d98610f16bed60)，合入上游 [`62bb657`](https://github.com/ElectronicWave/Elemental/commit/62bb657aeba31d115331ef18a4cfd58ca4fba7ce)。
+
+2026-11-12 按[上游 0.2 迁移文档](QuintElement/docs/migration/0.2.md)逐项核对 80 个条目，接入公共 `Launcher::builder`、实例加载、`Driver::prepare(&PrepareRequest)`、共同 prepared 类型及 `build_launch_command`。运行时和启动参数改为 `RuntimeOptions` / `LaunchOptions`；认证入口从 `UserCredential` 改为 `Credential`，直接使用旧 SDK API 的调用者需按该文档迁移。应用账户仍由 OS 凭据库和原有刷新事务管理，SDK 新增的账户持久化、Yggdrasil 和离线服务器能力不扩展产品界面。
+
+2026-11-12 的 SDK 相对上游 Rust 差异由原来的 12 个文件缩减到 6 个文件（含回归测试）。保留 `DownloadBatch::into_tasks`、Forge / NeoForge 身份校验与必要 family 检测入口，以及 `Distribution::from_validated_root`。该新增构造器导入应用已受控探测的 Java 属性，避免无 `release` 文件时再次启动未受应用取消管理的 SDK 探测；它不读写运行时元数据，上游 provider 和默认 executable 语义保持原样。精确的 Java / javaw 路径与实际 natives 搜索目录由应用适配，Windows 游戏和 Java 探测在执行前绑定 Job，等待、停止与析构覆盖完整进程树；2026-11-16 加载器 worker 也复用同一所有权实现。
 
 2026-11-08 的历史基线是在 fork `969227c` 上合入上游 [`540c3b3`](https://github.com/ElectronicWave/Elemental/commit/540c3b361e7d9796b1c04f5ec4992e19418a3bff)，合并提交为 [`92a4d18`](https://github.com/3093FengMing/QuintElement/commit/92a4d1848ab8840e29abd5d0c700b0089a58fb06)。该轮同步版本名称解析、凭据与启动命令 API、驱动目录、下载进度及 launchpad CLI；launchpad 替代旧 demo，CLI 依赖固定在 SDK 自己的 Cargo.lock 中。
 
@@ -28,7 +46,30 @@ SDK 的 Microsoft authorizer 通过 `oauth2-reqwest` 将 reqwest 0.13 client 接
 
 ## 升级回归
 
-2026-11-12 当前验收：SDK **34 项通过**，启动器 **275 项通过、2 项既有忽略**；两个工作区全目标 check、严格 Clippy 与格式检查、四项 UI 检查及内嵌前端的 Windows debug 构建通过。源码和最终运行证据已独立复审；包装程序提前退出后的子进程所有权与无 release 文件的额外探测问题均有回归和独立复验。
+### 2026-11-16 当前验收
+
+SDK **40 项通过**，启动器 **284 项通过、2 项既有忽略**；两个工作区 locked 全目标 check、严格 Clippy（`-D warnings`）、格式检查通过，SDK `format.bat` 和 launchpad `--help` 通过。UI `lint:ui`、`check:i18n`、`test:ui`、`build:ui` 全部通过，翻译检查为两种语言 1108 个资源键 / 1952 处静态调用。前端源码未变；Vite 关于未来 native config loader 和 chunk 大小的既有提示为非阻断。
+
+四种 loader 在独立中文 / 空格路径的缓存副本和完全空目录全新安装中，各完成两次纹理 / 声音就绪与受控进程树回收；全新矩阵使用 canonical Windows 路径：
+
+| Loader | 游戏版本 | 缓存版本 | 全新版本 | 各场景就绪 / 回收 |
+| --- | --- | --- | --- | --- |
+| Fabric | 1.20.1 | 0.20.1 | 0.20.1 | 2 / 2 |
+| Quilt | 1.20.1 | 0.30.1 | 0.30.2 | 2 / 2 |
+| Forge | 1.20.1 | 47.4.28 | 47.4.29 | 2 / 2 |
+| NeoForge | 1.21.1 | 21.1.265 | 21.1.266 | 2 / 2 |
+
+Vanilla 缓存副本的 1.12.2 / Java 8、1.20.1 / Java 17、1.21.1 / Java 21、26.3 / Java 25 各完成两次就绪与受控停止；初次复用与修复均为 0 下载文件，实际 native / 纹理 / 声音加载通过。Java wrapper / javaw、下载取消、受控探测、提前退出包装程序和 loader worker 回收均由本轮单元回归覆盖。
+
+另一个不运行游戏的独立副本只在 SDK 调用前显式迁移四个 native-state 绝对路径字段；两次扫描 / 加载均通过并保持 JSON / natives 状态不变。首个未迁移路径且与游戏共享副本的检查因预期的 native 状态更新未通过，已保留为诊断，不计入通过。历史 loader / Vanilla 源缓存共 **20,260 文件**的大小、时间和 SHA-256 均保持一致；本次未触碰用户游戏目录。
+
+当前内嵌前端的 Windows x64 **debug** 构建为本地 `.test-data/2026-11-16-quintelement-sync/native-debug/paradox-launcher-20261116.exe`，**45,041,152 字节**，SHA-256 `BDEDC0BDF9FDCFC83E5A4B4DE817B493B8C3B190977B137C3F2EF49105783E1C`。debug 使用项目既有 console subsystem，release 的 GUI subsystem 约定未改变；CLI version / help 和隔离四-loader 扫描通过。本轮未做新的 GUI 视觉或在线正版 / 服务器身份验收，也不把受控停止计作自然退出。
+
+详细日志和通过 / 失败证据分别位于 `.test-data/2026-11-16-quintelement-sync/`，保持本地忽略。Codacy MCP / token 当前不可用，不宣称远程复杂度 / 评分检查完成；本地严格 Clippy、测试与构建结果已记录。
+
+### 历史验收
+
+2026-11-12 历史验收：SDK **34 项通过**，启动器 **275 项通过、2 项既有忽略**；两个工作区全目标 check、严格 Clippy 与格式检查、四项 UI 检查及内嵌前端的 Windows debug 构建通过。源码和最终运行证据已独立复审；包装程序提前退出后的子进程所有权与无 release 文件的额外探测问题均有回归和独立复验。
 
 四种 loader 的历史缓存副本和全新中文 / 空格目录分别完成各两次纹理 / 声音就绪与受控停止，进程树均已回收。缓存两次停机扫描与加载的 JSON / natives 状态不变；运行前后仅四个实例的 JNA 临时 DLL / 空 `.x` 文件及目录时间轮换，其他 native 和 JSON 不变。历史 loader 与 Vanilla 原目录共 20,260 个文件的大小、时间与 SHA-256 均保持一致。
 

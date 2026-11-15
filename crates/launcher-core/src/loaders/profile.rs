@@ -44,7 +44,7 @@ impl<E: LoaderMetaEndpoints> ProfileResourceUrl for LoaderMetaSource<E> {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl<F> ProfiledVersionJsonFamily for BoundedProfileFamily<F>
 where
     F: ProfiledVersionJsonFamily,
@@ -129,6 +129,25 @@ mod tests {
         io::{AsyncReadExt, AsyncWriteExt},
         net::TcpListener,
     };
+
+    #[test]
+    fn bounded_profile_futures_are_send_for_fabric_and_quilt() {
+        fn assert_send(_: impl std::future::Future + Send) {}
+        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let game = MinecraftVersionId::from("1.21.1");
+        let loader = LoaderVersionId::from("fixture-loader");
+        let fabric = BoundedProfileFamily::new(
+            FabricDriverFamily::new(FabricFlavor::Fabric),
+            client.clone(),
+            Duration::from_secs(5),
+        );
+        let fabric_source = FabricSource::with_client(FabricEndpoints::official(), client.clone());
+        assert_send(fabric.profile(&fabric_source, &game, &loader));
+        let quilt =
+            BoundedProfileFamily::new(QuiltDriverFamily, client.clone(), Duration::from_secs(5));
+        let quilt_source = QuiltSource::with_client(QuiltEndpoints::official(), client);
+        assert_send(quilt.profile(&quilt_source, &game, &loader));
+    }
 
     #[tokio::test]
     async fn profiled_drivers_reject_oversized_profile_before_decoding() {

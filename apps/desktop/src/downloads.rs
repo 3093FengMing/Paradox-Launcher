@@ -436,7 +436,8 @@ impl DownloadManager {
     }
 
     fn run_queue(&self, app: &tauri::AppHandle, busy: &AtomicBool) -> Result<()> {
-        // Elemental's non-Send futures are created and polled on this worker.
+        // The serialized queue owns blocking file work and isolated installer
+        // workers; SDK futures no longer require a non-Send compatibility bridge.
         let runtime = tokio::runtime::Builder::new_multi_thread()
             .worker_threads(2)
             .enable_all()

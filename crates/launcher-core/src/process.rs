@@ -39,6 +39,12 @@ impl OwnedChild {
         None
     }
 
+    /// Take the child's piped stderr for bounded worker diagnostics.
+    /// The child retains ownership of its process tree until wait, kill or drop.
+    pub fn take_stderr(&mut self) -> Option<tokio::process::ChildStderr> {
+        self.inner.stderr.take()
+    }
+
     pub fn try_wait(&mut self) -> std::io::Result<Option<ExitStatus>> {
         if self.status.is_none() {
             self.status = self.inner.try_wait()?;
@@ -87,7 +93,13 @@ impl Drop for OwnedChild {
     }
 }
 
-pub(crate) fn spawn_owned_command(command: &mut Command) -> std::io::Result<OwnedChild> {
+/// Spawn a command with process-tree ownership before child code executes.
+///
+/// Windows creates it suspended, binds a kill-on-close Job, and only then
+/// resumes its primary thread. Setup errors reap the suspended process. Waiting
+/// includes descendants, and kill/drop finishes tree cleanup before returning.
+/// Other platforms retain Tokio child ownership; callers may add a process group.
+pub fn spawn_owned_command(command: &mut Command) -> std::io::Result<OwnedChild> {
     command.kill_on_drop(true);
     #[cfg(windows)]
     let job = windows_job::ProcessJob::new()?;
