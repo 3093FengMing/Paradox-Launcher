@@ -27,3 +27,10 @@ Thumbs.db
 /.prettierrc
 /.prettierrc.*
 /prettier.config.*
+
+# Local design artifacts
+/.impeccable/
+/PRODUCT.md
+/DESIGN.md
+/product.md
+/design.md
