@@ -1,4 +1,5 @@
 import * as ts from 'typescript';
+import { createBindingResolver, unwrap } from './site-bindings';
 import type { SuiteSourceTransform } from '../ui-suite/module-graph';
 import {
   normalizeSourcePath as normalizePath,
@@ -42,6 +43,7 @@ const privatePath = (path: string) =>
   /(?:^|\/)ui-foundation\/(?:environment|Identity)(?:\.tsx?)?$/.test(path) ||
   /(?:^|\/)ui-suite\/SuiteProvider(?:\.tsx?)?$/.test(path) ||
   /(?:^|\/)RecoveryHost(?:\.tsx?)?$/.test(path);
+/** Resolve imports lexically without filesystem access; private modules remain uninstrumented. */
 function resolvedPath(file: string, specifier: string): string {
   if (!specifier.startsWith('.')) return specifier;
   const parts = file.split('/');
@@ -52,32 +54,18 @@ function resolvedPath(file: string, specifier: string): string {
   }
   return parts.join('/');
 }
-interface Origin {
-  name: string;
-  module: string;
-  namespace: boolean;
+/** Explicit sites accept string literals through TypeScript-only wrappers, never runtime values. */
+function explicitSite(attribute: ts.JsxAttribute | undefined, path: string): string | null {
+  if (!attribute) return null;
+  const value = attribute.initializer;
+  if (value && ts.isStringLiteral(value)) return value.text;
+  if (value && ts.isJsxExpression(value) && value.expression) {
+    const expression = unwrap(value.expression);
+    if (ts.isStringLiteral(expression)) return expression.text;
+  }
+  throw Error(`${path}: data-ui-site must be a static nonempty string.`);
 }
-interface BindingScope {
-  bindings: Map<string, Binding>;
-  parent: BindingScope | null;
-}
-interface AliasBinding {
-  expression: ts.Expression;
-  scope: BindingScope;
-  path: readonly string[];
-}
-type Binding = Origin | AliasBinding | null;
-function unwrap(node: ts.Expression): ts.Expression {
-  while (
-    ts.isParenthesizedExpression(node) ||
-    ts.isAsExpression(node) ||
-    ts.isTypeAssertionExpression(node) ||
-    ts.isNonNullExpression(node) ||
-    ts.isSatisfiesExpression(node)
-  )
-    node = node.expression;
-  return node;
-}
+/** Instrument JSX call sites while excluding providers and private ownership infrastructure. */
 export function createSiteTransformer(
   filePath: string,
   publish?: (definitions: readonly UiSiteDefinition[]) => void,
@@ -89,113 +77,8 @@ export function createSiteTransformer(
       publish?.([]);
       return file;
     }
-    const scopes: BindingScope[] = [];
+    const bindings = createBindingResolver();
     let fragmentName: ts.Identifier | undefined;
-    const bindName = (name: ts.BindingName, value: AliasBinding | null, scope: BindingScope) => {
-      if (ts.isIdentifier(name)) scope.bindings.set(name.text, value);
-      else
-        for (const [index, element] of name.elements.entries()) {
-          if (!ts.isBindingElement(element)) continue;
-          const property =
-            element.propertyName ?? (ts.isIdentifier(element.name) ? element.name : undefined);
-          const key = ts.isArrayBindingPattern(name)
-            ? String(index)
-            : property &&
-                (ts.isIdentifier(property) ||
-                  ts.isStringLiteral(property) ||
-                  ts.isNumericLiteral(property))
-              ? property.text
-              : null;
-          // Only immutable, statically named destructuring retains provenance.
-          bindName(
-            element.name,
-            value && key !== null && !element.dotDotDotToken && !element.initializer
-              ? { ...value, path: [...value.path, key] }
-              : null,
-            scope,
-          );
-        }
-    };
-    const scopeFor = (node: ts.Node) => {
-      const scope: BindingScope = { bindings: new Map(), parent: scopes.at(-1) ?? null };
-      if (ts.isFunctionLike(node))
-        for (const parameter of node.parameters) bindName(parameter.name, null, scope);
-      const statements = ts.isSourceFile(node) || ts.isBlock(node) ? node.statements : [];
-      for (const statement of statements) {
-        if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
-          const module = statement.moduleSpecifier.text,
-            clause = statement.importClause;
-          if (clause?.name)
-            scope.bindings.set(clause.name.text, {
-              name: clause.name.text,
-              module,
-              namespace: false,
-            });
-          if (clause?.namedBindings) {
-            const bindings = clause.namedBindings;
-            if (ts.isNamespaceImport(bindings))
-              scope.bindings.set(bindings.name.text, { name: '*', module, namespace: true });
-            else
-              for (const item of bindings.elements)
-                scope.bindings.set(item.name.text, {
-                  name: item.propertyName?.text ?? item.name.text,
-                  module,
-                  namespace: false,
-                });
-          }
-        } else if (ts.isVariableStatement(statement)) {
-          for (const declaration of statement.declarationList.declarations)
-            bindName(
-              declaration.name,
-              statement.declarationList.flags & ts.NodeFlags.Const && declaration.initializer
-                ? { expression: declaration.initializer, scope, path: [] }
-                : null,
-              scope,
-            );
-        } else if (
-          (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) &&
-          statement.name
-        )
-          scope.bindings.set(statement.name.text, null);
-      }
-      return scope;
-    };
-    const member = (base: Origin | null, name: string | null): Origin | null =>
-      name && (base || name === 'Provider' || name === 'Consumer')
-        ? { name, module: base?.module ?? '', namespace: false }
-        : null;
-    const origin = (
-      expression: ts.Expression,
-      scope = scopes.at(-1) ?? null,
-      seen = new Set<Binding>(),
-    ): Origin | null => {
-      const node = unwrap(expression);
-      if (ts.isIdentifier(node)) {
-        for (let lexical = scope; lexical; lexical = lexical.parent)
-          if (lexical.bindings.has(node.text)) {
-            const binding = lexical.bindings.get(node.text)!;
-            if (!binding || seen.has(binding)) return null;
-            seen.add(binding);
-            if ('module' in binding) return binding;
-            let result = origin(binding.expression, binding.scope, seen);
-            for (const property of binding.path) result = member(result, property);
-            return result;
-          }
-      } else if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
-        const base = origin(node.expression, scope, seen);
-        const name = ts.isPropertyAccessExpression(node)
-          ? node.name.text
-          : ts.isStringLiteral(node.argumentExpression)
-            ? node.argumentExpression.text
-            : null;
-        return member(base, name);
-      } else if (ts.isCallExpression(node)) {
-        const called = origin(node.expression, scope, seen);
-        if (called?.module === 'react' && called.name === 'createContext')
-          return { name: 'Provider', module: 'react', namespace: false };
-      }
-      return null;
-    };
     const attribute = (name: string, value?: string) =>
       ts.factory.createJsxAttribute(
         ts.factory.createIdentifier(name),
@@ -204,7 +87,7 @@ export function createSiteTransformer(
     const attributes = (node: ts.JsxOpeningElement | ts.JsxSelfClosingElement) => {
       const tag = node.tagName.getText(file),
         root = tag.split('.')[0],
-        imported = origin(ts.factory.createIdentifier(root));
+        imported = bindings.origin(ts.factory.createIdentifier(root));
       const part = tag.includes('.') ? tag.split('.').at(-1)! : (imported?.name ?? tag);
       const module = imported?.module ?? '';
       if (
@@ -224,19 +107,7 @@ export function createSiteTransformer(
             ts.isJsxAttribute(row) && row.name.getText(file) === name,
         );
       const explicit = get('data-ui-site');
-      let explicitValue: string | null = null;
-      if (explicit) {
-        const value = explicit.initializer;
-        if (value && ts.isStringLiteral(value)) explicitValue = value.text;
-        else if (
-          value &&
-          ts.isJsxExpression(value) &&
-          value.expression &&
-          ts.isStringLiteral(unwrap(value.expression))
-        )
-          explicitValue = (unwrap(value.expression) as ts.StringLiteral).text;
-        else throw Error(`${path}: data-ui-site must be a static nonempty string.`);
-      }
+      const explicitValue = explicitSite(explicit, path);
       const targetAttribute = get('data-ui-target');
       const target =
         targetAttribute?.initializer && ts.isStringLiteral(targetAttribute.initializer)
@@ -267,7 +138,7 @@ export function createSiteTransformer(
     };
     const visit: ts.Visitor = (node) => {
       const scoped = ts.isSourceFile(node) || ts.isBlock(node) || ts.isFunctionLike(node);
-      if (scoped) scopes.push(scopeFor(node));
+      if (scoped) bindings.enter(node);
       let result: ts.VisitResult<ts.Node>;
       if (ts.isJsxFragment(node)) {
         fragmentName ??= ts.factory.createUniqueName('__UiSiteFragment');
@@ -303,7 +174,7 @@ export function createSiteTransformer(
           ts.visitEachChild(attributes(node), visit, context),
         );
       else result = ts.visitEachChild(node, visit, context);
-      if (scoped) scopes.pop();
+      if (scoped) bindings.leave();
       return result;
     };
     let output = ts.visitNode(file, visit) as ts.SourceFile;
@@ -325,6 +196,7 @@ export function createSiteTransformer(
   };
 }
 
+/** Transform source and retain the exact published site catalog used by editor selectors. */
 export function instrumentSites(
   source: string,
   filePath: string,
@@ -355,6 +227,7 @@ export function instrumentSites(
   return siteResult(source, path, definitions);
 }
 export const siteTransformVersion = 'ui-sites-v1.3';
+/** Compose instrumentation before caller transforms using a versioned source-cache identity. */
 export function suiteSiteTransform(
   publish?: (definitions: readonly UiSiteDefinition[]) => void,
   extra?: SuiteSourceTransform,

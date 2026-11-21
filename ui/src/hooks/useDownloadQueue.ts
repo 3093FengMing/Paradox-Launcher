@@ -13,6 +13,8 @@ export function useDownloadQueue(
   const commandRef = useRef(new Set<string>());
   const generation = useRef(0);
   const revision = useRef(0);
+  const readSequence = useRef(0);
+  const mounted = useRef(false);
 
   const acceptTasks = useCallback(
     (next: DownloadTask[]) => {
@@ -34,20 +36,29 @@ export function useDownloadQueue(
   );
 
   const refresh = useCallback(async () => {
+    if (!mounted.current) return;
     const requestGeneration = generation.current;
     const requestRevision = revision.current;
+    const request = ++readSequence.current;
+    const current = () =>
+      mounted.current &&
+      generation.current === requestGeneration &&
+      revision.current === requestRevision &&
+      readSequence.current === request;
     try {
       const next = await api.downloadTasks();
-      if (generation.current === requestGeneration && revision.current === requestRevision)
-        acceptTasks(next);
+      if (current()) acceptTasks(next);
     } catch (error) {
-      if (generation.current === requestGeneration) onError(error);
+      if (current()) onError(error);
     }
   }, [acceptTasks, onError]);
 
   useEffect(() => {
     const lifecycle = generation;
+    const mountedRef = mounted;
     const requestGeneration = ++lifecycle.current;
+    mountedRef.current = true;
+    setPending([...commandRef.current]);
     let disposed = false;
     let unsubscribe: (() => void) | undefined;
     void api
@@ -71,27 +82,33 @@ export function useDownloadQueue(
       });
     return () => {
       disposed = true;
-      if (lifecycle.current === requestGeneration) lifecycle.current++;
+      if (lifecycle.current === requestGeneration) {
+        lifecycle.current++;
+        mountedRef.current = false;
+      }
       unsubscribe?.();
     };
   }, [acceptTasks, onError, refresh]);
 
   const perform = useCallback(
     async (key: string, operation: () => Promise<unknown>) => {
-      if (commandRef.current.has(key)) return false;
+      if (!mounted.current || commandRef.current.has(key)) return false;
       commandRef.current.add(key);
       setPending([...commandRef.current]);
       const requestGeneration = generation.current;
       try {
         await operation();
+        if (!mounted.current || generation.current !== requestGeneration) return false;
         await refresh();
-        return true;
+        return mounted.current && generation.current === requestGeneration;
       } catch (error) {
         if (generation.current === requestGeneration) onError(error);
         return false;
       } finally {
         commandRef.current.delete(key);
-        if (generation.current === requestGeneration) setPending([...commandRef.current]);
+        // A reservation survives reconnect until its actual IPC settles. The
+        // current view still needs its release, while obsolete results stay out.
+        if (mounted.current) setPending([...commandRef.current]);
       }
     },
     [onError, refresh],

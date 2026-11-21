@@ -67,6 +67,13 @@ impl Settings {
                 && (480..=4320).contains(&self.resolution_height),
             "游戏分辨率超出支持范围"
         );
+        ensure!(
+            !self.java_executable.contains('\0'),
+            "Java 路径不能包含空字符"
+        );
+        for arguments in [&self.extra_jvm_arguments, &self.extra_game_arguments] {
+            ensure!(!arguments.contains('\0'), "启动参数不能包含空字符");
+        }
         self.appearance.validate()?;
         self.personalization.validate()?;
         ensure!(

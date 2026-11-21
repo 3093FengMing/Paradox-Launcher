@@ -114,6 +114,12 @@ impl CatalogCache {
         let mut temporary = tempfile::NamedTempFile::new_in(parent)?;
         serde_json::to_writer(&mut temporary, &stored)?;
         temporary.write_all(b"\n")?;
+        // A valid catalog can still exceed the serialized size accepted by load.
+        // Reject it before replacing a usable cache with unreadable data.
+        ensure!(
+            temporary.as_file().metadata()?.len() <= MAX_CACHE_BYTES,
+            "版本目录缓存大小异常"
+        );
         temporary.as_file().sync_all()?;
         temporary
             .persist(&self.path)
@@ -219,5 +225,28 @@ mod tests {
         };
         fs::write(&path, serde_json::to_vec(&data).unwrap()).unwrap();
         assert!(cache.load_at(101).is_err());
+    }
+
+    #[test]
+    fn oversized_serialized_catalog_preserves_the_previous_cache() {
+        let directory = tempfile::tempdir().unwrap();
+        let cache = CatalogCache::new(directory.path().join("catalog.json"), DEFAULT_CATALOG_TTL);
+        cache.save(&snapshot(100)).unwrap();
+        let original = fs::read(cache.path()).unwrap();
+        let oversized = CatalogSnapshot {
+            versions: (0..50_000)
+                .map(|number| GameVersion {
+                    id: format!("{number:0160}"),
+                    kind: "r".repeat(40),
+                })
+                .collect(),
+            ..snapshot(200)
+        };
+        validate_versions(&oversized.versions).unwrap();
+
+        assert!(cache.save(&oversized).is_err());
+        assert_eq!(fs::read(cache.path()).unwrap(), original);
+        assert_eq!(cache.load_at(201).unwrap().unwrap().fetched_at, 100);
+        assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 1);
     }
 }

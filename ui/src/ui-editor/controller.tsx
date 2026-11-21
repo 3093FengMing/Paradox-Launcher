@@ -388,18 +388,35 @@ export class UiEditorController {
     return stagedParent;
   }
   private scope(key: string): Promise<SuiteRuntimeScope> {
-    let value = this.scopes.get(key); if (!value) { value = Promise.resolve(this.deps.createScope()); this.scopes.set(key, value); } return value;
+    let value = this.scopes.get(key);
+    if (!value) {
+      const pending = Promise.resolve().then(() => this.deps.createScope());
+      value = pending.catch(error => {
+        if (this.scopes.get(key) === value) this.scopes.delete(key);
+        throw error;
+      });
+      this.scopes.set(key, value);
+    }
+    return value;
   }
   private async prepareTrusted(life: number): Promise<SuiteActivationLayer> {
     if (this.trusted) return this.trusted;
-    if (!this.trustedPromise) this.trustedPromise = (async () => {
-      const bundle = await this.deps.getBuiltinBundle('modern'), scope = await this.scope('trusted.modern');
-      const isCurrent = () => this.alive(life);
-      if (!isCurrent()) throw new DOMException('Superseded', 'AbortError');
-      const prepared = await this.deps.compile(bundle, scope, { isCurrent });
-      if (!isCurrent()) { prepared.dispose(); throw new DOMException('Superseded', 'AbortError'); }
-      this.trusted = { layerId: 'trusted.modern', bundle: detached(bundle), prepared }; return this.trusted;
-    })();
+    if (!this.trustedPromise) {
+      const pending = (async () => {
+        const bundle = await this.deps.getBuiltinBundle('modern'), scope = await this.scope('trusted.modern');
+        const isCurrent = () => this.alive(life);
+        if (!isCurrent()) throw new DOMException('Superseded', 'AbortError');
+        const prepared = await this.deps.compile(bundle, scope, { isCurrent });
+        if (!isCurrent()) { prepared.dispose(); throw new DOMException('Superseded', 'AbortError'); }
+        this.trusted = { layerId: 'trusted.modern', bundle: detached(bundle), prepared }; return this.trusted;
+      })();
+      const cached = pending.catch(error => {
+        // Only the failed attempt may clear its cache; a reconnect can own a newer one.
+        if (this.trustedPromise === cached) this.trustedPromise = null;
+        throw error;
+      });
+      this.trustedPromise = cached;
+    }
     return this.trustedPromise;
   }
   private installTrusted() {

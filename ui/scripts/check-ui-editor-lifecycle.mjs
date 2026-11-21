@@ -70,7 +70,7 @@ async function editor(options = {}) {
     getBuiltinBundle: async () => structuredClone(b),
     waitForConfiguration: options.waitForConfiguration,
     getDefaultBuiltin: () => options.defaultBuiltin ?? 'immersive',
-    createScope: () => ({}),
+    createScope: options.createScope ?? (() => ({})),
     compile: async (value, scope, ownership) => {
       compiles.push({ value, scope, ownership });
       if (!ownership.isCurrent()) throw new DOMException('stale', 'AbortError');
@@ -431,6 +431,38 @@ test('disable_during_startup_read_keeps_checked_editable_data_and_blocks_user_co
   assert.equal(f.snapshot().loaded, true); assert.ok(f.snapshot().draft);
   assert.equal(f.compiles.length, 1); assert.equal(f.snapshot().suspended, true); f.disconnect();
 });
+test('trusted_compile_failure_can_retry_without_restarting_editor', async () => {
+  let attempts = 0;
+  const f = await editor({ compile: async () => {
+    if (++attempts === 1) throw Error('temporary trusted compile failure');
+    return prepared();
+  } });
+  try {
+    assert.ok(f.snapshot().diagnostics.includes('temporary trusted compile failure'));
+    assert.equal(f.snapshot().suspended, true);
+    assert.equal(await f.actions.selectSuite('builtin.modern'), true);
+    assert.ok(f.controller.getActivation());
+    assert.equal(f.snapshot().suspended, false);
+  } finally { f.disconnect(); }
+});
+
+test('failed_scope_creation_can_retry_with_preserved_draft', async () => {
+  let attempts = 0;
+  const f = await editor({ createScope: async () => {
+    if (++attempts === 1) throw Error('temporary scope creation failure');
+    return {};
+  } });
+  try {
+    assert.ok(f.snapshot().diagnostics.includes('temporary scope creation failure'));
+    await f.actions.copyBuiltin('modern', 'Recovered draft');
+    f.actions.patchFile('a.tsx', 'preserved edit');
+    assert.equal(await f.actions.preview(), true);
+    assert.equal(f.snapshot().draft.files['a.tsx'].text, 'preserved edit');
+    assert.equal(f.snapshot().dirty, true);
+    assert.equal(f.snapshot().suspended, false);
+  } finally { f.disconnect(); }
+});
+
 test('duplicate_asset_reports_false_retains_original_bytes_and_diagnostic', async () => {
   const f = await editor();
   const asset = (bytes) => ({ name: 'duplicate.png', size: bytes.length, type: 'image/png', arrayBuffer: async () => Uint8Array.from(bytes).buffer });

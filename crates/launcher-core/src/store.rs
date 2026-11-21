@@ -101,6 +101,34 @@ mod tests {
     }
 
     #[test]
+    fn null_bytes_in_global_launch_fields_never_replace_saved_configuration() {
+        let directory = tempfile::tempdir().unwrap();
+        let store = ConfigStore::new(directory.path().join("config.json"));
+        let config = AppConfig::default();
+        store.save(&config).unwrap();
+        let original = fs::read(store.path()).unwrap();
+
+        for field in [
+            "java_executable",
+            "extra_jvm_arguments",
+            "extra_game_arguments",
+        ] {
+            let mut value = serde_json::to_value(&config).unwrap();
+            let invalid = if field == "java_executable" {
+                format!("{}\0java.exe", directory.path().display())
+            } else {
+                "--example=before\0after".into()
+            };
+            value["settings"][field] = serde_json::json!(invalid);
+            let invalid: AppConfig = serde_json::from_value(value).unwrap();
+
+            assert!(store.save(&invalid).is_err(), "{field}");
+            assert_eq!(fs::read(store.path()).unwrap(), original, "{field}");
+        }
+        store.load().unwrap().validate().unwrap();
+    }
+
+    #[test]
     fn language_and_complete_presets_survive_disk_replacement() {
         use crate::model::{Appearance, AppearancePreset};
 

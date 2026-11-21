@@ -1,4 +1,9 @@
 import type { UiPositionLocator, UiSelector } from '../ui-suite/model';
+import { readonlySet } from './ownership-types';
+import { pruneOwnerLeases, collectDomOwners, collectUnstableOwners, buildOwnerSnapshot, writeAttribute } from './ownership-snapshot';
+import type { UiOwnerRecord, UiTargetMetadata, DomOwnership, UiResolution, UiSourceDefinition, UiDefinitionPublication, UiViewPublication } from './ownership-types';
+export { readonlySet } from './ownership-types';
+export type { UiStability, UiOwnerRecord, UiTargetMetadata, DomOwnership, UiResolution, UiSourceDefinition, UiDefinitionPublication, UiViewPublication } from './ownership-types';
 import type { SuiteStyleRoot } from '../ui-suite/prepared';
 import { canonicalSuiteJson } from '../ui-suite/canonical';
 import {
@@ -9,71 +14,6 @@ import {
   SelectorIndex,
 } from './selectors';
 
-export type UiStability = 'stable' | 'automatic-site' | 'missing-repeat-key' | 'unsupported';
-export interface UiTargetMetadata {
-  readonly nameKey: string | null;
-  readonly type: string;
-  readonly sourcePath: string | null;
-  readonly routeId: string | null;
-}
-export interface UiOwnerRecord {
-  readonly ownerId: string;
-  readonly parentOwnerId: string | null;
-  readonly target: string;
-  readonly site: string | null;
-  readonly locator: UiPositionLocator;
-  readonly stability: UiStability;
-  readonly roots: ReadonlySet<Element>;
-  readonly metadata: UiTargetMetadata;
-  /** Transient inherited presentation provenance; never part of a selector. */
-  readonly catalogPresentation: boolean;
-  readonly viewId: string | null;
-  readonly layerId: string | null;
-}
-export interface DomOwnership {
-  readonly ownerIds: readonly string[];
-  readonly rootOwnerIds: readonly string[];
-  readonly leafOwnerId: string | null;
-}
-export interface UiResolution {
-  readonly status: 'resolved' | 'unmounted' | 'hidden' | 'ambiguous' | 'unsupported';
-  readonly owners: readonly UiOwnerRecord[];
-  readonly reason: string | null;
-}
-export interface UiSourceDefinition extends UiTargetMetadata {
-  readonly target: string;
-  readonly site: string | null;
-  readonly viewId: string | null;
-  readonly selector?: UiSelector;
-}
-export interface UiDefinitionPublication {
-  readonly key: string;
-  readonly definitions: readonly UiSourceDefinition[];
-}
-export interface UiViewPublication {
-  readonly viewId: string;
-  readonly sourcePath: string | null;
-  readonly routeId: string | null;
-  readonly layerId: string;
-  readonly nameKey?: string | null;
-}
-export function readonlySet<T>(values: Iterable<T>): ReadonlySet<T> {
-  const set = new Set(values);
-  const result: ReadonlySet<T> = Object.freeze({
-    get size() {
-      return set.size;
-    },
-    has: (value: T) => set.has(value),
-    entries: () => set.entries(),
-    keys: () => set.keys(),
-    values: () => set.values(),
-    [Symbol.iterator]: () => set[Symbol.iterator](),
-    forEach(callback: (value: T, value2: T, set: ReadonlySet<T>) => void, thisArg?: unknown) {
-      set.forEach((value) => callback.call(thisArg, value, value, result));
-    },
-  });
-  return result;
-}
 const owners = new Map<string, { token: object; record: UiOwnerRecord; signature: string }>();
 const dom = new Map<Element, Map<object, DomOwnership>>();
 const definitions = new Map<
@@ -134,131 +74,6 @@ function ownerSelectors(owner: UiOwnerRecord): UiSelector[] {
     })),
   ];
 }
-function outerRoots(candidates: readonly Element[]): ReadonlySet<Element> {
-  const all = new Set(candidates), ancestry = new Map<Element, boolean>();
-  return readonlySet(candidates.filter((element) => {
-    const path: Element[] = [];
-    let parent = element.parentElement;
-    while (parent && !all.has(parent) && !ancestry.has(parent)) {
-      path.push(parent);
-      parent = parent.parentElement;
-    }
-    // Element ancestry, like Node.contains, stops at a ShadowRoot/fragment.
-    const contained = parent !== null && parent !== undefined &&
-      (all.has(parent) || ancestry.get(parent) === true);
-    for (const ancestor of path) ancestry.set(ancestor, contained);
-    return !contained;
-  }));
-}
-function writeAttribute(element: Element, name: string, value: string | null): void {
-  if (element.getAttribute(name) === value) return;
-  if (value === null) element.removeAttribute(name);
-  else element.setAttribute(name, value);
-}
-type OwnerLeases = typeof owners;
-function pruneOwnerLeases(registeredOwners: OwnerLeases): void {
-  // Parent mount leases bound descendants even when invalid duplicate React keys
-  // strand a child without its own cleanup. Replacements register before this flush.
-  let removed = true;
-  while (removed) {
-    removed = false;
-    for (const [id, { record }] of registeredOwners)
-      if (record.parentOwnerId && !registeredOwners.has(record.parentOwnerId)) {
-        registeredOwners.delete(id);
-        removed = true;
-      }
-  }
-}
-function collectDomOwners(registeredOwners: OwnerLeases, registrationsByElement: typeof dom) {
-  const nodes = new Map<string, Set<Element>>(),
-    merged = new Map<Element, string[]>();
-  for (const [element, registrations] of registrationsByElement) {
-    for (const [token, registration] of registrations)
-      if (registration.ownerIds.length && !registration.ownerIds.some((id) => registeredOwners.has(id)))
-        registrations.delete(token);
-    if (!registrations.size) {
-      registrationsByElement.delete(element);
-      writeAttribute(element, 'data-ui-selector', null);
-      writeAttribute(element, 'data-ui-render-root', null);
-      writeAttribute(element, 'data-ui-render-layer', null);
-      continue;
-    }
-    const ids = [...new Set([...registrations.values()].flatMap((row) => row.ownerIds))].filter(
-      (id) => registeredOwners.has(id),
-    );
-    merged.set(element, ids);
-    for (const id of ids) {
-      const roots = nodes.get(id) ?? new Set<Element>();
-      roots.add(element);
-      nodes.set(id, roots);
-    }
-  }
-  return { nodes, merged };
-}
-function collectUnstableOwners(registeredOwners: OwnerLeases, unkeyed: typeof unkeyedCalls): Set<string> {
-  const repeats = new Map<string, UiOwnerRecord[]>();
-  for (const { record } of registeredOwners.values()) {
-    const key = canonicalSuiteJson([
-      record.parentOwnerId,
-      record.site,
-      record.locator.business,
-      record.locator.calls.at(-1)?.key ?? null,
-    ]);
-    const group = repeats.get(key) ?? [];
-    group.push(record);
-    repeats.set(key, group);
-  }
-  const missing = new Set<string>();
-  for (const [key, parentOwnerId] of unkeyed)
-    if (parentOwnerId ? !registeredOwners.has(parentOwnerId) : !repeats.has(key)) unkeyed.delete(key);
-  for (const [key, group] of repeats)
-    if (group.length > 1 && group[0].locator.calls.at(-1)?.key === null) {
-      // Distinct accumulated business identities separate repeated rows. Equal identities do not.
-      unkeyed.set(key, group[0].parentOwnerId);
-    }
-  for (const [key, group] of repeats)
-    if (unkeyed.has(key)) for (const row of group) missing.add(row.ownerId);
-  let propagated = true;
-  while (propagated) {
-    propagated = false;
-    for (const { record } of registeredOwners.values())
-      if (
-        record.parentOwnerId &&
-        missing.has(record.parentOwnerId) &&
-        !missing.has(record.ownerId)
-      ) {
-        missing.add(record.ownerId);
-        propagated = true;
-      }
-  }
-  return missing;
-}
-function buildOwnerSnapshot(input: {
-  registeredOwners: OwnerLeases;
-  nodes: Map<string, Set<Element>>;
-  missing: ReadonlySet<string>;
-  previousById: ReadonlyMap<string, UiOwnerRecord>;
-  previousSignatures: ReadonlyMap<string, string>;
-}) {
-  const { registeredOwners, nodes, missing, previousById, previousSignatures } = input;
-  const next: UiOwnerRecord[] = [], nextSignatures = new Map<string, string>();
-  for (const { record, signature } of registeredOwners.values()) {
-    const candidates = [...(nodes.get(record.ownerId) ?? record.roots)];
-    const roots = outerRoots(candidates);
-    const old = previousById.get(record.ownerId),
-      stability = missing.has(record.ownerId) ? 'missing-repeat-key' : record.stability;
-    const updated = { ...record, roots, stability };
-    const equivalent =
-      old &&
-      old.stability === stability &&
-      [...roots].every((root) => old.roots.has(root)) &&
-      roots.size === old.roots.size &&
-      previousSignatures.get(record.ownerId) === signature;
-    next.push(equivalent ? old : Object.freeze(updated));
-    nextSignatures.set(record.ownerId, signature);
-  }
-  return { next, nextSignatures };
-}
 function updateCatalogSnapshots(): boolean {
   let changed = false;
   const nextDefinitions = [...definitions.values()].flatMap((row) => row.definitions),
@@ -293,6 +108,17 @@ function createOwnerIndex(currentOwners: readonly UiOwnerRecord[]): SelectorInde
     for (const selector of ownerSelectors(owner)) nextIndex.add(selector, owner.ownerId);
   return nextIndex;
 }
+/** Broad selectors remain plural; precise marks require a unique, stable full identity. */
+function ownerMarks(owner: UiOwnerRecord, currentIndex: SelectorIndex<string | null>): string[] {
+  return ownerSelectors(owner).flatMap(selector => {
+    const lookup = currentIndex.get(selector);
+    if (lookup.collision) return [];
+    if (selector.kind !== 'position') return [`s${selectorDigest(selector)}`];
+    if (owner.stability === 'missing-repeat-key' || owner.stability === 'unsupported') return [];
+    if (new Set(lookup.values.filter(id => id !== null)).size !== 1) return [];
+    return [`s${selectorDigest(selector)}`];
+  });
+}
 function publishDomOwners(
   merged: Map<Element, string[]>,
   currentById: ReadonlyMap<string, UiOwnerRecord>,
@@ -306,18 +132,7 @@ function publishDomOwners(
     for (const id of rootIds) {
       const owner = currentById.get(id)!;
       roots.add(owner.locator.renderRoot);
-      for (const selector of ownerSelectors(owner)) {
-        const lookup = currentIndex.get(selector);
-        if (lookup.collision) continue;
-        if (
-          selector.kind === 'position' &&
-          (new Set(lookup.values.filter((id) => id !== null)).size !== 1 ||
-            owner.stability === 'missing-repeat-key' ||
-            owner.stability === 'unsupported')
-        )
-          continue;
-        marks.add(`s${selectorDigest(selector)}`);
-      }
+      for (const mark of ownerMarks(owner, currentIndex)) marks.add(mark);
     }
     writeAttribute(element, 'data-ui-selector', marks.size ? [...marks].join(' ') : null);
     writeAttribute(element, 'data-ui-render-root', roots.size ? [...roots].join(' ') : null);
@@ -334,6 +149,7 @@ function publishDomOwners(
   }
   return nextDom;
 }
+/** Publish one coherent batch: lease pruning, repetition stability, selectors and DOM marks. */
 function flush() {
   if (!dirty) return;
   dirty = false;
@@ -353,6 +169,7 @@ function flush() {
   index = createOwnerIndex(snapshot);
   domSnapshot = publishDomOwners(merged, byId, index);
 }
+/** Replacement leases share an id; only the latest token may remove the registered owner. */
 export function registerOwner(record: UiOwnerRecord): () => void {
   const token = {},
     value = Object.freeze({
@@ -372,6 +189,7 @@ export function registerOwner(record: UiOwnerRecord): () => void {
     schedule();
   };
 }
+/** Merge root registrations without letting one component's cleanup erase another lease. */
 export function registerDom(element: Element, ownership: DomOwnership): () => void {
   const token = {},
     registrations = dom.get(element) ?? new Map<object, DomOwnership>();
@@ -396,6 +214,7 @@ export function registerDom(element: Element, ownership: DomOwnership): () => vo
     schedule();
   };
 }
+/** Flush pending leases and return the frozen identity-stable owner snapshot. */
 export function listOwners(): readonly UiOwnerRecord[] {
   flush();
   return snapshot;
@@ -414,6 +233,7 @@ export function subscribeOwners(listener: () => void): () => void {
     listeners.delete(listener);
   };
 }
+/** Disconnected, invisible and zero-area roots do not provide an interactive target. */
 export function collectVisibleRects(ownerIds: readonly string[]): readonly DOMRectReadOnly[] {
   flush();
   const roots = new Set(ownerIds.flatMap((id) => [...(byId.get(id)?.roots ?? [])]));
@@ -431,6 +251,7 @@ export function collectVisibleRects(ownerIds: readonly string[]): readonly DOMRe
     }),
   );
 }
+/** Resolve verified full selectors before visibility; a digest alone never selects an owner. */
 export function resolveSelector(selector: UiSelector): UiResolution {
   flush();
   const result = index.get(selector),
@@ -467,6 +288,7 @@ export function resolveSelector(selector: UiSelector): UiResolution {
     return resolution('hidden', 'The registered roots have no visible rectangles.');
   return resolution('resolved', null);
 }
+/** Source definitions outlive mounts, using replacement tokens just like runtime owners. */
 export function publishUiDefinitions(publication: UiDefinitionPublication): () => void {
   const token = {},
     rows = Object.freeze(
@@ -527,6 +349,7 @@ export interface UiStyleRootSnapshot extends SuiteStyleRoot {
 function layerBoundaryToken(layerId: string): string {
   return `l${selectorDigest({ kind: 'type', target: layerId })}`;
 }
+/** Lease structural selector boundaries while CSS can match future mounts in this layer. */
 export function getSuiteStyleRoot(
   id: UiPositionLocator['renderRoot'],
   layerId?: string,

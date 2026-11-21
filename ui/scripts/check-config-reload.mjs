@@ -833,3 +833,113 @@ await test('task4_preset_held_library_ack_and_queued_current_merge_preserve_unfi
   assert.deepEqual(f.server.config.settings, initialConfig.settings);
   f.host.unmount();
 });
+
+async function queueFixture() {
+  const host = hookHost();
+  const reads = [];
+  const commands = [];
+  const errors = [];
+  const finished = [];
+  let emit;
+  const api = {
+    subscribeDownloads: async (listener) => {
+      emit = listener;
+      return () => {};
+    },
+    downloadTasks: () => {
+      const response = deferred();
+      reads.push(response);
+      return response.promise;
+    },
+    enqueueInstall: (key) => {
+      const response = { ...deferred(), key };
+      commands.push(response);
+      return response.promise;
+    },
+  };
+  const app = loadApp(new Map([
+    ['react', host.hooks],
+    [resolve(uiRoot, 'src/api.ts'), api],
+  ]));
+  const { useDownloadQueue } = app('hooks/useDownloadQueue.ts');
+  const onError = (error) => errors.push(error);
+  const onFinished = (task) => finished.push(task);
+  host.mount(() => useDownloadQueue(onError, onFinished));
+  const queue = await host.settle();
+  return { host, queue, reads, commands, errors, finished, emit };
+}
+
+await test('a late initial queue snapshot cannot erase a newer command refresh', async () => {
+  const f = await queueFixture();
+  const installing = f.queue.install('first');
+  f.commands[0].resolve();
+  await f.host.settle();
+  assert.equal(f.reads.length, 2);
+  f.reads[1].resolve([{ ...packTask('running'), kind: 'install' }]);
+  assert.equal(await installing, true);
+  f.reads[0].resolve([]);
+  const queue = await f.host.settle();
+  assert.equal(queue.tasks[0]?.status, 'running');
+  assert.equal(queue.getGuardState().active, true, 'old snapshots must preserve the active-task guard');
+  assert.deepEqual(f.errors, []);
+  f.host.unmount();
+});
+
+await test('a superseded queue read failure cannot report an obsolete error', async () => {
+  const f = await queueFixture();
+  const installing = f.queue.install('first');
+  f.commands[0].resolve();
+  await f.host.settle();
+  f.reads[1].resolve([]);
+  await installing;
+  f.reads[0].reject(new Error('obsolete initial read'));
+  await f.host.settle();
+  assert.deepEqual(f.errors, []);
+  f.host.unmount();
+});
+
+await test('an installation command completed after unmount cannot refresh or publish tasks', async () => {
+  const f = await queueFixture();
+  f.reads[0].resolve([]);
+  await f.host.settle();
+  const installing = f.queue.install('first');
+  f.host.unmount();
+  f.commands[0].resolve();
+  await f.host.settle();
+  assert.equal(f.reads.length, 1, 'an obsolete command must not start a fresh task read');
+  assert.equal(await installing, false);
+  assert.equal(f.host.updatesAfterUnmount, 0);
+  assert.deepEqual(f.finished, []);
+});
+
+await test('a reconnect releases a completed command reservation without accepting its old response', async () => {
+  const f = await queueFixture();
+  f.reads[0].resolve([]);
+  await f.host.settle();
+  const installing = f.queue.install('first');
+  f.host.reconnectEffects();
+  await f.host.settle();
+  assert.equal(f.reads.length, 2);
+  f.reads[1].resolve([{ ...packTask('running'), kind: 'install' }]);
+  await f.host.settle();
+  assert.deepEqual(f.queue.getGuardState().pending, ['install:first']);
+  f.commands[0].resolve();
+  await f.host.settle();
+  assert.equal(f.reads.length, 2, 'only the new subscription owns task synchronization');
+  assert.equal(await installing, false);
+  const queue = await f.host.settle();
+  assert.deepEqual(queue.pending, []);
+  assert.deepEqual(queue.getGuardState().pending, []);
+  assert.equal(queue.tasks[0]?.status, 'running');
+  f.host.unmount();
+});
+
+await test('a retained queue action cannot start backend work after unmount', async () => {
+  const f = await queueFixture();
+  f.reads[0].resolve([]);
+  await f.host.settle();
+  f.host.unmount();
+  assert.equal(await f.queue.install('first'), false);
+  assert.equal(f.commands.length, 0);
+  assert.equal(f.host.updatesAfterUnmount, 0);
+});
