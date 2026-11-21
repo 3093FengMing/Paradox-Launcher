@@ -17,7 +17,7 @@ export function acquireInteractionLease(
   interactionLease.current = token;
   let released = false;
   const publish = (patch: Partial<typeof interaction.current>) => {
-    if (released || interactionLease.current !== token) return;
+    if (released || !Object.is(interactionLease.current, token)) return;
     let changed = false;
     for (const key of ['editorOpen', 'picking', 'modalOpen'] as const) {
       if (typeof patch[key] === 'boolean' && interaction.current[key] !== patch[key]) {
@@ -31,7 +31,7 @@ export function acquireInteractionLease(
     publish,
     release() {
       if (released) return;
-      if (interactionLease.current === token) {
+      if (Object.is(interactionLease.current, token)) {
         publish({ editorOpen: false, picking: false, modalOpen: false });
         interactionLease.current = null;
       }

@@ -28,8 +28,8 @@ fn nth_handles_skips_and_overflow_without_reusing_an_item() {
 
     assert_eq!(iter.nth(1), Some("世界"));
     assert_eq!(iter.len(), 1);
-    assert_eq!(iter.nth(0), Some("last"));
-    assert_eq!(iter.nth(0), None);
+    assert_eq!(iter.next(), Some("last"));
+    assert_eq!(iter.next(), None);
 
     let mut iter = value.array_iter_str().unwrap();
     assert_eq!(iter.nth(usize::MAX), None);
@@ -50,7 +50,7 @@ fn last_returns_the_remaining_tail_and_handles_empty_arrays() {
     assert_eq!(iter.len(), 0);
     assert_eq!(iter.next(), None);
     assert_eq!(iter.next_back(), None);
-    assert_eq!(iter.nth(0), None);
+    assert_eq!(iter.next(), None);
     assert_eq!(iter.nth_back(0), None);
     assert_eq!(iter.last(), None);
 }

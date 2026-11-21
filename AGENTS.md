@@ -1,12 +1,12 @@
 # Agent workflow
 
-Read `CONTRIBUTING.md` before editing this repository. Work on `dev` unless the user selects another branch, and preserve unrelated working-tree changes.
+Read the [development conventions](CONTRIBUTING.md) before editing this repository. Work on `dev` unless the user selects another branch, and preserve unrelated working-tree changes.
 
 ## Completion and remote verification
 
 Follow this completion checklist unless the user explicitly changes its scope:
 
-1. Run the checks required by `CONTRIBUTING.md` and the regressions appropriate to the change.
+1. Run the checks required by the [development conventions](CONTRIBUTING.md) and the regressions appropriate to the change.
 2. Review and commit the task's source, tests and intentional configuration changes, then push to the remote branch. Include unrelated changes only when the user explicitly requests them. Force-push requires explicit user authorization.
 3. Wait for every required GitHub Actions workflow on the exact pushed commit, including all platform jobs in CI and Build.
 4. Wait for Codacy code analysis, its quality gate and the coverage report for that same commit. Generate Rust and frontend coverage where those languages are present, upload all parts, and finalize only after every part succeeds.
