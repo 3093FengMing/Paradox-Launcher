@@ -6,11 +6,26 @@
 
 初始化使用 `git submodule update --init --recursive`。核心开发在子模块的功能分支中进行，先向 fork 推送提交，再在启动器提交新 gitlink。启动器构建读取子模块中的源码，仓库记录的 gitlink 固定实际 SDK 提交。
 
+### 2026-11-21 同步与 TLS 选择
+
+当前 gitlink 固定 SDK [`5ead9ef`](https://github.com/3093FengMing/QuintElement/commit/5ead9ef5c28973c8802f4ef551e0b27347e8d170)，合入上游 [`2e13f21`](https://github.com/ElectronicWave/Elemental/commit/2e13f217ced9ac2890ebd1d6044cbe121f9aabdb) 的 26 个新提交。facade 仍为 `elemental-kit 0.3.0`，两个仓库继续使用 `dev`。
+
+上游提供 `tls-aws-lc`（默认）、`tls-rustls-no-provider`、`tls-native`、`tls-native-vendored`。根 `Cargo.toml` 使用 `default-features = false` 和 `tls-native`，将 native TLS 选择传播到 SDK 各层；SDK 的 TLS manifest 与上游一致，不再修改 SDK reqwest 后端。应用 reqwest 保持 `native-tls`，Windows 使用 schannel。解析后的启动器依赖没有 AWS-LC 包；SDK 默认 AWS-LC 工作区和其他三种配置均编译通过。`tls-rustls-no-provider` 使用方需在宿主安装 rustls crypto provider。
+
+显式启用 `driver-fabric`、`driver-quilt`、`driver-forge`、`driver-neoforge`，原版始终注册。此次上游存在破坏性 API 变化：`Driver` 不再携带布局泛型；准备请求与结果改用 `SharedRootLayout` / `SharedInstanceLayout`，`PrepareRequest` 新增 `on_stage`；Forge / NeoForge 使用 `InstallerFamilyDriver`、`InstallerMavenSource` 和 `MavenInstallerSpec`；Vanilla prepared alias 移到 driver 模块，`load` 不再接收 endpoints，下载 planner 显式传入 resolver。应用已迁移这些调用，完整说明见[上游迁移文档](QuintElement/docs/migration/0.3.md)。
+
+仍有消费者的 `DownloadBatch::into_tasks`、`Distribution::from_validated_root` 保留。Forge installer 游戏版本冲突检查与 NeoForge release / FML marker 识别迁移为 spec 回调，原有回归测试继续有效；删除了已被上游移除的离线 variables builder 测试入口。网络上限、镜像、代理、下载取消、所选 Java / javaw、实际 natives 和完整进程树所有权继续由应用适配。应用 Microsoft 登录与 OS 凭据库仍由现有事务实现，因此不启用 SDK 的可选 `microsoft-auth`；不新增 Yggdrasil 或皮肤 / 披风产品界面。
+
+本次 Rust 1.92.0 locked 全目标 check、严格 Clippy 和测试通过：SDK **73 项**，启动器 **284 项、2 项既有忽略**。两个工作区格式检查、SDK `format.bat`、launchpad `--help` 通过。当前 UI 的 lint、i18n、测试和构建通过，翻译为 1111 键 / 1962 静态调用；首页、设置、版本下载浏览器回归分别验证当前 UI 修改。这些 UI 修改单独提交。
+
+以下 2026-11-16 和更早的游戏运行矩阵与原生构建是历史证据，不计作本次运行结果。本次详细日志位于本地忽略目录 `.test-data/2026-11-21-quintelement-tls-sync/`。
+
+### 2026-11-16 历史同步
 同步使用的 `upstream` remote 指向 [ElectronicWave/Elemental](https://github.com/ElectronicWave/Elemental)。2026-11-16 的固定 SDK 提交为 [`013abda`](https://github.com/3093FengMing/QuintElement/commit/013abda8585d58637cdd1f512b1eea820641f63f)，合入本轮实际 fetch 的最新上游 [`d4c3ab9`](https://github.com/ElectronicWave/Elemental/commit/d4c3ab920bd7ee25b38d37c058623f0e7336453c)。SDK 和启动器继续使用 `dev`；`.gitmodules` 的远程更新分支也是 `dev`，构建仍以启动器 gitlink 固定的提交为准。facade package 升级为 `elemental-kit 0.3.0`，本轮没有修改 `main`。
 
 ### 0.3 接口与兼容边界
 
-本次按[上游 0.3 迁移文档](QuintElement/docs/migration/0.3.md)适配：
+2026-11-16 按[上游 0.3 迁移文档](QuintElement/docs/migration/0.3.md)适配：
 
 - `Driver` / source 改为 `Send + Sync`，异步实现使用 `#[async_trait]`，不再使用 `?Send`。应用 `BoundedProfileFamily` 与 service 的扫描、下载准备和启动命令 future 均有 `Send` 回归。
 - `Launcher::inspect_instances()` 返回 `InspectReport { instances, failures }`。`ElementalService::inspect()` 保持应用 / IPC 的健康实例列表，并按名称、路径与错误记录失败；根目录 IO 错误仍返回失败。损坏 JSON 不改写，健康实例扫描不创建 `.elemental`。
@@ -38,15 +53,15 @@ Vanilla 继续由 SDK 规划下载、应用 `DownloadEngine` 执行、SDK 完成
 
 ## 认证依赖与 TLS
 
-SDK 的 Microsoft authorizer 通过 `oauth2-reqwest` 将 reqwest 0.13 client 接入 oauth2 5，与 `minecraft-msa-auth 0.5.0` 的 `HttpClient` 使用同一 reqwest 版本。启动器恢复使用 crates.io 的原始 helper，已移除 `vendor/minecraft-msa-auth/` 与根 `Cargo.toml` 的 `[patch.crates-io]` 覆盖。
+SDK 的可选 `microsoft-auth` authorizer 通过 `oauth2-reqwest` 将 reqwest 0.13 client 接入 oauth2 5，与 `minecraft-msa-auth 0.5.0` 的 `HttpClient` 使用同一 reqwest 版本。启动器恢复使用 crates.io 的原始 helper，已移除 `vendor/minecraft-msa-auth/` 与根 `Cargo.toml` 的 `[patch.crates-io]` 覆盖。
 
-启动器和 SDK 保留 `native-tls`，Windows 使用 schannel。上游同步保留了这一 TLS 选择。
+启动器通过上游 `tls-native` feature 选择 native-tls，Windows 使用 schannel。SDK 不再维护后端硬编码补丁；未使用的 SDK Microsoft helper 依赖从启动器锁文件移除。
 
 启动器已实现设备代码登录、账户刷新与凭据清理。认证与游戏的实际验收结果见 [验证记录](../docs/VERIFICATION.md)。
 
 ## 升级回归
 
-### 2026-11-16 当前验收
+### 2026-11-16 历史验收
 
 SDK **40 项通过**，启动器 **284 项通过、2 项既有忽略**；两个工作区 locked 全目标 check、严格 Clippy（`-D warnings`）、格式检查通过，SDK `format.bat` 和 launchpad `--help` 通过。UI `lint:ui`、`check:i18n`、`test:ui`、`build:ui` 全部通过，翻译检查为两种语言 1108 个资源键 / 1952 处静态调用。前端源码未变；Vite 关于未来 native config loader 和 chunk 大小的既有提示为非阻断。
 

@@ -2,12 +2,8 @@ use super::{LoaderVersion, normalize_versions};
 use anyhow::{Result, ensure};
 use elemental::{
     core::minecraft::MinecraftVersion,
-    driver::{
-        drivers::{
-            fabric::source::FabricEndpoints, forge::ForgeEndpoints, neoforge::NeoForgeEndpoints,
-            quilt::source::QuiltEndpoints,
-        },
-        families::installer::InstallerMavenEndpoints,
+    driver::drivers::{
+        fabric::source::FabricEndpoints, forge, neoforge, quilt::source::QuiltEndpoints,
     },
     schema::maven::MavenMetadataBody,
 };
@@ -20,8 +16,8 @@ pub(super) fn catalog_url(loader: &str, game: &str) -> Result<String> {
     Ok(match loader {
         "fabric" => FabricEndpoints::official().loader_versions_url(game)?,
         "quilt" => QuiltEndpoints::official().loader_versions_url(game)?,
-        "forge" => ForgeEndpoints::official().maven_metadata_url()?,
-        "neoforge" => NeoForgeEndpoints::official().maven_metadata_url()?,
+        "forge" => forge::endpoints().maven_metadata_url()?,
+        "neoforge" => neoforge::endpoints().maven_metadata_url()?,
         _ => anyhow::bail!("loaders.errors.unsupported"),
     })
 }

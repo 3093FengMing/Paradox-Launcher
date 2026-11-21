@@ -125,6 +125,7 @@ mod tests {
             source::{QuiltEndpoints, QuiltOrigin, QuiltSource},
         },
     };
+    use elemental::driver::url::OriginPolicy;
     use tokio::{
         io::{AsyncReadExt, AsyncWriteExt},
         net::TcpListener,
@@ -175,7 +176,11 @@ mod tests {
                     Duration::from_secs(5),
                 );
                 let source = QuiltSource::with_client(
-                    QuiltEndpoints::with_overrides([(QuiltOrigin::Meta, origin)]).unwrap(),
+                    QuiltEndpoints::new(
+                        OriginPolicy::default()
+                            .with_override(QuiltOrigin::Meta, origin)
+                            .unwrap(),
+                    ),
                     client,
                 );
                 family.profile(&source, &game, &loader).await
@@ -186,7 +191,11 @@ mod tests {
                     Duration::from_secs(5),
                 );
                 let source = FabricSource::with_client(
-                    FabricEndpoints::with_overrides([(FabricOrigin::Meta, origin)]).unwrap(),
+                    FabricEndpoints::new(
+                        OriginPolicy::default()
+                            .with_override(FabricOrigin::Meta, origin)
+                            .unwrap(),
+                    ),
                     client,
                 );
                 family.profile(&source, &game, &loader).await

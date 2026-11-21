@@ -16,11 +16,10 @@ use elemental::{
     driver::{
         driver::InstalledDriver,
         drivers::vanilla::{
-            prepared::{ResolvedVanillaMetadata, ResolvedVanillaVersion},
-            source::VanillaEndpoints,
+            ResolvedVanillaMetadata, ResolvedVanillaVersion, source::VanillaEndpoints,
         },
         families::version_json::{
-            layout::{BaseInstanceLayout, BaseRootLayout},
+            layout::{SharedInstanceLayout, SharedRootLayout},
             parse_argument_string,
             storage::VersionJsonGameStorageExt,
         },
@@ -170,12 +169,15 @@ impl ElementalService {
         )?;
         let endpoints = self.settings.network.endpoints()?;
         let client = self.settings.network.build_client()?;
-        let storage = Storage::new(&self.settings.game_directory, BaseRootLayout);
+        let storage = Storage::new(&self.settings.game_directory, SharedRootLayout::default());
         let instance = storage
-            .ensure_instance(profile.instance_key.clone(), BaseInstanceLayout)
+            .ensure_instance(
+                profile.instance_key.clone(),
+                SharedInstanceLayout::default(),
+            )
             .await
             .context("无法创建实例目录")?;
-        let resolved = match ResolvedVanillaVersion::load(endpoints.clone(), instance.clone()) {
+        let resolved = match ResolvedVanillaVersion::load(instance.clone()) {
             Ok(local) => local,
             Err(_) => {
                 let metadata = tokio::select! {
@@ -201,7 +203,7 @@ impl ElementalService {
             ));
         }
         let artifacts: Vec<Artifact> = resolved
-            .planner()
+            .planner(&endpoints)
             .download_batches()
             .context("无法生成游戏下载计划")?
             .into_iter()
@@ -418,11 +420,7 @@ pub(crate) async fn resolve_bounded_vanilla_metadata(
             timeout,
         )
         .await?;
-        Ok(ResolvedVanillaMetadata::new(
-            endpoints.clone(),
-            metadata,
-            assets,
-        ))
+        Ok(ResolvedVanillaMetadata::new(metadata, assets))
     })
     .await
     .context("获取游戏元数据超时")?
@@ -571,8 +569,8 @@ async fn persist_vanilla_metadata(
     metadata: ResolvedVanillaMetadata,
     profile: &GameProfile,
     paths: &crate::loaders::InstallationPaths,
-    instance: &Storage<BaseInstanceLayout, Storage<BaseRootLayout>>,
-) -> Result<ResolvedVanillaVersion<BaseRootLayout, BaseInstanceLayout>> {
+    instance: &Storage<SharedInstanceLayout, Storage<SharedRootLayout>>,
+) -> Result<ResolvedVanillaVersion> {
     validate_metadata_paths(
         &serde_json::to_value(&metadata.metadata).context("无法验证游戏元数据")?,
     )?;
@@ -1009,7 +1007,6 @@ mod tests {
 
     fn vanilla_metadata(profile: &GameProfile) -> ResolvedVanillaMetadata {
         ResolvedVanillaMetadata::new(
-            Settings::default().network.endpoints().unwrap(),
             serde_json::from_value(serde_json::json!({
                 "assetIndex": {"id": "17", "sha1": "0".repeat(40), "size": 0,
                     "totalSize": 0, "url": "https://piston-meta.mojang.com/v1/packages/index.json"},
@@ -1032,8 +1029,8 @@ mod tests {
         let paths = crate::loaders::InstallationPaths::new(&root, &profile.instance_key).unwrap();
         let instance = Storage::with_parent(
             paths.instance.clone(),
-            Storage::new(&root, BaseRootLayout),
-            BaseInstanceLayout,
+            Storage::new(&root, SharedRootLayout::default()),
+            SharedInstanceLayout::default(),
         );
         persist_vanilla_metadata(vanilla_metadata(&profile), &profile, &paths, &instance)
             .await
@@ -1064,8 +1061,8 @@ mod tests {
                 crate::loaders::InstallationPaths::new(&root, &profile.instance_key).unwrap();
             let instance = Storage::with_parent(
                 paths.instance.clone(),
-                Storage::new(&root, BaseRootLayout),
-                BaseInstanceLayout,
+                Storage::new(&root, SharedRootLayout::default()),
+                SharedInstanceLayout::default(),
             );
             let mut metadata = vanilla_metadata(&profile);
             if invalid_identity {
@@ -1094,8 +1091,8 @@ mod tests {
         let paths = crate::loaders::InstallationPaths::new(&root, &profile.instance_key).unwrap();
         let instance = Storage::with_parent(
             paths.instance.clone(),
-            Storage::new(&root, BaseRootLayout),
-            BaseInstanceLayout,
+            Storage::new(&root, SharedRootLayout::default()),
+            SharedInstanceLayout::default(),
         );
         let mut metadata = vanilla_metadata(&profile);
         metadata.metadata.downloads.client.sha1 = "da39a3ee5e6b4b0d3255bfef95601890afd80709".into();
@@ -1235,8 +1232,8 @@ mod tests {
         directory_link(&outside, &root.join("assets/indexes"));
         let instance = Storage::with_parent(
             paths.instance.clone(),
-            Storage::new(&root, BaseRootLayout),
-            BaseInstanceLayout,
+            Storage::new(&root, SharedRootLayout::default()),
+            SharedInstanceLayout::default(),
         );
         assert!(
             persist_vanilla_metadata(vanilla_metadata(&profile), &profile, &paths, &instance)

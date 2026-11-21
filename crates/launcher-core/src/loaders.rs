@@ -10,15 +10,17 @@ use elemental::{
                 driver::FabricDriverFamily,
                 source::{FabricEndpoints, FabricFlavor, FabricSource},
             },
-            forge::{ForgeDriver, ForgeEndpoints, ForgeSource},
-            neoforge::{NeoForgeDriver, NeoForgeEndpoints, NeoForgeSource},
+            forge, neoforge,
             quilt::{
                 driver::QuiltDriverFamily,
                 source::{QuiltEndpoints, QuiltSource},
             },
             vanilla::source::VanillaSource,
         },
-        families::version_json::{BaseInstanceLayout, BaseRootLayout, ProfiledVersionJsonDriver},
+        families::{
+            installer::{InstallerFamilyDriver, InstallerMavenSource},
+            version_json::{ProfiledVersionJsonDriver, SharedInstanceLayout, SharedRootLayout},
+        },
     },
     infra::downloader::{
         DownloadSession, ElementalDownloader, ElementalDownloaderConfig, FailurePolicy, RetryPolicy,
@@ -149,9 +151,12 @@ pub async fn prepare(
     );
     validate_installation_paths(profile, settings)?;
     std::fs::create_dir_all(&settings.game_directory)?;
-    let storage = Storage::new(&settings.game_directory, BaseRootLayout);
+    let storage = Storage::new(&settings.game_directory, SharedRootLayout::default());
     let instance = storage
-        .ensure_instance(profile.instance_key.clone(), BaseInstanceLayout)
+        .ensure_instance(
+            profile.instance_key.clone(),
+            SharedInstanceLayout::default(),
+        )
         .await?;
     let client = settings.network.build_client()?;
     let downloader = ElementalDownloader::builder()
@@ -189,6 +194,7 @@ pub async fn prepare(
         loader_version: Some(&loader),
         runtime_options: &runtime_options,
         runtime_resolver: &runtime_resolver,
+        on_stage: None,
     };
     let preparation = async {
         match profile.loader.as_str() {
@@ -242,13 +248,16 @@ pub async fn prepare(
                     ..request
                 };
                 if profile.loader == "forge" {
-                    ForgeDriver::new(ForgeSource::with_client(ForgeEndpoints::official(), client))
-                        .with_vanilla_source(vanilla)
-                        .prepare(&request)
-                        .await?;
+                    InstallerFamilyDriver::new(InstallerMavenSource::with_client(
+                        forge::endpoints(),
+                        client,
+                    ))
+                    .with_vanilla_source(vanilla)
+                    .prepare(&request)
+                    .await?;
                 } else {
-                    NeoForgeDriver::new(NeoForgeSource::with_client(
-                        NeoForgeEndpoints::official(),
+                    InstallerFamilyDriver::new(InstallerMavenSource::with_client(
+                        neoforge::endpoints(),
                         client,
                     ))
                     .with_vanilla_source(vanilla)
@@ -343,7 +352,7 @@ mod tests {
                 fabric::source::FabricOrigin, forge::ForgeOrigin, neoforge::NeoForgeOrigin,
                 quilt::source::QuiltOrigin,
             },
-            url::OriginEndpoints,
+            url::OriginPolicy,
         };
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let origin = format!("http://{}", listener.local_addr().unwrap());
@@ -364,23 +373,35 @@ mod tests {
             connection.write_all(&body).await.unwrap();
         });
         let client = reqwest::Client::builder().no_proxy().build().unwrap();
-        use elemental::driver::families::installer::InstallerMavenEndpoints;
+        use elemental::driver::families::installer::MavenEndpoints;
         let url = match loader {
-            "fabric" => FabricEndpoints::with_overrides([(FabricOrigin::Meta, origin)])
-                .unwrap()
-                .loader_versions_url(game)
-                .unwrap(),
-            "quilt" => QuiltEndpoints::with_overrides([(QuiltOrigin::Meta, origin)])
-                .unwrap()
-                .loader_versions_url(game)
-                .unwrap(),
-            "forge" => ForgeEndpoints::new(
-                OriginEndpoints::with_overrides([(ForgeOrigin, origin)]).unwrap(),
+            "fabric" => FabricEndpoints::new(
+                OriginPolicy::default()
+                    .with_override(FabricOrigin::Meta, origin)
+                    .unwrap(),
+            )
+            .loader_versions_url(game)
+            .unwrap(),
+            "quilt" => QuiltEndpoints::new(
+                OriginPolicy::default()
+                    .with_override(QuiltOrigin::Meta, origin)
+                    .unwrap(),
+            )
+            .loader_versions_url(game)
+            .unwrap(),
+            "forge" => MavenEndpoints::new(
+                &forge::FORGE_SPEC,
+                OriginPolicy::default()
+                    .with_override(ForgeOrigin, origin)
+                    .unwrap(),
             )
             .maven_metadata_url()
             .unwrap(),
-            "neoforge" => NeoForgeEndpoints::new(
-                OriginEndpoints::with_overrides([(NeoForgeOrigin, origin)]).unwrap(),
+            "neoforge" => MavenEndpoints::new(
+                &neoforge::NEOFORGE_SPEC,
+                OriginPolicy::default()
+                    .with_override(NeoForgeOrigin, origin)
+                    .unwrap(),
             )
             .maven_metadata_url()
             .unwrap(),
@@ -425,7 +446,7 @@ mod tests {
                     &temporary.path().join("instance"),
                     &temporary.path().join("libraries"),
                     family,
-                    |_| Ok(()),
+                    &|_| Ok(()),
                 ),
             )
             .await
