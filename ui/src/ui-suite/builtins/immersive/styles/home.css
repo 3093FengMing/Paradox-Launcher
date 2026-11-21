@@ -2,12 +2,12 @@
 .immersive-home { display: grid; grid-template-columns: minmax(18em,25em) minmax(0,1fr); min-height: calc(100dvh - var(--titlebar-height)); min-width: 0; align-items: start; }
 .immersive-launch-area { display: flex; flex-direction: column; min-width: 0; padding: 2em; background: var(--surface); border-inline-end: 1px solid var(--border); min-height: calc(100dvh - var(--titlebar-height)); position: sticky; top: 0; }
 .immersive-launch-meta { display: flex; align-items: center; gap: .65em; }
-.immersive-account-link { display: flex; min-width: 0; flex: 1; justify-content: flex-start; align-items: center; gap: .8em; padding: 0; background: transparent !important; color: var(--text); border: 0 !important; text-align: left; }
+.immersive-home .immersive-account-link { display: flex; min-width: 0; flex: 1; justify-content: flex-start; align-items: center; gap: .8em; padding: 0; background: transparent; color: var(--text); border: 0; text-align: left; }
 .immersive-account-copy { min-width: 0; display: grid; gap: .1em; }
 .immersive-account-copy strong { overflow-wrap: anywhere; font-weight: 600; }
 .immersive-account-copy small { font-size: max(12px,.88em); }
 .immersive-account-link > :is(.avatar,.account-avatar) { flex-shrink: 0; width: 2.45em; height: 2.45em; }
-.immersive-instance-settings { width: var(--c-control-height); background: transparent !important; color: var(--muted) !important; flex-shrink: 0; }
+.immersive-home button.immersive-instance-settings { width: var(--c-control-height); background: transparent; color: var(--muted); flex-shrink: 0; }
 .immersive-launch-identity { position: relative; display: flex; align-items: flex-start; gap: .65em; margin-top: 2.25em; }
 .home-current-caption.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .home-current-caption { color: var(--muted); font-size: max(12px,.9em); }
@@ -15,20 +15,20 @@
 .home-instance-state { display: flex; flex-wrap: wrap; gap: .4em .65em; align-items: center; color: var(--muted); margin-top: .5em; }
 .home-instance-state > span { color: var(--accent-ink); font-size: max(13px,.95em); }
 .home-instance-state small { font-size: max(12px,.9em); }
-.immersive-launch-config { margin-bottom: 2em !important; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: .75em; margin: 1.25em 0 0; padding-top: 1em; border-top: 1px solid var(--border); }
+.immersive-home .immersive-launch-config { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: .75em; margin: 1.25em 0 2em; padding-top: 1em; border-top: 1px solid var(--border); }
 .immersive-launch-config > div { min-width: 0; display: grid; gap: .3em; align-content: start; }
 .immersive-launch-config dt { color: var(--muted); font-size: max(12px,.92em); }
 .immersive-launch-config dd { margin: 0; font-size: 1.05em; font-weight: 600; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .home-action-reason { font-size: max(13px,.95em); line-height: 1.55; margin: .8em 0 0; overflow-wrap: anywhere; }
 .immersive-launch-split { padding-top: 0; display: flex; width: 100%; min-height: 5em; margin-top: auto; border-radius: var(--c-radius); background: var(--c-launch-background); color: var(--c-launch-text); overflow: visible; }
-.immersive-launch-primary, .immersive-launch-select { border: 0 !important; border-radius: 0 !important; background: transparent !important; color: inherit !important; box-shadow: none; }
-.immersive-launch-primary { flex: 1; min-width: 0; justify-content: flex-start !important; gap: .8em !important; padding: .8em 1.05em !important; text-align: left; }
+.immersive-home .immersive-launch-split button.immersive-launch-primary, .immersive-home .immersive-launch-split button.immersive-launch-select { border: 0; border-radius: 0; background: transparent; color: inherit; box-shadow: none; }
+.immersive-home button.immersive-launch-primary { flex: 1; min-width: 0; justify-content: flex-start; gap: .8em; padding: .8em 1.05em; text-align: left; }
 .immersive-launch-primary:disabled { opacity: .65; }
 .immersive-launch-primary > svg { flex-shrink: 0; }
 .immersive-launch-copy { display: grid; gap: .3em; min-width: 0; }
 .immersive-launch-copy strong { font-size: 1.15em; font-weight: 650; }
-.immersive-launch-copy small { font-size: max(12px,.88em); color: inherit !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.immersive-launch-select { flex: 0 0 2.8em; border-left: 1px solid color-mix(in srgb,var(--accent-fg) 35%,transparent) !important; }
+.immersive-home .immersive-launch-copy small { font-size: max(12px,.88em); color: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.immersive-home .immersive-launch-split button.immersive-launch-select { flex: 0 0 2.8em; border-left: 1px solid color-mix(in srgb,var(--accent-fg) 35%,transparent); }
 .immersive-launch-split :is(.immersive-launch-primary,.immersive-launch-select):focus-visible { outline: 2px solid var(--accent-fg); outline-offset: -4px; }
 .home-empty-actions { display: flex; flex-wrap: wrap; gap: .8em; margin-top: .5em; }
 .immersive-customize-hint { display: flex; align-items: center; gap: .6em; margin-top: 1em; padding-top: .75em; border-top: 1px solid var(--border); }
@@ -36,7 +36,7 @@
 .immersive-hint-copy { min-width: 0; flex: 1; }
 .immersive-hint-copy h2, .immersive-hint-copy p { display: none; }
 .immersive-hint-copy button { color: var(--accent-ink); background: transparent; padding: .25em 0; border: 0; justify-content: flex-start; }
-.immersive-hint-close { min-width: 24px; min-height: 24px !important; width: 24px; height: 24px; color: var(--muted) !important; background: transparent !important; flex-shrink: 0; }
+.immersive-home .immersive-customize-hint button.immersive-hint-close { min-width: 24px; min-height: 24px; width: 24px; height: 24px; color: var(--muted); background: transparent; flex-shrink: 0; }
 .immersive-home-library { min-width: 0; display: flex; flex-direction: column; padding: 2em 2.25em; }
 .immersive-home-library .section-heading { margin-bottom: .9em; }
 .immersive-home-library .section-heading h2 { font-size: 1.4em; }
@@ -44,16 +44,16 @@
 .immersive-home-list { border-top: 1px solid var(--border); }
 .immersive-home-row { display: grid; grid-template-columns: minmax(0,1fr) auto auto; align-items: center; gap: 1em; min-height: var(--c-row-height); border-bottom: 1px solid var(--border); padding: .65em .6em; }
 .immersive-home-row[data-current=true] { background: var(--s-selected); }
-.home-instance-select { min-width: 0; justify-content: flex-start !important; text-align: left; padding: 0; background: transparent !important; border: 0 !important; gap: .8em !important; }
+.immersive-home button.home-instance-select { min-width: 0; justify-content: flex-start; text-align: left; padding: 0; background: transparent; border: 0; gap: .8em; }
 .home-instance-select > svg { flex-shrink: 0; color: var(--accent-ink); }
 .home-instance-copy { min-width: 0; display: grid; gap: .15em; }
 .home-instance-name-line { display: flex; align-items: baseline; gap: .5em; flex-wrap: wrap; min-width: 0; }
 .home-instance-name-line strong { font-size: max(13px,1.03em); font-weight: 600; overflow-wrap: anywhere; }
-.home-current-marker { font-size: max(12px,.86em) !important; color: var(--accent-ink) !important; white-space: nowrap; }
+.immersive-home .home-current-marker { font-size: max(12px,.86em); color: var(--accent-ink); white-space: nowrap; }
 .home-instance-copy > small { font-size: max(12px,.88em); font-variant-numeric: tabular-nums; }
 .home-row-status { display: inline-flex; align-items: center; gap: .35em; color: var(--muted); font-size: max(12px,.9em); white-space: nowrap; }
 .home-row-status svg { color: var(--accent-ink); }
-.home-row-details { gap: .3em !important; color: var(--muted) !important; font-size: max(13px,.95em) !important; white-space: nowrap; }
+.immersive-home .immersive-home-row button.home-row-details { gap: .3em; color: var(--muted); font-size: max(13px,.95em); white-space: nowrap; }
 .home-library-footer { margin-top: .5em; padding-top: 1em; display: flex; justify-content: flex-end; }
 .immersive-menu-positioner { z-index: 110; }
 .immersive-instance-menu { width: min(24em,calc(100vw - 20px)); max-height: min(28em,var(--available-height)); overflow: auto; padding: .4em; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: var(--c-radius); box-shadow: var(--overlay-shadow); }
@@ -85,13 +85,13 @@
  .immersive-launch-area { position: static; min-height: 0; padding: 1.4em 1.3em; border-inline-end: 0; border-bottom: 1px solid var(--border); }
  .immersive-launch-identity { margin-top: 1.2em; }
  .immersive-launch-identity h1 { font-size: 1.6em; }
- .immersive-launch-config { margin-top: 1.2em; padding-top: 1em; gap: .6em; }
+ .immersive-home .immersive-launch-config { margin-top: 1.2em; padding-top: 1em; gap: .6em; }
  .immersive-customize-hint { padding-top: 1.4em; }
  .immersive-hint-copy p { display: none; }
  .immersive-home-library { padding: 1.5em 1.3em; }
  .immersive-launch-split { position: fixed; z-index: 35; bottom: .65em; left: .75em; right: .75em; width: auto; margin: 0; min-height: 3.5em; border: 1px solid var(--control-border); }
  .immersive-shell.has-download-tasks .immersive-launch-split { right: calc(.75em + var(--download-indicator-width,3em) + .55em); }
- .immersive-launch-primary { padding: .7em .85em !important; }
+ .immersive-home button.immersive-launch-primary { padding: .7em .85em; }
  .immersive-launch-copy strong { font-size: max(13px,1.1em); }
  .immersive-launch-copy small { max-width: calc(100vw - 10em); }
  .home-row-status { white-space: normal; max-width: 7em; }

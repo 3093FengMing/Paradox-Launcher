@@ -18,7 +18,7 @@ button {
 button:active:not(:disabled) {
   transform: none;
 }
-button:active:not(:disabled):not(:focus-visible) {
+button:active:enabled:not(:focus-visible) {
   transform: scale(0.97);
 }
 button:focus-visible,

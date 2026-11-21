@@ -1,50 +1,35 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SetStateAction } from 'react';
 import type { DeepReadonly } from '../launcher/public/types';
-import { createNoticeStore, retainNoticeStore, noticeTime } from '../ui-runtime/notices';
+import { createNoticeStore, retainNoticeStore } from '../ui-runtime/notices';
 import type { UiNoticeKind } from '../ui-runtime/notices';
-import i18n, { getFormattingLocale, translateRuntimeMessage } from '../i18n';
+import i18n, { getFormattingLocale } from '../i18n';
 import * as api from '../api';
 import { errorMessage } from '../lib/errors';
-import { canStopLaunch } from '../lib/activity';
-import {
-  createAppearancePreset,
-  importAppearancePreset as parseAppearancePreset,
-  MAX_APPEARANCE_PRESETS,
-  validatePresetName,
-} from '../lib/appearance-presets';
-import {
-  validateProfileName,
-  validateProfileSettings,
-  validateSettings,
-  validateUsername,
-  type ProfileEditor,
-} from '../lib/forms';
+
 import type {
   Activity,
   Appearance,
   AppConfig,
-  AppearancePreset,
   Bootstrap,
-  GameProfile,
   InstalledInstance,
   LogEvent,
   LogIdentity,
-  LogLine,
   Personalization,
-  ProfileRemovalResult,
   Settings,
 } from '../types';
 import { useCatalog } from './useCatalog';
+import {createSettingsActions} from './settings-actions';
+import { createProfileActions } from './profile-actions';
+import { createPresetActions } from './preset-actions';
+import { createGameActions } from './game-actions';
+import { publishOwnerNotice } from './notice-publisher';
+import { MAX_LOG_LINES, afterLogBoundary, insertLog, mergeLogs } from './launcher-log';
+import type { LauncherLogLine } from './launcher-log';
 import { normalizeArgumentTemplates } from '../lib/preferences';
 import type { ArgumentTemplate } from '../types';
 
-const MAX_LOG_LINES = 500;
-const NOTIFICATION_DEDUPLICATION_MS = 1000;
 type ConfigOperation = (current: AppConfig) => Promise<AppConfig | Bootstrap>;
-interface LauncherLogLine extends LogLine {
-  localSequence?: number;
-}
 interface ScanRead {
   generation: number;
   request: number;
@@ -57,36 +42,6 @@ const scanRoots = (config: AppConfig | null) =>
     config?.settings.game_directory,
     config?.profiles.map((profile) => [profile.instance_key, profile.game_directory]),
   ]);
-
-function sameLog(left: LogIdentity | undefined, right: LogIdentity): boolean {
-  return left?.session === right.session && left.sequence === right.sequence;
-}
-
-function afterLogBoundary(id: LogIdentity, boundary: LogIdentity): boolean {
-  return id.session === boundary.session && BigInt(id.sequence) > BigInt(boundary.sequence);
-}
-
-function insertLog(current: LauncherLogLine[], line: LauncherLogLine): LauncherLogLine[] {
-  const id = line.id;
-  if (id && current.some((previous) => sameLog(previous.id, id))) return current;
-  const sequence = id ? BigInt(id.sequence) : null;
-  const index = id
-    ? current.findIndex(
-        (previous) =>
-          previous.id?.session === id.session &&
-          sequence !== null &&
-          BigInt(previous.id.sequence) > sequence,
-      )
-    : -1;
-  // Event delivery can lag behind a newer disk snapshot or another event.
-  const next = [...current];
-  next.splice(index < 0 ? next.length : index, 0, line);
-  return next.slice(-MAX_LOG_LINES);
-}
-
-function mergeLogs(history: LogLine[], current: LauncherLogLine[]): LauncherLogLine[] {
-  return [...history, ...current].reduce<LauncherLogLine[]>(insertLog, []);
-}
 
 export function useLauncher() {
   // Permanent business owner. Every main/editor viewport borrows this same store.
@@ -162,20 +117,7 @@ export function useLauncher() {
 
   const publishNotice = useCallback(
     (kind: UiNoticeKind, message: string): string => {
-      if (kind !== 'error' && configRef.current?.settings.personalization.notifications === false)
-        return '';
-      message = translateRuntimeMessage(message);
-      const previous = lastNotification.current;
-      const time = noticeTime(notices);
-      if (
-        previous.message === message &&
-        previous.kind === kind &&
-        time - previous.time < NOTIFICATION_DEDUPLICATION_MS
-      )
-        return previous.id;
-      const id = notices.publish(kind, message);
-      lastNotification.current = { message, kind, time, id };
-      return id;
+      return publishOwnerNotice(notices, configRef, lastNotification, kind, message);
     },
     [notices],
   );
@@ -467,294 +409,20 @@ export function useLauncher() {
     [setDraft],
   );
 
-  const saveSettings = async (): Promise<boolean> => {
-    if (!draftRef.current) return false;
-    const submitted = structuredClone(draftRef.current);
-    const generation = lifecycle.current;
-    try {
-      validateSettings(submitted);
-      const config = await enqueueConfig((current) =>
-        api.saveConfig({ ...current, settings: submitted }),
-      );
-      if (generation !== lifecycle.current) return false;
-      setDraft((previous) =>
-        JSON.stringify(previous) === JSON.stringify(submitted)
-          ? structuredClone(config.settings)
-          : previous,
-      );
-      notify(i18n.t('messages.settingsSaved'));
-      addLog('info', i18n.t('messages.settingsLog'));
-      return true;
-    } catch (error) {
-      if (generation === lifecycle.current) reportError(error);
-      return false;
-    }
-  };
 
-  const saveAccount = async (): Promise<boolean> => {
-    if (!draftRef.current) return false;
-    const username = draftRef.current.offline_username;
-    const generation = lifecycle.current;
-    try {
-      validateUsername(username);
-      const config = await enqueueConfig((current) =>
-        api.saveConfig({
-          ...current,
-          settings: { ...current.settings, offline_username: username },
-        }),
-      );
-      if (generation !== lifecycle.current) return false;
-      setDraft((previous) =>
-        previous?.offline_username === username
-          ? { ...previous, offline_username: config.settings.offline_username }
-          : previous,
-      );
-      notify(i18n.t('messages.accountSaved'));
-      return true;
-    } catch (error) {
-      if (generation === lifecycle.current) reportError(error);
-      return false;
-    }
-  };
 
-  const setSnapshots = async (showSnapshots: boolean) => {
-    const generation = lifecycle.current;
-    try {
-      const config = await enqueueConfig((current) =>
-        api.saveConfig({
-          ...current,
-          settings: { ...current.settings, show_snapshots: showSnapshots },
-        }),
-      );
-      if (generation !== lifecycle.current) return;
-      setDraft((previous) =>
-        previous ? { ...previous, show_snapshots: config.settings.show_snapshots } : previous,
-      );
-    } catch (error) {
-      if (generation === lifecycle.current) reportError(error);
-    }
-  };
 
-  const selectProfile = async (key: string) => {
-    const generation = lifecycle.current;
-    try {
-      await enqueueConfig((current) => api.saveConfig({ ...current, active_profile: key }));
-    } catch (error) {
-      if (generation === lifecycle.current) reportError(error);
-    }
-  };
 
-  const saveProfile = async (editor: ProfileEditor): Promise<boolean> => {
-    const generation = lifecycle.current;
-    try {
-      validateProfileName(editor.name);
-      await enqueueConfig((current) =>
-        editor.editKey
-          ? api.saveConfig({
-              ...current,
-              profiles: current.profiles.map((profile) =>
-                profile.instance_key === editor.editKey
-                  ? { ...profile, name: editor.name.trim() }
-                  : profile,
-              ),
-            })
-          : api.createProfile(editor.name, editor.version, editor.loader, editor.loader_version),
-      );
-      if (generation !== lifecycle.current) return false;
-      notify(i18n.t(editor.editKey ? 'messages.profileRenamed' : 'messages.profileCreated'));
-      return true;
-    } catch (error) {
-      if (generation === lifecycle.current) reportError(error);
-      return false;
-    }
-  };
 
-  const runAction = async (action: 'install' | 'launch', profile: GameProfile) => {
-    if (action === 'install') {
-      try {
-        await api.enqueueInstall(profile.instance_key);
-        notify(i18n.t('messages.profileQueued', { name: profile.name }));
-      } catch (error) {
-        reportError(error);
-      }
-      return;
-    }
-    if (busyRef.current || stopPending.current) return;
-    const request = ++actionSequence.current;
-    const generation = lifecycle.current;
-    const activity: Activity = {
-      action,
-      status: 'started',
-      message: i18n.t('messages.checkingJava'),
-    };
-    busyRef.current = activity;
-    launchProfileKey.current = profile.instance_key;
-    setBusy(activity);
-    try {
-      await api.launchInstance(profile.instance_key);
-    } catch (error) {
-      if (request !== actionSequence.current || generation !== lifecycle.current) return;
-      // A rejected command can release its optimistic state before registration.
-      // Once activity events arrive, only a backend terminal event releases busy.
-      if (busyRef.current === activity) {
-        busyRef.current = null;
-        launchProfileKey.current = null;
-        setBusy(null);
-      }
-      reportError(error);
-    }
-  };
 
-  const updateProfile = async (profile: GameProfile): Promise<boolean> => {
-    const generation = lifecycle.current;
-    try {
-      if (!configRef.current) return false;
-      validateProfileSettings(profile, configRef.current.settings);
-      await enqueueConfig(() => api.updateProfile(profile));
-      if (generation !== lifecycle.current) return false;
-      notify(i18n.t('messages.profileSettingsSaved'));
-      return true;
-    } catch (error) {
-      if (generation === lifecycle.current) reportError(error);
-      return false;
-    }
-  };
+  const {saveSettings,saveAccount,setSnapshots}=createSettingsActions({draftRef,lifecycle,enqueueConfig,setDraft,notify,addLog,reportError});
+  const { selectProfile, saveProfile, updateProfile, importProfiles, removeProfile, retryProfileFiles } =
+    createProfileActions({ lifecycle, configRef, enqueueConfig, scan, notify, reportError });
 
-  const importProfiles = async (directory: string, keys: string[]): Promise<boolean> => {
-    const generation = lifecycle.current;
-    try {
-      await enqueueConfig(() => api.importInstances(directory, keys));
-      if (generation !== lifecycle.current) return false;
-      notify(i18n.t('messages.profilesImported'));
-      return true;
-    } catch (error) {
-      if (generation === lifecycle.current) reportError(error);
-      return false;
-    }
-  };
+  const {runAction, stopGame} = createGameActions({ busyRef, stopPending, actionSequence, lifecycle, launchProfileKey, setBusy, notify, reportError });
 
-  const removeProfile = async (
-    key: string,
-    deleteFiles: boolean,
-  ): Promise<ProfileRemovalResult | null> => {
-    const generation = lifecycle.current;
-    try {
-      let result: ProfileRemovalResult | undefined;
-      await enqueueConfig(async () => {
-        result = await api.removeProfile(key, deleteFiles);
-        return result.config;
-      });
-      if (generation !== lifecycle.current || !result) return null;
-      await scan();
-      if (generation !== lifecycle.current) return null;
-      if (result.file_removal_error) reportError(result.file_removal_error);
-      else
-        notify(
-          i18n.t(deleteFiles ? 'messages.profileRemovedWithFiles' : 'messages.profileRemoved'),
-        );
-      return result;
-    } catch (error) {
-      if (generation !== lifecycle.current) return null;
-      reportError(error);
-      try {
-        await enqueueConfig(async () => (await api.getConfig()).config);
-      } catch (refreshError) {
-        if (generation === lifecycle.current) reportError(refreshError);
-      }
-      return null;
-    }
-  };
-
-  const retryProfileFiles = async (token: string): Promise<ProfileRemovalResult | null> => {
-    const generation = lifecycle.current;
-    try {
-      let result: ProfileRemovalResult | undefined;
-      await enqueueConfig(async () => {
-        result = await api.retryProfileFiles(token);
-        return result.config;
-      });
-      if (generation !== lifecycle.current || !result) return null;
-      await scan();
-      if (generation !== lifecycle.current) return null;
-      if (result.file_removal_error) reportError(result.file_removal_error);
-      else notify(i18n.t('messages.profileRemovedWithFiles'));
-      return result;
-    } catch (error) {
-      if (generation === lifecycle.current) reportError(error);
-      return null;
-    }
-  };
-
-  const stopGame = async () => {
-    if (stopPending.current || !canStopLaunch(busyRef.current)) return;
-    stopPending.current = true;
-    const generation = lifecycle.current;
-    try {
-      await api.stopGame();
-    } catch (error) {
-      if (generation === lifecycle.current) reportError(error);
-    } finally {
-      stopPending.current = false;
-    }
-  };
-
-  const writePresets = async (
-    update: (presets: AppearancePreset[]) => AppearancePreset[],
-    messageKey: string,
-  ): Promise<void> => {
-    const generation = lifecycle.current;
-    try {
-      await enqueueConfig((current) => {
-        const presets = update(current.appearance_presets);
-        if (presets.length > MAX_APPEARANCE_PRESETS)
-          throw new Error(i18n.t('presets.errors.limit'));
-        return api.saveConfig({ ...current, appearance_presets: presets });
-      });
-      if (generation === lifecycle.current) notify(i18n.t(messageKey));
-    } catch (error) {
-      if (generation === lifecycle.current) reportError(error);
-      throw error;
-    }
-  };
-
-  const saveAppearancePreset = async (name: string): Promise<void> => {
-    if (!draftRef.current) throw new Error(i18n.t('messages.configNotReady'));
-    const preset = createAppearancePreset(name, draftRef.current.appearance);
-    await writePresets((presets) => [...presets, preset], 'presets.saved');
-  };
-
-  const applyAppearancePreset = (id: string): void => {
-    const preset = configRef.current?.appearance_presets.find((item) => item.id === id);
-    if (!preset) {
-      reportError(i18n.t('presets.errors.missing'));
-      return;
-    }
-    patchSettings('appearance', structuredClone(preset.appearance));
-    notify(i18n.t('presets.applied'));
-  };
-
-  const renameAppearancePreset = async (id: string, name: string): Promise<void> => {
-    const trimmed = validatePresetName(name);
-    await writePresets((presets) => {
-      if (!presets.some((preset) => preset.id === id))
-        throw new Error(i18n.t('presets.errors.missing'));
-      return presets.map((preset) => (preset.id === id ? { ...preset, name: trimmed } : preset));
-    }, 'presets.renamed');
-  };
-
-  const removeAppearancePreset = async (id: string): Promise<void> => {
-    await writePresets((presets) => {
-      if (!presets.some((preset) => preset.id === id))
-        throw new Error(i18n.t('presets.errors.missing'));
-      return presets.filter((preset) => preset.id !== id);
-    }, 'presets.removed');
-  };
-
-  const importAppearancePreset = async (json: string): Promise<void> => {
-    const imported = parseAppearancePreset(json);
-    const preset = createAppearancePreset(imported.name, imported.appearance);
-    await writePresets((presets) => [...presets, preset], 'presets.imported');
-  };
+  const { saveAppearancePreset, applyAppearancePreset, renameAppearancePreset, removeAppearancePreset, importAppearancePreset } =
+    createPresetActions({ lifecycle, configRef, draftRef, enqueueConfig, patchSettings, notify, reportError });
 
   return {
     getSettingsDraft: (): DeepReadonly<Settings> | null =>

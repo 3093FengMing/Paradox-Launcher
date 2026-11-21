@@ -2,8 +2,8 @@
 .modern-shell .mobile-navigation { display: none; }
 .modern-shell :is(button,input,textarea,select,a,summary,[tabindex]):focus-visible,
 .modern-dialog-theme :is(button,input,textarea,select,a,summary,[tabindex]):focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
-.modern-shell :is(input:not([type=range]):not([type=color]),textarea,select,.ui-select-trigger,button.secondary),
-.modern-dialog-theme :is(input:not([type=range]):not([type=color]),textarea,select,.ui-select-trigger,button.secondary) { border-color: var(--control-border); }
+.modern-shell.app-shell :is(input:not([type=range], [type=color]),textarea,select,.ui-select-trigger,button.secondary),
+.modern-dialog-theme.dialog-theme :is(input:not([type=range], [type=color]),textarea,select,.ui-select-trigger,button.secondary) { border-color: var(--control-border); }
 .modern-shell :is(.settings-page p,.discover-page p,.accounts-page p,.modern-downloads p,.instance-detail p),
 .modern-dialog-theme :is(p,.dialog-help,.dialog-override small) { font-size: max(13px,.93em); }
 .modern-shell :is(.settings-tabs,.instance-detail-tabs) { background: transparent; border-radius: 0; padding: 0 0 .7rem; }

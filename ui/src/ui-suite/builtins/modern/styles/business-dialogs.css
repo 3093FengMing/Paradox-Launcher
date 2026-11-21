@@ -55,7 +55,7 @@
 .modern-instance-settings-dialog .business-dialog-form { grid-template-columns: minmax(0,1fr); gap: 1em; }
 .modern-instance-settings-dialog .dialog-section { gap: .7em; padding-bottom: .9em; }
 .modern-instance-settings-dialog .dialog-override { grid-template-columns: minmax(0,1fr); }
-.modern-instance-settings-dialog :is(input:not([type=checkbox]):not([type=radio]),textarea,.ui-select-trigger) { display: block; width: 100%; max-width: 100%; min-width: 0; justify-self: stretch; box-sizing: border-box; }
+.modern-dialog-theme .modern-instance-settings-dialog :is(input:not([type=checkbox], [type=radio]),textarea,.ui-select-trigger) { display: block; width: 100%; max-width: 100%; min-width: 0; justify-self: stretch; box-sizing: border-box; }
 .modern-instance-settings-dialog .dialog-paired-fields { gap: .85em; }
 @media (max-width: 520px) {
   .modern-business-dialog { padding: 18px; width: calc(100vw - 24px); max-height: calc(100dvh - 24px); }

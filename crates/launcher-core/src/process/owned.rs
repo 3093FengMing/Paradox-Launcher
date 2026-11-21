@@ -2,7 +2,9 @@
 
 #[cfg(windows)]
 use super::windows_job;
-use std::{process::ExitStatus, time::Duration};
+use std::process::ExitStatus;
+#[cfg(windows)]
+use std::time::Duration;
 use tokio::process::{Child, Command};
 
 /// Process ownership includes Windows wrapper descendants, even after the

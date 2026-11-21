@@ -8,11 +8,13 @@ use elemental::core::launcher::command::LaunchCommand;
 use fixtures::TrackedProcess;
 use fixtures::fixture_command;
 use std::{path::Path, time::Duration};
+#[cfg(windows)]
 use tokio::process::Command;
 
 mod fixtures;
 mod logs;
 mod probe;
+#[cfg(windows)]
 mod trees;
 
 #[test]

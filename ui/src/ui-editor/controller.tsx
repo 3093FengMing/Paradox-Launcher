@@ -1,87 +1,31 @@
 /** @jsxImportSource react */
-import { createContext, useContext, useEffect, useState, useSyncExternalStore } from 'react';
-import type { ReactNode } from 'react';
+import { createContext, useContext, useSyncExternalStore } from 'react';
 import type { DeepReadonly } from '../launcher/public/types';
 import type { LauncherInteractionPublisher } from '../launcher/services';
-import { useLauncherCompatibility } from '../launcher/compatibility';
-import { useLauncherSnapshot } from '../launcher/public/context';
-import * as storage from '../ui-suite/storage';
-import { bundleDigest, materializeSuite, normalizeDraftBundle, validateSuiteBundle } from '../ui-suite/bundle';
-import { decodeSuiteArchive, encodeSuiteArchive } from '../ui-suite/archive';
-import { canonicalSuiteJson, encodeBase64, utf8 } from '../ui-suite/canonical';
+import type * as storage from '../ui-suite/storage';
+import { bundleDigest, materializeSuite, validateSuiteBundle } from '../ui-suite/bundle';
+import { canonicalSuiteJson, utf8 } from '../ui-suite/canonical';
 import { uniqueSuitePaths, validateSuitePath } from '../ui-suite/paths';
-import { suiteLimits } from '../ui-suite/model';
-import type { UiFile, UiFileDescriptor, UiSelector, UiSuiteBundle, UiSuiteLibrary, UiSuiteRecord } from '../ui-suite/model';
-import type { PreparedSuiteRuntime, SuiteRuntimeScope } from '../ui-suite/prepared';
-import { publishUiDefinitions, resolveSelector, subscribeOwners } from '../customization/ownership';
-import { sameSelector, selectorDigest, selectorMatches } from '../customization/selectors';
-import { describeTarget, getScopeChoices, getTargetAncestors, listCurrentTargets } from '../customization/target-catalog';
-import type { TargetCatalogContext } from '../customization/target-catalog';
+import type { UiFile, UiSelector, UiSuiteBundle, UiSuiteLibrary, UiSuiteRecord } from '../ui-suite/model';
+import type { SuiteRuntimeScope } from '../ui-suite/prepared';
+import { publishUiDefinitions, subscribeOwners } from '../customization/ownership';
+import { sameSelector } from '../customization/selectors';
 import { createDomPreview, locateTarget } from '../customization/dom-preview';
 import { startPicker } from '../customization/picker';
 import i18n from '../i18n';
-import { UiInteractionContext } from '../customization/context';
-import { UiEditorActionsContext, UiEditorSnapshotContext } from './public';
 import type { DomPreviewHandle, UiEditorActions, UiEditorSnapshot, UiEditorSourceKind } from './public';
-
-export interface RecoveryActions {
-  disable(): void;
-  openBuiltinEditor(): void;
-  exportRecoverable(): Promise<void>;
-  reset(): Promise<boolean>;
-}
-export interface UiEditorSourceServices {
-  getBuiltinBundle(id: 'modern' | 'immersive'): Promise<UiSuiteBundle>;
-  getBuiltinName?(id: 'modern' | 'immersive'): Promise<string>;
-}
-// eslint-disable-next-line react-refresh/only-export-components
-export const UiEditorSourceContext = createContext<UiEditorSourceServices | null>(null);
-export interface SuiteActivationLayer {
-  readonly layerId: string;
-  readonly bundle: UiSuiteBundle;
-  readonly prepared: PreparedSuiteRuntime;
-}
-// Accepted publications only; the shared renderer consumes this carrier and the controller owns disposal.
-export interface SuiteActivation {
-  readonly primary: SuiteActivationLayer;
-  readonly parent: SuiteActivationLayer | null;
-  readonly trusted: SuiteActivationLayer;
-  readonly retired: boolean;
-  onRetire(listener: () => void): () => void;
-  dispose(): void;
-}
-export interface UiEditorDependencies extends UiEditorSourceServices {
-  storage: typeof storage;
-  createScope(): SuiteRuntimeScope | Promise<SuiteRuntimeScope>;
-  compile(bundle: UiSuiteBundle, scope: SuiteRuntimeScope, options: { isCurrent(): boolean }): Promise<PreparedSuiteRuntime>;
-  exportFile(name: string, bytes: Uint8Array): Promise<void>;
-  acquireInteractionPublisher(): LauncherInteractionPublisher;
-  reportError?(error: unknown): void;
-  safe: boolean;
-  getDefaultBuiltin?(): 'modern' | 'immersive';
-  waitForConfiguration?(): Promise<void>;
-  getTargetContext?(): TargetCatalogContext;
-}
-function detached<T>(value: T): T { return structuredClone(value); }
-function frozen<T>(value: T): T {
-  if (value && typeof value === 'object') {
-    if (Object.isFrozen(value)) return value;
-    for (const child of Object.values(value)) frozen(child);
-    Object.freeze(value);
-  }
-  return value;
-}
-// Diff against the immediate fixed parent, using exact spelling. Case-only rename is valid.
-// eslint-disable-next-line react-refresh/only-export-components
-export function draftToSuiteRecord(bundle: UiSuiteBundle, instanceId: string, parent: UiSuiteRecord['parent_snapshot']): UiSuiteRecord {
-  const overlay = Object.create(null) as Record<string, UiFile>;
-  const inherited = parent?.bundle.files ?? {};
-  for (const [path, file] of Object.entries(bundle.files)) {
-    if (!Object.hasOwn(inherited, path) || canonicalSuiteJson(inherited[path]) !== canonicalSuiteJson(file)) overlay[path] = detached(file);
-  }
-  return { instance_id: instanceId, manifest: detached(bundle.manifest), parent_snapshot: detached(parent), overlay,
-    deleted: Object.keys(inherited).filter((path) => !Object.hasOwn(bundle.files, path)) };
-}
+import { detached, frozen, draftToSuiteRecord } from './controller-model';
+import type { RecoveryActions, SuiteActivation, SuiteActivationLayer, UiEditorDependencies } from './controller-model';
+import { createActivation } from './activation';
+import { createPreparation } from './preparation';
+import { createSelection } from './selection';
+import {inheritedFileDescriptors} from './file-operations';
+import {createSourceOperations} from './source-operations';
+import {createPersistence} from './persistence';
+// eslint-disable-next-line react-refresh/only-export-components -- Stable editor barrel keeps the existing model and source-context imports.
+export { UiEditorSourceContext, draftToSuiteRecord } from './controller-model';
+export type { RecoveryActions, UiEditorSourceServices, SuiteActivationLayer, SuiteActivation, UiEditorDependencies } from './controller-model';
+export { UiEditorProvider } from './provider';
 // eslint-disable-next-line react-refresh/only-export-components
 export function createUiEditorController(deps: UiEditorDependencies) { return new UiEditorController(deps); }
 // eslint-disable-next-line react-refresh/only-export-components -- Shared editor model is exported beside its provider.
@@ -118,7 +62,56 @@ export class UiEditorController {
   private highlightCleanup: (() => void) | null = null;
   private highlightAbort: AbortController | null = null;
   private pickerCleanup: (() => void) | null = null;
+  private readonly persistenceOperations:ReturnType<typeof createPersistence>;
+  private readonly sourceOperations:ReturnType<typeof createSourceOperations>;
+  private readonly preparation:ReturnType<typeof createPreparation>;
+  private readonly selectionOperations:ReturnType<typeof createSelection>;
   constructor(private readonly deps: UiEditorDependencies) {
+    const owner = () => this;
+    this.persistenceOperations=createPersistence({deps, get state(){return owner().state;},
+      get library(){return owner().library;},set library(value){owner().library=value;},
+      get parent(){return owner().parent;},set parent(value){owner().parent=value;},
+      get draftIdentity(){return owner().draftIdentity;},set draftIdentity(value){owner().draftIdentity=value;},
+      get editRevision(){return owner().editRevision;},set editRevision(value){owner().editRevision=value;},
+      get activations(){return owner().activations;},set activations(value){owner().activations=value;},
+      get writes(){return owner().writes;},set writes(value){owner().writes=value;},
+      get loads(){return owner().loads;},set loads(value){owner().loads=value;},
+      get reads(){return owner().reads;},set reads(value){owner().reads=value;},
+      get initialSelectionRequired(){return owner().initialSelectionRequired;},set initialSelectionRequired(value){owner().initialSelectionRequired=value;},
+      get recoveryVisible(){return owner().recoveryVisible;},set recoveryVisible(value){owner().recoveryVisible=value;},
+      get recoveryToken(){return owner().recoveryToken;},set recoveryToken(value){owner().recoveryToken=value;},
+      get confirmation(){return owner().confirmation;},set confirmation(value){owner().confirmation=value;},
+      begin:pending=>owner().begin(pending),finish:op=>owner().finish(op),alive:life=>owner().alive(life),error:error=>owner().error(error),
+      publish:patch=>owner().publish(patch),publishDraft:(draft,dirty)=>owner().publishDraft(draft,dirty),serialize:run=>owner().serialize(run),
+      prepareActivation:(draft,id,parent,generation,life,stagedParent)=>owner().prepareActivation(draft,id,parent,generation,life,stagedParent),
+      install:(candidate,previewing,id,parent)=>owner().install(candidate,previewing,id,parent),disable:()=>owner().disable(),
+      requestReset:mode=>owner().requestReset(mode),disposeActivation:()=>owner().disposeActivation(),
+      loadDraft:(id,life,generation)=>owner().loadDraft(id,life,generation),activate:(draft,id,parent,generation,life,previewing)=>owner().activate(draft,id,parent,generation,life,previewing),
+    });
+    this.sourceOperations=createSourceOperations({deps,
+      get state(){return owner().state;}, get draftIdentity(){return owner().draftIdentity;},set draftIdentity(value){owner().draftIdentity=value;},
+      get editRevision(){return owner().editRevision;}, set editRevision(value){owner().editRevision=value;},
+      get reads(){return owner().reads;}, set reads(value){owner().reads=value;},
+      get parent(){return owner().parent;}, set parent(value){owner().parent=value;},
+      begin:pending=>owner().begin(pending),finish:op=>owner().finish(op),alive:life=>owner().alive(life),
+      error:error=>owner().error(error),edit:update=>owner().edit(update),publish:patch=>owner().publish(patch),
+      publishDraft:(draft,dirty)=>owner().publishDraft(draft,dirty),
+      selectionFile:(draft,selector,kind)=>owner().selectionFile(draft,selector,kind),patchFile:(path,text)=>owner().actions.patchFile(path,text),
+    });
+    this.selectionOperations=createSelection({ deps,
+      get state(){return owner().state;}, set state(value){owner().state=value;},
+      get positionAnchor(){return owner().positionAnchor;}, set positionAnchor(value){owner().positionAnchor=value;},
+      publish:patch=>owner().publish(patch), clearHighlight:()=>owner().clearHighlight(),
+      updateTargets:opening=>owner().updateTargets(opening), selectTarget:selector=>owner().selectTarget(selector),
+      selectionFile:(draft,selector,kind)=>owner().selectionFile(draft,selector,kind),
+      previews:owner().previews, error:error=>owner().error(error),
+    });
+    this.preparation = createPreparation({ deps,
+      get scopes(){return owner().scopes;}, set scopes(value){owner().scopes=value;},
+      get trusted(){return owner().trusted;}, set trusted(value){owner().trusted=value;},
+      get trustedPromise(){return owner().trustedPromise;}, set trustedPromise(value){owner().trustedPromise=value;},
+      get activations(){return owner().activations;}, alive:life=>owner().alive(life),
+    });
     this.state = frozen({ open: false, mode: 'normal', loaded: false, initialSelectionRequired: false, draft: null, dirty: false, selectedSuiteId: null,
       suites: [], selectedFile: null, selection: null, files: [], targets: [], currentTarget: null, targetAncestors: [], scopeChoices: [], picking: false, pending: null, diagnostics: [],
       previewing: false, suspended: deps.safe, resetConfirmationOpen: false });
@@ -240,11 +233,7 @@ export class UiEditorController {
     } catch (error) { this.error(error); return false; }
   }
   private publishDraft(draft: UiSuiteBundle, dirty: boolean) {
-    const known = new Map(draft.manifest.files.map((file) => [file.path, file]));
-    const files = Object.entries(draft.files).map(([path, file]): UiFileDescriptor => ({
-      path, kind: file.encoding === 'base64' ? 'asset' : known.get(path)?.kind ?? path.split('.').at(-1) as UiFileDescriptor['kind'],
-      bytes: known.get(path)?.bytes ?? 0, sha256: known.get(path)?.sha256 ?? '0'.repeat(64),
-      ...(file.encoding === 'base64' ? { media_type: file.media_type } : {}) }));
+    const files = inheritedFileDescriptors(draft);
     const selection = this.state.selection;
     this.publish({ draft, dirty, files,
       ...(selection ? { selection: { ...selection, filePath: this.selectionFile(draft, selection.selector, selection.sourceKind) } } : {}),
@@ -280,28 +269,7 @@ export class UiEditorController {
     };
     this.connectionCleanup = cleanup; return cleanup;
   }
-  private updateTargets(opening = false) {
-    // A closed editor has no catalog consumer. Keep an active selection current
-    // without reading every unrelated target; opening takes a synchronous fresh catalog.
-    if (!opening && !this.state.open && !this.state.selection && !this.state.picking) return;
-    const context = this.deps.getTargetContext?.() ?? {};
-    const targets = opening || this.state.open
-      ? listCurrentTargets(this.state.draft?.manifest.overrides.map((item) => item.selector) ?? [], context)
-      : this.state.targets;
-    const selector = this.state.selection?.selector;
-    const anchor = this.positionAnchor && resolveSelector(this.positionAnchor);
-    const anchorOwner = anchor && anchor.owners.length === 1 ? anchor.owners[0] : null;
-    const current = selector ? describeTarget(selector, context) : null;
-    const ownerId = selector && anchorOwner && selectorMatches(selector, anchorOwner.target, anchorOwner.locator) ? anchorOwner.ownerId : current?.ownerId ?? null;
-    const currentTarget = current && ownerId !== current.ownerId ? Object.freeze({ ...current, ownerId }) : current;
-    const targetAncestors = ownerId ? getTargetAncestors(ownerId, context) : [];
-    const scopeChoices = ownerId ? getScopeChoices(ownerId, context) : [];
-    const patch = { targets, currentTarget, targetAncestors, scopeChoices };
-    if (Object.entries(patch).some(([key, value]) => {
-      const before = this.state[key as keyof UiEditorSnapshot];
-      return !Object.is(value, before) && canonicalSuiteJson(value) !== canonicalSuiteJson(before);
-    })) this.publish(patch);
-  }
+  private updateTargets(opening = false){ return this.selectionOperations.updateTargets(opening); }
   // Launcher navigation/business snapshots are supplied by the existing provider.
   refreshTargets = (): void => { if (this.connected) this.updateTargets(); };
   private initialization: Promise<void> = Promise.resolve();
@@ -387,88 +355,16 @@ export class UiEditorController {
     this.publish({ selectedSuiteId: id, selection: null }); this.publishDraft(detached(draft), false);
     return stagedParent;
   }
-  private scope(key: string): Promise<SuiteRuntimeScope> {
-    let value = this.scopes.get(key);
-    if (!value) {
-      const pending = Promise.resolve().then(() => this.deps.createScope());
-      value = pending.catch(error => {
-        if (this.scopes.get(key) === value) this.scopes.delete(key);
-        throw error;
-      });
-      this.scopes.set(key, value);
-    }
-    return value;
-  }
-  private async prepareTrusted(life: number): Promise<SuiteActivationLayer> {
-    if (this.trusted) return this.trusted;
-    if (!this.trustedPromise) {
-      const pending = (async () => {
-        const bundle = await this.deps.getBuiltinBundle('modern'), scope = await this.scope('trusted.modern');
-        const isCurrent = () => this.alive(life);
-        if (!isCurrent()) throw new DOMException('Superseded', 'AbortError');
-        const prepared = await this.deps.compile(bundle, scope, { isCurrent });
-        if (!isCurrent()) { prepared.dispose(); throw new DOMException('Superseded', 'AbortError'); }
-        this.trusted = { layerId: 'trusted.modern', bundle: detached(bundle), prepared }; return this.trusted;
-      })();
-      const cached = pending.catch(error => {
-        // Only the failed attempt may clear its cache; a reconnect can own a newer one.
-        if (this.trustedPromise === cached) this.trustedPromise = null;
-        throw error;
-      });
-      this.trustedPromise = cached;
-    }
-    return this.trustedPromise;
-  }
+  private async prepareTrusted(life: number): Promise<SuiteActivationLayer>{ return this.preparation.prepareTrusted(life); }
   private installTrusted() {
     if (!this.trusted) return;
     const trusted = this.trusted;
-    this.activation = this.createActivation(trusted, null, trusted, []);
+    this.activation = createActivation(trusted, null, trusted, []);
     this.definitionDisposals.push(publishUiDefinitions({ key: 'editor:trusted.modern', definitions: trusted.prepared.sourceDefinitions }));
     this.publish();
   }
-  private createActivation(primary: SuiteActivationLayer, parent: SuiteActivationLayer | null, trusted: SuiteActivationLayer, owned: readonly SuiteActivationLayer[]): SuiteActivation {
-    let retired = false;
-    const listeners = new Set<() => void>();
-    return {
-      primary, parent, trusted,
-      get retired() { return retired; },
-      onRetire(listener) {
-        if (retired) { listener(); return () => {}; }
-        listeners.add(listener);
-        return () => { listeners.delete(listener); };
-      },
-      dispose() {
-        if (retired) return;
-        retired = true;
-        // Physical roots detach synchronously, before prepared resources release.
-        // A later passive effect can observe retirement without taking a lease.
-        try { for (const listener of [...listeners]) listener(); }
-        finally { listeners.clear(); owned.forEach((layer) => layer.prepared.dispose()); }
-      },
-    };
-  }
-  private async prepare(bundle: UiSuiteBundle, id: string, generation: number, life: number): Promise<SuiteActivationLayer> {
-    const isCurrent = () => this.alive(life) && generation === this.activations;
-    if (!isCurrent()) throw new DOMException('Superseded', 'AbortError');
-    const scope = await this.scope(id);
-    if (!isCurrent()) throw new DOMException('Superseded', 'AbortError');
-    const prepared = await this.deps.compile(bundle, scope, { isCurrent });
-    if (!isCurrent()) { prepared.dispose(); throw new DOMException('Superseded', 'AbortError'); }
-    return { layerId: id, bundle: detached(bundle), prepared };
-  }
-  private async prepareActivation(draft: UiSuiteBundle, id: string, parent: UiSuiteRecord['parent_snapshot'], generation: number, life: number, stagedParent: SuiteActivationLayer | null = null): Promise<SuiteActivation> {
-    const layers: SuiteActivationLayer[] = stagedParent ? [stagedParent] : [];
-    try {
-      const trusted = await this.prepareTrusted(life), trustedBundle = trusted.bundle;
-      if (!this.alive(life) || generation !== this.activations) throw new DOMException('Superseded', 'AbortError');
-      const parentLayer = stagedParent ?? (parent ? await this.prepare(parent.bundle, `${id}.parent.${parent.digest}`, generation, life) : null);
-      if (parentLayer && !stagedParent) layers.push(parentLayer);
-      const primary = id === 'builtin.modern' && canonicalSuiteJson(draft) === canonicalSuiteJson(trustedBundle)
-        ? trusted : await this.prepare(draft, id, generation, life);
-      if (primary !== trusted) layers.push(primary);
-      return this.createActivation(primary, parentLayer, trusted, layers);
-    } catch (error) { layers.forEach((layer) => layer.prepared.dispose()); throw error; }
-  }
+  private async prepare(bundle: UiSuiteBundle, id: string, generation: number, life: number): Promise<SuiteActivationLayer>{ return this.preparation.prepare(bundle, id, generation, life); }
+  private async prepareActivation(draft: UiSuiteBundle, id: string, parent: UiSuiteRecord['parent_snapshot'], generation: number, life: number, stagedParent: SuiteActivationLayer | null = null): Promise<SuiteActivation>{ return this.preparation.prepareActivation(draft, id, parent, generation, life, stagedParent); }
   private install(candidate: SuiteActivation, previewing: boolean, id: string, parentSnapshot: UiSuiteRecord['parent_snapshot']) {
     const previous = this.activation, accepted = this.accepted, state = this.state;
     const publishDefinitions = (activation: SuiteActivation) => {
@@ -513,113 +409,8 @@ export class UiEditorController {
     this.publish({ suspended: true, previewing: false, picking: false });
   }
   private serialize<T>(run: () => Promise<T>): Promise<T> { const work = this.persistence.then(run, run); this.persistence = work.catch(() => {}); return work; }
-  private async submit(persist: boolean): Promise<boolean> {
-    if (!this.state.loaded || !this.state.draft) return false;
-    const op = this.begin(persist ? 'save' : 'preview'), identity = this.draftIdentity, revision = this.editRevision;
-    const captured = detached(this.state.draft), parent = detached(this.parent), id = this.state.selectedSuiteId;
-    const generation = ++this.activations, write = this.writes;
-    let candidate: SuiteActivation | null = null;
-    try {
-      if (!id || (persist && id.startsWith('builtin.'))) throw new Error('Copy the builtin suite before saving');
-      const normalized = await normalizeDraftBundle(captured);
-      candidate = await this.prepareActivation(normalized, id, parent, generation, op.life);
-      if (persist) {
-        const ack = await this.serialize(async () => {
-          if (!this.alive(op.life) || write !== this.writes || !this.library) throw new DOMException('Superseded', 'AbortError');
-          const current = detached(this.library), record = draftToSuiteRecord(normalized, id, parent);
-          const index = current.suites.findIndex((item) => item.instance_id === id);
-          if (index < 0) current.suites.push(record); else current.suites[index] = record;
-          current.active_suite_id = id;
-          const ack = await this.deps.storage.saveSuiteLibrary(current, this.library.revision);
-          if (this.alive(op.life)) this.library = detached(ack);
-          return ack;
-        });
-        if (!this.alive(op.life)) return false;
-        if (identity === this.draftIdentity && revision === this.editRevision) {
-          this.parent = detached(ack.suites.find((item) => item.instance_id === id)?.parent_snapshot ?? parent);
-          this.publishDraft(normalized, false);
-        }
-      }
-      if (!this.alive(op.life) || generation !== this.activations) return persist;
-      this.recoveryVisible = false; this.install(candidate, !persist, id, parent); candidate = null; return true;
-    } catch (error) { if (this.alive(op.life)) this.error(error); return false; }
-    finally { candidate?.dispose(); this.finish(op); }
-  }
-  private async selectSuite(id: string): Promise<boolean> {
-    if (!this.library || (!['builtin.modern', 'builtin.immersive'].includes(id) && !this.library.suites.some((item) => item.instance_id === id))) return false;
-    const op = this.begin('save'), generation = ++this.activations, write = this.writes;
-    const identity = this.draftIdentity, editRevision = this.editRevision;
-    const current = () => this.alive(op.life) && write === this.writes && generation === this.activations;
-    let candidate: SuiteActivation | null = null;
-    let selected = id, parent: UiSuiteRecord['parent_snapshot'] = null;
-    const prepare = async (suiteId: string) => {
-      const record = this.library?.suites.find(item => item.instance_id === suiteId);
-      if (!record && !['builtin.modern', 'builtin.immersive'].includes(suiteId)) throw new Error('Selected suite is no longer available');
-      parent = detached(record?.parent_snapshot ?? null);
-      const bundle = record ? materializeSuite(detached(record))
-        : await this.deps.getBuiltinBundle(suiteId === 'builtin.immersive' ? 'immersive' : 'modern');
-      if (!current()) throw new DOMException('Superseded', 'AbortError');
-      candidate = await this.prepareActivation(detached(bundle), suiteId, parent, generation, op.life);
-      if (!current()) throw new DOMException('Superseded', 'AbortError');
-    };
-    try {
-      await prepare(id);
-      const persisted = await this.serialize(async () => {
-        if (!current() || !this.library) throw new DOMException('Superseded', 'AbortError');
-        if (!id.startsWith('builtin.') && !this.library.suites.some(item => item.instance_id === id)) throw new Error('Selected suite is no longer available');
-        const next = detached(this.library); next.active_suite_id = id;
-        try {
-          const ack = await this.deps.storage.saveSuiteLibrary(next, this.library.revision);
-          // A submitted write remains authoritative even if Recovery took over.
-          if (this.alive(op.life)) this.library = detached(ack);
-          if (current() && ack.active_suite_id !== selected) {
-            candidate?.dispose(); candidate = null;
-            if (!ack.active_suite_id) throw new Error('Saved library has no active suite');
-            selected = ack.active_suite_id; await prepare(selected);
-          }
-          return true;
-        } catch (error) {
-          if (!this.alive(op.life) || (error instanceof Error && error.name === 'AbortError')) throw error;
-          this.error(error);
-          try {
-            const authority = await this.deps.storage.loadSuiteLibrary();
-            if (!this.alive(op.life)) return false;
-            this.library = detached(authority); this.recoveryToken = null;
-          } catch (reloadError) {
-            if (this.alive(op.life)) {
-              this.library = null; this.error(reloadError); this.disable();
-              try {
-                const inspection = await this.deps.storage.inspectSuiteRecovery();
-                if (this.alive(op.life)) this.recoveryToken = inspection.token;
-              } catch (inspectionError) { if (this.alive(op.life)) this.error(inspectionError); }
-            }
-            return false;
-          }
-          if (!current() || !this.library.active_suite_id) return false;
-          // An external successful choice is installed under this same activation generation.
-          candidate?.dispose(); candidate = null;
-          selected = this.library.active_suite_id;
-          await prepare(selected);
-          return false;
-        }
-      });
-      if (!this.alive(op.life)) return false;
-      if (!current()) return persisted;
-      if (!persisted && (!this.library?.active_suite_id || selected !== this.library.active_suite_id)) return false;
-      if (!candidate) return false;
-      this.install(candidate, false, selected, parent);
-      const installed: SuiteActivation = candidate; candidate = null;
-      this.initialSelectionRequired = false; this.recoveryVisible = false;
-      this.publish({ initialSelectionRequired: false });
-      if (identity === this.draftIdentity && editRevision === this.editRevision) {
-        ++this.draftIdentity; this.parent = detached(parent); this.editRevision = 0;
-        this.publish({ selectedSuiteId: selected, selection: null });
-        this.publishDraft(detached(installed.primary.bundle), false);
-      }
-      return true;
-    } catch (error) { if (this.alive(op.life)) this.error(error); return false; }
-    finally { (candidate as SuiteActivation | null)?.dispose(); this.finish(op); }
-  }
+  private submit(persist: boolean){return this.persistenceOperations.submit(persist);}
+  private selectSuite(id: string){return this.persistenceOperations.selectSuite(id);}
   private async copyBuiltin(id: 'modern' | 'immersive', name: string): Promise<void> {
     const op = this.begin('import'), identity = this.draftIdentity, revision = this.editRevision;
     try {
@@ -660,52 +451,11 @@ export class UiEditorController {
       this.recoveryVisible = false; await this.activate(this.state.draft, id, this.parent, generation, op.life, false, stagedParent); return true;
     } catch (error) { if (this.alive(op.life)) this.error(error); return false; } finally { this.finish(op); }
   }
-  private async importSource(file: File): Promise<boolean> {
-    const path = this.state.selectedFile, identity = this.draftIdentity, original = path ? this.state.draft?.files[path] : null;
-    if (!path || original?.encoding !== 'utf8') return false;
-    const op = this.begin('import'), read = ++this.reads;
-    try {
-      if (file.size > suiteLimits.source) throw new Error('Source exceeds limit');
-      const text = await file.text();
-      if (!this.alive(op.life) || identity !== this.draftIdentity || read !== this.reads || canonicalSuiteJson(this.state.draft?.files[path] ?? null) !== canonicalSuiteJson(original)) return false;
-      this.actions.patchFile(path, text); return true;
-    } catch (error) { if (this.alive(op.life)) this.error(error); return false; } finally { this.finish(op); }
-  }
-  private async addAsset(file: File): Promise<boolean> {
-    const identity = this.draftIdentity, path = file.name, op = this.begin('asset'), read = ++this.reads;
-    try {
-      validateSuitePath(path); if (file.size > suiteLimits.asset) throw new Error('Asset exceeds limit');
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      if (!this.alive(op.life) || identity !== this.draftIdentity || read !== this.reads) return false;
-      return this.edit((draft) => { if (Object.hasOwn(draft.files, path)) throw new Error('File already exists'); uniqueSuitePaths([...Object.keys(draft.files), path]);
-        draft.files[path] = { encoding: 'base64', media_type: file.type, data: encodeBase64(bytes) }; });
-    } catch (error) { if (this.alive(op.life)) this.error(error); return false; } finally { this.finish(op); }
-  }
-  private async importBundle(file: File): Promise<boolean> {
-    const identity = this.draftIdentity, revision = this.editRevision, op = this.begin('import'), read = ++this.reads;
-    try {
-      if (file.size > suiteLimits.total) throw new Error('Bundle input exceeds limit');
-      const bundle = await decodeSuiteArchive(new Uint8Array(await file.arrayBuffer()));
-      if (!this.alive(op.life) || identity !== this.draftIdentity || revision !== this.editRevision || read !== this.reads) return false;
-      ++this.draftIdentity; ++this.editRevision; this.parent = null;
-      this.publish({ selectedSuiteId: crypto.randomUUID(), selection: null }); this.publishDraft(bundle, true); return true;
-    } catch (error) { if (this.alive(op.life)) this.error(error); return false; } finally { this.finish(op); }
-  }
-  private async exportSource() {
-    const path = this.state.selectedFile, source = path ? this.state.draft?.files[path] : null;
-    if (!path || source?.encoding !== 'utf8' || !this.state.draft) return;
-    const captured = detached(this.state.draft), op = this.begin('export');
-    try {
-      const normalized = await normalizeDraftBundle(captured), file = normalized.files[path];
-      if (this.alive(op.life) && file.encoding === 'utf8') await this.deps.exportFile(path.split('/').at(-1)!, utf8(file.text));
-    } catch (error) { if (this.alive(op.life)) this.error(error); } finally { this.finish(op); }
-  }
-  private async exportDraft() {
-    if (!this.state.draft) return; const captured = detached(this.state.draft), op = this.begin('export');
-    try { const normalized = await normalizeDraftBundle(captured); const bytes = await encodeSuiteArchive(normalized);
-      if (this.alive(op.life)) await this.deps.exportFile(`${normalized.manifest.name}.paradox-ui`, bytes);
-    } catch (error) { if (this.alive(op.life)) this.error(error); } finally { this.finish(op); }
-  }
+  private importSource(file: File){return this.sourceOperations.importSource(file);}
+  private addAsset(file: File){return this.sourceOperations.addAsset(file);}
+  private importBundle(file: File){return this.sourceOperations.importBundle(file);}
+  private exportSource(){return this.sourceOperations.exportSource();}
+  private exportDraft(){return this.sourceOperations.exportDraft();}
   private async exportRecoverable() {
     const captured = detached(this.state.draft), op = this.begin('export');
     try {
@@ -716,101 +466,11 @@ export class UiEditorController {
     } catch (error) { if (this.alive(op.life)) this.error(error); } finally { this.finish(op); }
   }
   private requestReset(owner: 'normal' | 'recovery') { this.confirmation = owner; this.publish({ resetConfirmationOpen: true }); }
-  private async reset(owner: 'normal' | 'recovery'): Promise<boolean> {
-    if (this.confirmation !== owner) { if (owner === 'recovery') this.requestReset(owner); return false; }
-    const op = this.begin('reset'), generation = ++this.activations, write = ++this.writes; ++this.loads; ++this.reads;
-    try {
-      const ack = await this.serialize(async () => {
-        if (!this.alive(op.life) || write !== this.writes) throw new DOMException('Superseded', 'AbortError');
-        const ack = this.library ? await this.deps.storage.resetSuiteLibrary(this.library.revision)
-          : await this.deps.storage.resetRecoverableSuiteLibrary(this.recoveryToken ?? (await this.deps.storage.inspectSuiteRecovery()).token);
-        if (this.alive(op.life)) this.library = detached(ack); return ack;
-      });
-      if (!this.alive(op.life) || write !== this.writes) return false;
-      this.confirmation = null; this.recoveryToken = null; this.initialSelectionRequired = false;
-      this.publish({ loaded: true, resetConfirmationOpen: false, initialSelectionRequired: false });
-      if (generation !== this.activations) return true;
-      this.disposeActivation(); this.recoveryVisible = false; ++this.draftIdentity; this.parent = null;
-      this.publish({ draft: null, files: [], dirty: false, selectedSuiteId: ack.active_suite_id, selectedFile: null, selection: null, diagnostics: [], previewing: false });
-      await this.loadDraft(ack.active_suite_id ?? 'builtin.modern', op.life);
-      if (this.state.draft && generation === this.activations) await this.activate(this.state.draft, this.state.selectedSuiteId!, null, generation, op.life, false);
-      return true;
-    } catch (error) { if (this.alive(op.life)) this.error(error); return false; } finally { this.finish(op); }
-  }
-  private selectTarget(selector: UiSelector) {
-    this.clearHighlight();
-    if (selector.kind === 'position') this.positionAnchor = detached(selector);
-    else if (this.positionAnchor?.kind === 'position' && !selectorMatches(selector, this.positionAnchor.target, this.positionAnchor.locator)) this.positionAnchor = null;
-    const binding = this.state.draft?.manifest.overrides.find((item) => sameSelector(item.selector, selector));
-    const filePath = binding?.entry ?? binding?.stylesheet ?? null;
-    const sourcePath = describeTarget(selector, this.deps.getTargetContext?.()).sourcePath;
-    const selectedFile = filePath && this.state.draft?.files[filePath] ? filePath : sourcePath && this.state.draft?.files[sourcePath] ? sourcePath : this.state.selectedFile;
-    this.publish({ selection: { selector: detached(selector), scope: selector.kind, filePath: binding?.entry ?? binding?.stylesheet ?? null,
-      sourceKind: binding?.entry?.endsWith('.html') ? 'html' : binding?.entry ? 'tsx' : 'css' }, selectedFile });
-    this.updateTargets();
-    for (const preview of this.previews) preview.refresh();
-  }
-  private selectionFile(draft: UiSuiteBundle | null, selector: UiSelector, kind: UiEditorSourceKind): string | null {
-    const binding = draft?.manifest.overrides.find(item => sameSelector(item.selector, selector));
-    const path = kind === 'css' ? binding?.stylesheet : binding?.entry;
-    if (!path || !draft?.files[path]) return null;
-    const descriptor = draft.manifest.files.find(file => file.path === path);
-    return (descriptor?.kind ?? path.split('.').at(-1)) === kind ? path : null;
-  }
-  private setSourceKind(kind: UiEditorSourceKind) {
-    const selection = this.state.selection;
-    if (!selection || !['css', 'html', 'tsx'].includes(kind)) return;
-    const filePath = this.selectionFile(this.state.draft, selection.selector, kind);
-    this.publish({ selection: { ...selection, sourceKind: kind, filePath }, selectedFile: filePath });
-  }
-  private async createSelectionOverride(kind: UiEditorSourceKind): Promise<boolean> {
-    const selection = this.state.selection, suiteId = this.state.selectedSuiteId;
-    if (!selection || !suiteId || !this.state.draft || !['css', 'html', 'tsx'].includes(kind)) return false;
-    const selector = detached(selection.selector), identity = this.draftIdentity;
-    const selectedFile = this.state.selectedFile, original = this.state.draft.manifest.overrides.find(item => sameSelector(item.selector, selector));
-    const capturedBinding = canonicalSuiteJson(original ?? null), read = ++this.reads, op = this.begin('import');
-    try {
-      // Use the same complete-selector digest as the stylesheet/ref adapter. The
-      // yield keeps this public async operation within the existing read fences.
-      const digest = await Promise.resolve(selectorDigest(selector));
-      if (!this.alive(op.life) || identity !== this.draftIdentity || read !== this.reads || suiteId !== this.state.selectedSuiteId || !this.state.draft) return false;
-      const current = this.state.draft.manifest.overrides.find(item => sameSelector(item.selector, selector));
-      if (canonicalSuiteJson(current ?? null) !== capturedBinding) return false;
-      const prefix = `overrides/${digest}/`;
-      const existing = this.selectionFile(this.state.draft, selector, kind);
-      if (!existing && this.state.draft.manifest.overrides.some(item => !sameSelector(item.selector, selector) &&
-        (selectorDigest(item.selector) === digest || [item.entry, item.stylesheet].some(path => path?.startsWith(prefix)))))
-        throw new Error(String(i18n.t('uiInspector.overrideCollision')));
-      const path = existing ?? `${prefix}${kind === 'css' ? 'style.css' : kind === 'html' ? 'View.html' : 'View.tsx'}`;
-      const file = this.state.draft.files[path], descriptor = this.state.draft.manifest.files.find(item => item.path === path);
-      if (file && (file.encoding !== 'utf8' || (descriptor?.kind ?? path.split('.').at(-1)) !== kind))
-        throw new Error(String(i18n.t('uiInspector.overrideFileConflict')));
-      const openCaptured = this.state.selection && sameSelector(this.state.selection.selector, selector) &&
-        this.state.selection.sourceKind === selection.sourceKind && this.state.selection.filePath === selection.filePath && this.state.selectedFile === selectedFile;
-      if (existing) {
-        if (openCaptured) this.publish({ selection: { ...selection, sourceKind: kind, filePath: path }, selectedFile: path });
-        return true;
-      }
-      // Clone the latest captured draft, preserving unrelated edits made during
-      // the yield. One existing edit publishes the ordinary file and full binding.
-      this.edit(draft => {
-        if (!file) {
-          uniqueSuitePaths([...Object.keys(draft.files), path]);
-          const text = kind === 'css' ? '/* Styles for this selector\'s current roots. */\n' : kind === 'html' ? '<ui-slot></ui-slot>\n' :
-            'export default function TargetOverride({ props, children, Original }) {\n  return <Original {...props}>{children}</Original>;\n}\n';
-          draft.files[path] = { encoding: 'utf8', text };
-          draft.manifest.files.push({ path, kind, bytes: 0, sha256: '0'.repeat(64) });
-        }
-        const binding = draft.manifest.overrides.find(item => sameSelector(item.selector, selector)) ??
-          { selector, enabled: true, entry: null, stylesheet: null };
-        if (!draft.manifest.overrides.includes(binding)) draft.manifest.overrides.push(binding);
-        if (kind === 'css') binding.stylesheet = path; else binding.entry = path;
-      });
-      if (this.selectionFile(this.state.draft, selector, kind) !== path) return false;
-      if (openCaptured) this.publish({ selection: { ...selection, sourceKind: kind, filePath: path }, selectedFile: path });
-      return true;
-    } catch (error) { if (this.alive(op.life)) this.error(error); return false; } finally { this.finish(op); }
-  }
+  private reset(owner: 'normal' | 'recovery'){return this.persistenceOperations.reset(owner);}
+  private selectTarget(selector: UiSelector){ return this.selectionOperations.selectTarget(selector); }
+  private selectionFile(draft: UiSuiteBundle | null, selector: UiSelector, kind: UiEditorSourceKind): string | null{ return this.selectionOperations.selectionFile(draft, selector, kind); }
+  private setSourceKind(kind: UiEditorSourceKind){ return this.selectionOperations.setSourceKind(kind); }
+  private createSelectionOverride(kind: UiEditorSourceKind){return this.sourceOperations.createSelectionOverride(kind);}
   private clearHighlight() { this.highlightAbort?.abort(); this.highlightAbort = null; this.highlightCleanup?.(); this.highlightCleanup = null; }
   private cancelPick() {
     const cleanup = this.pickerCleanup;
@@ -829,17 +489,7 @@ export class UiEditorController {
       getContext: () => this.deps.getTargetContext?.() ?? {},
     });
   }
-  private setScope(scope: 'position' | 'business' | 'type') {
-    const selection = this.state.selection; if (!selection) return;
-    if (scope === selection.selector.kind) { this.publish({ selection: { ...selection, scope } }); return; }
-    if (scope === 'type') this.selectTarget({ kind: 'type', target: selection.selector.target });
-    else if (scope === 'position' && this.positionAnchor?.target === selection.selector.target) this.selectTarget(this.positionAnchor);
-    else if (scope === 'business') {
-      const choices = this.state.scopeChoices.filter((item) => item.selector.kind === 'business');
-      if (choices.length === 1) this.selectTarget(choices[0].selector);
-      else this.error(new Error(String(i18n.t(choices.length ? 'uiInspector.chooseBusiness' : 'uiInspector.noBusiness'))));
-    }
-  }
+  private setScope(scope: 'position' | 'business' | 'type'){ return this.selectionOperations.setScope(scope); }
 }
 // eslint-disable-next-line react-refresh/only-export-components
 export const UiEditorControllerContext = createContext<UiEditorController | null>(null);
@@ -849,50 +499,4 @@ export function useUiEditorController(): UiEditorController { const value = useC
 export function useSuiteActivation(): SuiteActivation | null {
   const controller = useUiEditorController();
   return useSyncExternalStore(controller.subscribe, controller.getActivation, controller.getActivation);
-}
-function exportFile(name: string, bytes: Uint8Array): Promise<void> {
-  const url = URL.createObjectURL(new Blob([bytes.slice().buffer]));
-  try { const anchor = document.createElement('a'); anchor.href = url; anchor.download = name; anchor.click(); }
-  finally { setTimeout(() => URL.revokeObjectURL(url), 0); }
-  return Promise.resolve();
-}
-export function UiEditorProvider({ children }: { children: ReactNode }): React.JSX.Element {
-  const { services } = useLauncherCompatibility(); const source = useContext(UiEditorSourceContext);
-  const launcherSnapshot = useLauncherSnapshot();
-  const [current] = useState(() => {
-    let ready!: () => void;
-    const configuration = new Promise<void>((resolve) => { ready = resolve; });
-    return { services, source, configuration, ready, snapshot: launcherSnapshot };
-  }); current.services = services; current.source = source; current.snapshot = launcherSnapshot;
-  useEffect(() => { if (launcherSnapshot.config.ready) current.ready(); }, [current, launcherSnapshot.config.ready]);
-  const [controller] = useState(() => createUiEditorController({ storage,
-    getBuiltinBundle: (id) => { if (!current.source) throw new Error('Builtin source services are missing'); return current.source.getBuiltinBundle(id); },
-    getBuiltinName: async (id) => {
-      if (!current.source) throw new Error('Builtin source services are missing');
-      return current.source.getBuiltinName
-        ? current.source.getBuiltinName(id)
-        : (await current.source.getBuiltinBundle(id)).manifest.name;
-    },
-    createScope: async () => (await import('../ui-suite/prepared')).createSuiteRuntimeScope(),
-    compile: async (bundle, scope, options) => (await import('../ui-suite/compiler')).compileSuiteInScope(bundle, scope, options),
-    exportFile, acquireInteractionPublisher: () => current.services.acquireInteractionPublisher(),
-    reportError: (error) => current.services.launcher.reportError(error),
-    getDefaultBuiltin: () => current.services.launcher.getGuardState().config?.settings.appearance.interface_style === 'immersive' ? 'immersive' : 'modern',
-    waitForConfiguration: () => current.configuration,
-    getTargetContext: () => ({ routes: current.snapshot.navigation.routes.map((route) => route.id),
-      businessNames: [...current.snapshot.profiles.items.map(({ profile }) => ({ namespace: 'profile', value: profile.instance_key, name: profile.name })),
-        ...current.snapshot.accounts.state.accounts.map((account) => ({ namespace: 'account', value: account.id, name: account.name }))] }),
-    safe: typeof location !== 'undefined' && new URLSearchParams(location.search).get('ui-safe') === '1',
-  }));
-  useEffect(() => controller.connect(), [controller, services.acquireInteractionPublisher]);
-  useEffect(() => controller.refreshTargets(), [controller, launcherSnapshot.navigation, launcherSnapshot.profiles, launcherSnapshot.accounts]);
-  const snapshot = useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
-  // Accessible names and rectangles reflect the committed normal editor DOM.
-  // Equality-checked catalog publication reaches a fixed point after that commit.
-  useEffect(() => controller.refreshTargets(), [controller, snapshot]);
-  return <UiEditorControllerContext.Provider value={controller}>
-    <UiEditorActionsContext.Provider value={controller.actions}>
-      <UiEditorSnapshotContext.Provider value={snapshot}><UiInteractionContext.Provider value={{ editing: snapshot.open }}>{children}</UiInteractionContext.Provider></UiEditorSnapshotContext.Provider>
-    </UiEditorActionsContext.Provider>
-  </UiEditorControllerContext.Provider>;
 }

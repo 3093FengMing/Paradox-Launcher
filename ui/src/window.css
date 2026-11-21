@@ -55,8 +55,8 @@
 .window-controls button:disabled {
   opacity: 0.55;
 }
-.window-controls button:active {
-  transform: none !important;
+.window-bar .window-controls button:active {
+  transform: none;
 }
 @media (max-width: 480px) {
   .window-title small {

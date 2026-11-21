@@ -2,7 +2,7 @@
 members = ["crates/launcher-core", "apps/desktop"]
 default-members = ["apps/desktop"]
 resolver = "3"
-exclude = ["vendor/QuintElement"]
+exclude = ["vendor/QuintElement", "vendor/glib-0.18.5"]
 
 [workspace.package]
 version = "0.4.0-dev"
@@ -39,3 +39,7 @@ uuid = { version = "1.29.1", features = ["v4"] }
 [profile.release]
 lto = "thin"
 strip = "debuginfo"
+
+[patch.crates-io]
+# GTK 3 requires GLib 0.18; retain its API and backport RUSTSEC-2024-0429.
+glib = { path = "vendor/glib-0.18.5" }

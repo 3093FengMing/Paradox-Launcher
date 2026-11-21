@@ -33,7 +33,7 @@
 /* Progressive continuous corners retain the user's public radius, including 0. */
 @supports (corner-shape: squircle) {
   :is(.modern-shell,.modern-dialog-theme,.modern-portal,.immersive-shell,.immersive-dialog-theme,.immersive-portal)
-  :is(.primary,.secondary,.icon-button,.text-button,.download-navigation-tab,.download-navigation-history,.window-nav-link,.sidebar-nav-item,input:not([type=range]):not([type=checkbox]),textarea,select,.ui-select-trigger,.panel,.modal,.instances-list-region,.instances-inspector,.logs-panel,.queue-list,.queue-task,.queue-details,.download-indicator,.immersive-launch-split,.home-play-panel,.home-workspace-grid,.home-overview,.home-account,.instance-tools-menu,.window-navigation-menu),
+  :is(.primary,.secondary,.icon-button,.text-button,.download-navigation-tab,.download-navigation-history,.window-nav-link,.sidebar-nav-item,input:not([type=range], [type=checkbox]),textarea,select,.ui-select-trigger,.panel,.modal,.instances-list-region,.instances-inspector,.logs-panel,.queue-list,.queue-task,.queue-details,.download-indicator,.immersive-launch-split,.home-play-panel,.home-workspace-grid,.home-overview,.home-account,.instance-tools-menu,.window-navigation-menu),
   :is(.ui-select-popup,.ui-select-option,.immersive-launch-menu,.sidebar-nav-menu,.modern-nav-menu) {
     corner-shape: squircle;
   }

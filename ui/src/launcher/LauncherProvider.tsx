@@ -20,7 +20,7 @@ import { useBackground } from '../hooks/useBackground';
 import { applyLanguagePreference } from '../i18n';
 import { appearanceVariables } from '../lib/appearance';
 import { defaultPersonalization } from '../lib/preferences';
-import { isShortcutInput, matchesLaunchShortcut } from '../lib/shortcuts';
+import { acceptsLaunchShortcut } from './shortcut';
 import * as nativeWindow from '../ui-runtime/window';
 import { UiFoundationAppearanceBridge } from '../ui-foundation/environment';
 import { LauncherActionsContext, LauncherSnapshotContext } from './public/context';
@@ -37,6 +37,7 @@ import {
 } from '../ui-suite/routes';
 import { ActiveRouteRegistryContext } from './routeRegistry';
 import type { LauncherServices } from './services';
+import { acquireInteractionLease } from './interaction-lease';
 import { CompatibilityContext } from './compatibility';
 import { createLauncherSnapshot } from './snapshot';
 import { useLaunchController } from './controllers/launch';
@@ -96,33 +97,8 @@ export function LauncherProvider({
   const interaction = useRef({ editorOpen: false, picking: false, modalOpen: false });
   const interactionLease = useRef<object | null>(null);
   const [, publishInteraction] = useState(0);
-  const acquireInteractionPublisher = useCallback<LauncherServices['acquireInteractionPublisher']>(() => {
-    const token = {};
-    interactionLease.current = token;
-    let released = false;
-    const publish = (patch: Partial<typeof interaction.current>) => {
-      if (released || interactionLease.current !== token) return;
-      let changed = false;
-      for (const key of ['editorOpen', 'picking', 'modalOpen'] as const) {
-        if (typeof patch[key] === 'boolean' && interaction.current[key] !== patch[key]) {
-          interaction.current[key] = patch[key];
-          changed = true;
-        }
-      }
-      if (changed) publishInteraction((revision) => revision + 1);
-    };
-    return {
-      publish,
-      release() {
-        if (released) return;
-        if (interactionLease.current === token) {
-          publish({ editorOpen: false, picking: false, modalOpen: false });
-          interactionLease.current = null;
-        }
-        released = true;
-      },
-    };
-  }, []);
+  const acquireInteractionPublisher = useCallback<LauncherServices['acquireInteractionPublisher']>(
+    () => acquireInteractionLease(interaction, interactionLease, () => publishInteraction(revision => revision + 1)), []);
   const controllers = useRef<{
     launch: ReturnType<typeof useLaunchController>;
     profileDraft: ReturnType<typeof useProfileDraftController>;
@@ -341,31 +317,11 @@ export function LauncherProvider({
   };
   useEffect(() => {
     const shortcut = (event: KeyboardEvent) => {
-      const { launcher: owner, downloads: queue, closeRequest: close } = current.current;
-      const launcherState = owner.getGuardState();
-      const downloadState = queue.getGuardState();
-      const config = launcherState.config;
-      const gates = getInteractionState();
-      if (
-        !config?.settings.personalization.shortcuts ||
-        !api.desktop ||
-        !config.active_profile ||
-        launcherState.busy ||
-        launcherState.saving ||
-        downloadState.active ||
-        downloadState.pending.length > 0 ||
-        picking.current.size ||
-        gates.editorOpen ||
-        gates.picking ||
-        gates.modalOpen ||
-        close.request ||
-        isShortcutInput(event.target) ||
-        event.defaultPrevented
-      )
-        return;
-      if (!matchesLaunchShortcut(event, config.settings.personalization.launch_shortcut)) return;
+      const {launcher:owner, downloads:queue, closeRequest:close} = current.current;
+      const profile = acceptsLaunchShortcut(event, owner, queue, close, getInteractionState(), picking.current.size, api.desktop);
+      if (!profile) return;
       event.preventDefault();
-      void controllers.current?.launch.actions.request(config.active_profile);
+      void controllers.current?.launch.actions.request(profile);
     };
     // Bubble phase preserves input/control cancellation before global dispatch.
     window.addEventListener('keydown', shortcut);
