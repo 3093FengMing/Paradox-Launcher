@@ -607,13 +607,23 @@ mod tests {
     #[tokio::test]
     async fn spawn_uses_selected_executable_cwd_environment_and_both_log_sources() {
         let temporary = tempfile::tempdir().unwrap();
+        #[cfg(not(unix))]
+        let requested_cwd = temporary.path().to_owned();
+        #[cfg(unix)]
+        let alias_root = tempfile::tempdir().unwrap();
+        #[cfg(unix)]
+        let requested_cwd = {
+            let alias = alias_root.path().join("requested-cwd");
+            std::os::unix::fs::symlink(temporary.path(), &alias).unwrap();
+            alias
+        };
         let selected = temporary
             .path()
             .join(format!("selected-javaw{}", std::env::consts::EXE_SUFFIX));
         std::fs::copy(std::env::current_exe().unwrap(), &selected).unwrap();
         let command = fixture_command(temporary.path())
             .await
-            .with_cwd(temporary.path().to_owned())
+            .with_cwd(requested_cwd.clone())
             .with_env("PARADOX_PROCESS_FIXTURE".into(), "echo".into())
             .with_env("PARADOX_FIXTURE_ENV".into(), "retained value".into());
         assert_ne!(command.program(), selected);
@@ -631,10 +641,6 @@ mod tests {
                 "selected={}",
                 selected.file_name().unwrap().to_string_lossy()
             ),
-            format!(
-                "cwd={}",
-                crate::sdk::java_compatible_path(temporary.path()).display()
-            ),
             "environment=retained value".into(),
             "non-utf8-�".into(),
             "stdout-after-invalid".into(),
@@ -646,6 +652,19 @@ mod tests {
                 "missing {expected}"
             );
         }
+        let reported_cwd = lines
+            .iter()
+            .find(|line| line.source == ProcessLogSource::Stdout && line.line.starts_with("cwd="))
+            .expect("missing working directory output")
+            .line
+            .strip_prefix("cwd=")
+            .unwrap();
+        // macOS /var temporary paths resolve through /private/var in the child.
+        assert_eq!(
+            std::fs::canonicalize(reported_cwd).unwrap(),
+            std::fs::canonicalize(&requested_cwd).unwrap(),
+            "the child must run in the requested working directory"
+        );
         assert!(
             lines.iter().any(
                 |line| line.source == ProcessLogSource::Stderr && line.line == "stderr-fixture"

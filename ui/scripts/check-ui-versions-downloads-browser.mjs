@@ -147,7 +147,13 @@ for (const suite of ['modern', 'immersive']) {
     await page.getByRole('option', { name: 'Fabric', exact: true }).click();
     await wait(() => window.task6Boundary.heldLoaders.length === 1);
     await act(() => { window.task6Boundary.holdLoaders = false; });
-    await site('ProfileDialog-version').fill('1.20.1');
+    // Set the rapid pair within one browser task; Playwright actionability can
+    // otherwise take longer than the debounce on a busy runner.
+    await act(() => {
+      window.suiteBuiltinsFixture.actions.profileDraft.patch({ version: '1.20.1' });
+      window.suiteBuiltinsFixture.actions.profileDraft.patch({ loader: 'quilt' });
+    });
+    await wait(() => window.suiteBuiltinsFixture.snapshot.profileDraft.editor.loader === 'quilt');
     await site('ProfileDialog-loader').click();
     await page.getByRole('option', { name: 'Quilt', exact: true }).click();
     await wait(() => !window.suiteBuiltinsFixture.snapshot.profileDraft.loaderCatalog.pending && window.suiteBuiltinsFixture.snapshot.profileDraft.loaderCatalog.request?.loader === 'quilt');
