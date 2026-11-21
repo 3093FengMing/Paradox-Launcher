@@ -10,7 +10,7 @@
 .immersive-shell :is(.settings-options > button.selected,.settings-style-option.selected) { background: var(--s-selected); }
 .immersive-navigation-positioner { z-index: 45; max-width: calc(100vw - 16px); }
 .immersive-navigation-menu { display: flex; flex-direction: column; min-width: min(19em,calc(100vw - 16px)); max-width: calc(100vw - 16px); max-height: calc(100dvh - 5em); overflow: auto; padding: 6px; background: var(--surface); color: var(--text); border: 1px solid var(--control-border); border-radius: var(--c-radius); }
-.immersive-navigation-menu [role^=menuitem] { display: flex; align-items: center; gap: 8px; padding: .7em; overflow-wrap: anywhere; border-radius: var(--radius,6px); font-size: max(13px,1em); }
+.immersive-navigation-menu [role^=menuitem] { box-sizing: border-box; display: flex; align-items: center; gap: .65em; padding: .45em .75em; min-height: 2.45em; line-height: 1.4; overflow-wrap: anywhere; border-radius: var(--radius,6px); font-size: max(13px,1em); }
 .immersive-navigation-menu [role^=menuitem][data-highlighted] { background: var(--hover); outline: 2px solid var(--accent-ink); outline-offset: -2px; }
 .immersive-navigation-menu .mobile-navigation-separator { height: 1px; margin: 6px 0; background: var(--border); }
 @media(max-width:719px){

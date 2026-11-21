@@ -1,7 +1,7 @@
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, Folder, Gamepad2, LoaderCircle, Palette, SlidersHorizontal } from 'lucide-react';
-import { Field, Toggle, UiIdentity } from '@paradox/ui';
+import { Field, UiIdentity } from '@paradox/ui';
 import { useLauncherActions, useLauncherSnapshot, useUiEditorActions } from '@paradox/launcher';
 import { sourceView } from '../../common/lib/view';
 import { settingsPageState } from '../../common/lib/settings-display';
@@ -35,6 +35,8 @@ export default function SettingsPage() {
     <h1 data-ui-site="Settings-3">{t('nav.settings')}</h1>
     <p data-ui-site="Settings-4">{t(`settingsPages.${tab}Intro`)}</p>
     </header>
+    <div className="settings-workspace" data-ui-site="Settings-workspace">
+    <aside className="settings-navigation" data-ui-site="Settings-navigation">
     <nav className="settings-tabs" role="tablist" aria-label={t('settingsPages.navigation')} data-ui-site="Settings-5">{tabs.map(item => <UiIdentity key={item.id} namespace="settings-tab" value={item.id}>
         <button type="button" role="tab" aria-selected={tab === item.id} aria-controls={`${prefix}-panel`} tabIndex={tab === item.id ? 0 : -1} disabled={locked} className={tab === item.id ? 'selected' : ''} onClick={() => a.settings.setTab(item.id)} onKeyDown={event => { const index = tabs.findIndex(value => value.id === item.id); const next = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? (index + 1) % tabs.length : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? (index + tabs.length - 1) % tabs.length : event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : -1; if (next >= 0) {
             event.preventDefault();
@@ -48,6 +50,8 @@ export default function SettingsPage() {
     <nav className="settings-section-links" aria-label={t('settingsPages.navigation')} data-ui-site="Settings-9">{groups[tab].map(section => <UiIdentity key={section} namespace="settings-section-link" value={section}>
         <a href={`#${prefix}-${section}`} data-ui-site="Settings-10">{t(`settingsPages.sections.${section}`)}</a>
         </UiIdentity>)}</nav>
+    </aside>
+    <div className="settings-main" data-ui-site="Settings-main">
     <div id={`${prefix}-panel`} className="settings-content" role="tabpanel" aria-label={t(tabs.find(item => item.id === tab)!.label)} data-ui-site="Settings-11">
         {tab === 'appearance' && <>
           <section id={`${prefix}-layout`} className="settings-section" data-ui-site="Settings-12">
@@ -130,13 +134,6 @@ export default function SettingsPage() {
         <Field label={t('settings.gameArguments')} description={t('settings.gameArgumentsDescription')} data-ui-site="Settings-59">
         <textarea aria-label={t('settings.gameArguments')} rows={3} placeholder={t('settings.gameArgumentsPlaceholder')} value={draft.extra_game_arguments} onChange={event => patch('extra_game_arguments', event.target.value)} data-ui-site="Settings-60"/>
         </Field>
-        <div className="settings-row" data-ui-site="Settings-61">
-        <div data-ui-site="Settings-62">
-        <h3 data-ui-site="Settings-63">{t('downloads.showSnapshots')}</h3>
-        <p data-ui-site="Settings-64">{t('settings.snapshotsDescription')}</p>
-        </div>
-        <Toggle label={t('downloads.showSnapshots')} checked={draft.show_snapshots} onChange={value => patch('show_snapshots', value)} data-ui-site="Settings-65"/>
-        </div>
         </section>
           <section id={`${prefix}-templates`} className="settings-section" data-ui-site="Settings-66">
         <Templates data-ui-site="Settings-67"/>
@@ -182,5 +179,7 @@ export default function SettingsPage() {
     <button type="button" className="primary" disabled={Boolean(reason)} onClick={() => void a.settings.save()} data-ui-site="Settings-94">{saving ? <LoaderCircle size={16} className="spin" aria-hidden="true" data-ui-site="Settings-95"/> : <Check size={16} aria-hidden="true" data-ui-site="Settings-96"/>}{t('settings.save')}</button>
     </div>
     </footer>
+    </div>
+    </div>
     </div>;
 }

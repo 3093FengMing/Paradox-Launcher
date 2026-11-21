@@ -21,7 +21,7 @@
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .accounts-page .accounts-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .accounts-page .accounts-confirm { flex-basis: 100%; display: grid; gap: 12px; padding: 15px; border: 1px solid var(--border); border-radius: var(--c-radius); background: var(--bg); }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .accounts-page .accounts-confirm p { overflow-wrap: anywhere; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .accounts-page .accounts-notice { display: grid; justify-items: start; gap: 12px; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--c-radius); padding: 18px; background: var(--surface); overflow-wrap: anywhere; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .accounts-page .accounts-notice { display: grid; justify-items: start; gap: 12px; border: 1px solid var(--border); border-left: 1px solid var(--border); border-radius: var(--c-radius); padding: 18px; background: var(--surface); overflow-wrap: anywhere; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .accounts-page .accounts-recovery-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .accounts-page .accounts-empty { display: grid; justify-items: center; gap: 12px; color: var(--muted); padding: 34px 16px; border: 1px dashed var(--border); border-radius: var(--c-radius); text-align: center; }
 @media (max-width: 600px) {
@@ -33,7 +33,7 @@
   :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .accounts-page .accounts-actions > button { flex: 1 1 auto; }
 }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-accounts { grid-template-columns: minmax(225px, .85fr) minmax(0, 1.65fr); align-items: start; gap: 28px; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-accounts .accounts-operation-sidebar { display: grid; gap: 25px; padding: 25px; min-width: 0; background: var(--surface); border-left: 3px solid var(--accent); }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-accounts .accounts-operation-sidebar { display: grid; gap: 25px; padding: 25px; min-width: 0; background: var(--surface); border-left: 1px solid var(--border); }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-accounts .accounts-operation-sidebar > .accounts-eyebrow { margin: 0; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-accounts .accounts-configuration { border-top: 1px solid var(--border); padding-top: 24px; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-accounts .accounts-main { display: grid; min-width: 0; gap: 24px; padding: 9px 0; }

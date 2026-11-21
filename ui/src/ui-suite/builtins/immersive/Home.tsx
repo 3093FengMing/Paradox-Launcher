@@ -13,12 +13,18 @@ import './style.css';
 
 import { useEffect, useRef, useState } from 'react';
 import { Menu } from '@paradox/ui';
-import { ArrowUpRight, Box, Check, ChevronDown, Import, Palette, Play, Plus, Search, Settings2, X } from 'lucide-react';
+import { ArrowUpRight, Box, Check, ChevronDown, ChevronUp, Import, Palette, Play, Plus, Search, Settings2, X } from 'lucide-react';
 export default function Home() {
   const [hint, setHint] = useState(true), [menuOpen, setMenuOpen] = useState(false), [search, setSearch] = useState('');
+  const [pagination, setPagination] = useState({ key: '', limit: 30 });
 
   const launchButton = useRef<HTMLButtonElement>(null), returnLaunchFocus = useRef(false), hadSelection = useRef(false);
-  const s = useLauncherSnapshot(), a = useLauncherActions(), { t } = useTranslation();
+  const s = useLauncherSnapshot(), a = useLauncherActions(), { t, i18n } = useTranslation();
+  const number = (value: number) => new Intl.NumberFormat(i18n.resolvedLanguage).format(value);
+  const filtered = s.profiles.items.filter(item => [item.profile.name, item.profile.instance_key, item.actualInstance?.game_version ?? item.profile.game_version, item.actualInstance?.loader ?? item.profile.loader].join(' ').toLowerCase().includes(search.trim().toLowerCase()));
+  const paginationKey = JSON.stringify([search, s.profiles.items.length]);
+  const limit = pagination.key === paginationKey ? pagination.limit : 30;
+  const menuItems = s.profiles.items.slice(0, 30);
   const entry = resolveProfileEntry(s, s.profiles.activeKey), account = resolveActiveAccount(s);
   const profile = entry?.profile;
   const visible = (id: string) => s.navigation.routes.some(r => r.id === id && r.navigation);
@@ -72,7 +78,7 @@ export default function Home() {
       </div>}
       {profile && <dl data-ui-site="Home-config" className="immersive-launch-config">
         <div data-ui-site="Home-config-java"><dt data-ui-site="Home-config-java-label">{t('settings.javaExecutable')}</dt><dd data-ui-site="Home-config-java-value" title={profile.overrides.java_executable ?? s.config.value.settings.java_executable}>{(profile.overrides.java_executable ?? s.config.value.settings.java_executable) || t('settingsPages.automaticJava')}</dd></div>
-        <div data-ui-site="Home-config-memory"><dt data-ui-site="Home-config-memory-label">{t('settings.maximumMemory')}</dt><dd data-ui-site="Home-config-memory-value">{profile.overrides.memory_mb ?? s.config.value.settings.memory_mb} MB</dd></div>
+        <div data-ui-site="Home-config-memory"><dt data-ui-site="Home-config-memory-label">{t('settings.maximumMemory')}</dt><dd data-ui-site="Home-config-memory-value">{number(profile.overrides.memory_mb ?? s.config.value.settings.memory_mb)} MB</dd></div>
       </dl>}
       {reason && <p data-ui-site="Home-reason" className="home-action-reason">{reason}</p>}
       <div data-ui-site="Home-20" className="immersive-launch-split">
@@ -82,13 +88,13 @@ export default function Home() {
           <span data-ui-site="Home-26" className="immersive-launch-copy"><strong data-ui-site="Home-27">{actionTitle}</strong><small data-ui-site="Home-28" title={profile?.name}>{profile?.name ?? t(s.profiles.items.length ? 'immersive.chooseWorld' : 'immersive.firstWorld')}</small></span>
         </Button>
         <Menu.Root data-ui-site="Home-29" open={menuOpen} onOpenChange={setMenuOpen}>
-          <Menu.Trigger data-ui-site="Home-30" className="immersive-launch-select" aria-label={t('immersive.selectInstance')} title={t('immersive.selectInstance')}><ChevronDown data-ui-site="Home-31" size={20} aria-hidden="true" /></Menu.Trigger>
-          <Menu.Portal data-ui-site="Home-32"><Menu.Positioner data-ui-site="Home-33" side="bottom" align="end" sideOffset={8} className="immersive-menu-positioner immersive-portal" style={{ fontSize: Math.max(13, 14 * (s.appearance.value?.ui_scale ?? 100) / 100) }}>
+          <Menu.Trigger data-ui-site="Home-30" className="immersive-launch-select" aria-label={t('immersive.selectInstance')} title={t('immersive.selectInstance')}><ChevronUp data-ui-site="Home-31" size={20} aria-hidden="true" /></Menu.Trigger>
+          <Menu.Portal data-ui-site="Home-32"><Menu.Positioner data-ui-site="Home-33" side="top" align="end" sideOffset={8} className="immersive-menu-positioner immersive-portal" style={{ fontSize: Math.max(13, 14 * (s.appearance.value?.ui_scale ?? 100) / 100) }}>
             <Menu.Popup data-ui-site="Home-34" className="immersive-instance-menu immersive-portal" style={{ fontSize: 'inherit' }}>
-              <div data-ui-site="Home-35" className="immersive-menu-heading">{t('immersive.instances')}<span data-ui-site="Home-36">{s.profiles.items.length}</span></div>
+              <div data-ui-site="Home-35" className="immersive-menu-heading">{t('immersive.instances')}<span data-ui-site="Home-36">{number(s.profiles.items.length)}</span></div>
               <div data-ui-site="Home-37" className="immersive-menu-instances">
-                {s.profiles.items.map(item => <UiIdentity key={item.profile.instance_key} namespace="profile" value={item.profile.instance_key}>
-                  <Menu.Item data-ui-site="Home-38" className="immersive-instance-entry" label={item.profile.name}
+                {menuItems.map(item => <UiIdentity key={item.profile.instance_key} namespace="profile" value={item.profile.instance_key}>
+                  <Menu.Item data-ui-site="Home-38" className="immersive-instance-entry" label={item.profile.name} title={item.profile.name}
                     aria-label={t(item.profile.instance_key === profile?.instance_key ? 'immersive.currentInstanceLabel' : 'immersive.instanceLabel', { name: item.profile.name, version: item.profile.game_version })}
                     onClick={() => void a.profiles.select(item.profile.instance_key)} style={{ fontSize: 'inherit' }}>
                     <Box data-ui-site="Home-40" size={20} /><span data-ui-site="Home-41" className="immersive-menu-instance-copy"><strong data-ui-site="Home-42">{item.profile.name}</strong>
@@ -97,6 +103,7 @@ export default function Home() {
                   </Menu.Item>
                 </UiIdentity>)}
                 {!s.profiles.items.length && <p data-ui-site="Home-45" className="immersive-menu-empty">{t('immersive.empty')}</p>}
+                {s.profiles.items.length > menuItems.length && <p data-ui-site="Home-menu-summary" className="immersive-menu-empty">{t('instances.visibleCount', { shown: number(menuItems.length), total: number(s.profiles.items.length) })}</p>}
               </div>
               <Menu.Separator data-ui-site="Home-48" className="immersive-menu-divider" />
               <Menu.Item data-ui-site="Home-49" className="immersive-menu-action" label={t('immersive.createNew')} onClick={() => a.profileDraft.openCreate()} style={{ fontSize: 'inherit' }}><Plus data-ui-site="Home-50" size={16} />{t('immersive.createNew')}</Menu.Item>
@@ -114,7 +121,7 @@ export default function Home() {
     </div>
     <section data-ui-site="Home-library" className="immersive-home-library" aria-label={t('instancePages.list')}>
       <header data-ui-site="Home-library-heading" className="section-heading">
-        <h2 data-ui-site="Home-library-title">{t('immersive.instances')} <span data-ui-site="Home-library-count">{s.profiles.items.length}</span></h2>
+        <h2 data-ui-site="Home-library-title">{t('immersive.instances')} <span data-ui-site="Home-library-count">{number(s.profiles.items.length)}</span></h2>
         <div data-ui-site="Home-library-actions" className="button-group">
           <button data-ui-site="Home-library-import" className="secondary" disabled={!s.window.desktop || !!s.activity || s.settings.saving || s.downloads.active || s.downloads.pending.length > 0 || s.content.pending} onClick={() => a.importDraft.open()}><Import data-ui-site="Home-library-import-icon" size={16} />{t('instances.import')}</button>
           <button data-ui-site="Home-library-create" className="primary" onClick={() => a.profileDraft.openCreate()}><Plus data-ui-site="Home-library-create-icon" size={16} />{t('common.createInstance')}</button>
@@ -125,7 +132,7 @@ export default function Home() {
         <input data-ui-site="Home-library-search" value={search} onChange={event => setSearch(event.target.value)} aria-label={t('instances.search')} placeholder={t('instances.searchPlaceholder')} />
       </label>
       <div data-ui-site="Home-library-list" className="immersive-home-list">
-        {s.profiles.items.filter(item => [item.profile.name, item.profile.instance_key, item.actualInstance?.game_version ?? item.profile.game_version, item.actualInstance?.loader ?? item.profile.loader].join(' ').toLowerCase().includes(search.toLowerCase())).map(item => {
+        {filtered.slice(0, limit).map(item => {
           const key = item.profile.instance_key, current = key === s.profiles.activeKey;
           const itemState = s.launch.profileKey === key && s.launch.phase !== 'idle' ? s.launch.phase === 'running' ? 'instancePages.running' : s.launch.phase === 'cancelling' ? 'common.stopping' : 'instancePages.launching'
             : s.launch.selection?.profileKey === key ? 'instancePages.selectAccount' : item.installing ? 'instancePages.taskActive' : item.installed ? 'common.installed' : item.actualInstance ? 'instancePages.filterStatus.repair' : 'common.notInstalled';
@@ -146,8 +153,9 @@ export default function Home() {
           </UiIdentity>;
         })}
         {!s.profiles.items.length && <div data-ui-site="Home-library-empty" className="instance-message"><h3 data-ui-site="Home-library-empty-title">{t('instances.emptyTitle')}</h3><p data-ui-site="Home-library-empty-copy">{t('instances.emptyDescription')}</p></div>}
-        {!!s.profiles.items.length && !s.profiles.items.some(item => [item.profile.name, item.profile.instance_key, item.actualInstance?.game_version ?? item.profile.game_version, item.actualInstance?.loader ?? item.profile.loader].join(' ').toLowerCase().includes(search.toLowerCase())) && <p data-ui-site="Home-library-no-matches" className="instance-message">{t('instances.noMatches')}</p>}
+        {!!s.profiles.items.length && !filtered.length && <div data-ui-site="Home-library-no-matches" className="instance-message"><h3 data-ui-site="Home-no-matches-title">{t('instances.noMatches')}</h3><p data-ui-site="Home-no-matches-description">{t('instances.trySearch')}</p><button data-ui-site="Home-clear-search" className="secondary" onClick={() => setSearch('')}>{t('instances.clearSearch')}</button></div>}
       </div>
+      {!!filtered.length && <div data-ui-site="Home-pagination" className="home-library-pagination"><span data-ui-site="Home-shown" role="status">{t('instances.visibleCount', { shown: number(Math.min(limit, filtered.length)), total: number(filtered.length) })}</span>{filtered.length > limit && <button data-ui-site="Home-more" className="secondary" onClick={() => setPagination({ key: paginationKey, limit: limit + 30 })}><ChevronDown size={16} aria-hidden="true" data-ui-site="Home-more-icon"/>{t('instances.loadMore')}</button>}</div>}
       {visible('instances') && <footer data-ui-site="Home-library-footer" className="home-library-footer"><button data-ui-site="Home-library-manage" className="text-button" onClick={() => a.navigation.navigate('instances')}>{t('immersive.manageAll')}<ArrowUpRight data-ui-site="Home-library-manage-icon" size={16} aria-hidden="true" /></button></footer>}
     </section>
   </section>;

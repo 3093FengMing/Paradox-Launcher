@@ -13,6 +13,10 @@ import './ui-foundation/foundation.css';
 const FinalCapture = import.meta.env.MODE === 'foundation-test'
   ? React.lazy(() => import('./ui-tests/suite-final-fixture').then((module) => ({ default: module.Capture })))
   : null;
+const stressPreview = import.meta.env.DEV && new URLSearchParams(location.search).get('uiStress') === '1';
+const StressPreview = stressPreview
+  ? React.lazy(() => import('./ui-tests/ui-stress-fixture'))
+  : null;
 
 if (import.meta.env.MODE === 'foundation-test') void import('./ui-foundation/browser-fixture');
 if (import.meta.env.MODE === 'ownership-test')
@@ -34,7 +38,12 @@ if (import.meta.env.MODE === 'foundation-test')
 
 if (import.meta.env.MODE === 'suite-builtins-test')
   void import('./ui-tests/suite-builtins-fixture').then(({ installSuiteBuiltinsFixture }) =>
-    installSuiteBuiltinsFixture(root),
+    installSuiteBuiltinsFixture(root).then(async () => {
+      if (stressPreview) {
+        const { installUiStressFixture } = await import('./ui-tests/ui-stress-fixture');
+        installUiStressFixture(window.suiteBuiltinsFixture.actions, () => window.suiteBuiltinsFixture.snapshot);
+      }
+    }),
   );
 else if (import.meta.env.MODE === 'suite-views-test')
   void import('./ui-tests/suite-views-fixture').then(({ installSuiteViewsFixture }) =>
@@ -57,6 +66,7 @@ else
           <UiEditorProvider>
             <App />
             {FinalCapture && <React.Suspense fallback={null}><FinalCapture /></React.Suspense>}
+            {StressPreview && <React.Suspense fallback={null}><StressPreview /></React.Suspense>}
           </UiEditorProvider>
         </UiEditorSourceContext.Provider>
       </LauncherProvider>

@@ -2,7 +2,6 @@ import { useState, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UiView, UiRouteViewport, UiIdentity } from '@paradox/ui';
 import { useLauncherSnapshot, useUiEditorSnapshot } from '@paradox/launcher';
-import { resolveActiveAccount } from '../common/lib/launcher-display';
 import { isDownloadCenterRoute } from '../common/lib/navigation';
 import { useRouteMotion } from '../common/lib/use-route-motion';
 import DownloadNavigation from './components/DownloadNavigation';
@@ -25,7 +24,6 @@ export default function Shell() {
   const route = s.navigation.routes.find(r => r.id === s.navigation.routeId);
   const home = route?.id === 'home';
   const downloadCenter = isDownloadCenterRoute(s.navigation.routeId);
-  const account = resolveActiveAccount(s);
   const title = downloadCenter ? t('nav.downloadCenter') : route ? t(route.title, { defaultValue: route.title }) : '';
   const ready = !!s.config.value && !!editor.draft && !editor.initialSelectionRequired && !editor.suspended;
   const hasDownloads = s.downloads.active || s.downloads.pending.length > 0 || downloadFocused;
@@ -46,7 +44,7 @@ export default function Shell() {
       <div data-ui-site="Shell-6" className="workspace">
         <main data-ui-site="Shell-16">
           <header data-ui-site="Shell-17" className="page-heading">
-            <div data-ui-site="Shell-18"><h1 data-ui-site="Shell-19">{home ? t('app.welcome', { name: account.name }) : title}</h1>
+            <div data-ui-site="Shell-18"><h1 data-ui-site="Shell-19">{home ? t('nav.home') : title}</h1>
             <p data-ui-site="Shell-20">{downloadCenter ? t('downloadCenter.description') : route ? t(route.description, { defaultValue: route.description }) : ''}</p></div>
           </header>
           {downloadCenter && <UiView data-ui-site="Shell-download-navigation" id="component.download-navigation" Original={DownloadNavigation}/>}

@@ -5,6 +5,8 @@
 .modern-shell button, .modern-dialog-theme button { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: .55rem; border: 0; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; transition: background-color 120ms var(--ease-out), border-color 120ms var(--ease-out); }
 .modern-shell button:disabled, .modern-dialog-theme button:disabled { opacity: .5; cursor: not-allowed; }
 .modern-shell :is(input,textarea,select,.ui-select-trigger), .modern-dialog-theme :is(input,textarea,select,.ui-select-trigger) { min-width: 0; width: 100%; min-height: var(--control-height); color: var(--text); background: var(--input); border: 1px solid var(--control-border); border-radius: var(--radius, 6px); padding: .55rem .75rem; font-size: max(13px,1em); line-height: 1.4; }
+/* Select portals inherit the invoking control's density, not document rem sizing. */
+:is(.modern-shell,.modern-dialog-theme) .ui-select-trigger { --ui-select-border: var(--control-border); --ui-select-option-box-sizing: border-box; --ui-select-option-min-height: 2.45em; --ui-select-option-padding: .45em .75em; --ui-select-option-line-height: 1.4; --ui-select-option-radius: var(--radius,6px); --ui-select-popup-radius: var(--radius,6px); }
 .modern-shell :is(input,textarea)::placeholder, .modern-dialog-theme :is(input,textarea)::placeholder { color: var(--muted); opacity: 1; }
 .modern-shell textarea, .modern-dialog-theme textarea { resize: vertical; line-height: 1.6; }
 .modern-shell input[type=range], .modern-dialog-theme input[type=range] { min-height: 1.5rem; padding: 0; border: 0; accent-color: var(--accent-ink); cursor: pointer; }

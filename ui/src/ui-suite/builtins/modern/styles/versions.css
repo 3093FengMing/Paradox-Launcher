@@ -56,3 +56,25 @@
   .modern-shell .modern-versions .versions-toolbar > button { margin-left: auto; }
   .modern-shell .modern-versions .versions-footer { padding: .7em .8em; }
 }
+
+/* Browsing comes first; catalog provenance and installation help follow it. */
+.modern-shell .modern-versions .versions-toolbar { gap: .7em; }
+.modern-shell .modern-versions .versions-filter-panel { gap: .65em; }
+.modern-shell .modern-versions .versions-kind-field { flex-basis: auto; }
+.modern-shell .modern-versions .versions-kind-field .ui-select-trigger { min-width: 11em; }
+.modern-shell .modern-versions .versions-footer .versions-loader-note { flex-basis: 100%; font-size: max(12px,.93em); }
+.modern-shell .modern-versions .versions-cache { border-top: 1px solid var(--border); border-bottom: 0; padding: .55em 1em; background: transparent; }
+.modern-shell .modern-versions .versions-cache strong { font-weight: 500; color: var(--muted); }
+.modern-shell .modern-versions .versions-name strong { min-width: 0; overflow-wrap: anywhere; }
+.modern-shell .modern-versions .versions-tag { white-space: nowrap; }
+@media (max-width:620px) {
+ .modern-shell .modern-versions .versions-kind-field { flex-basis: 100%; }
+ .modern-shell .modern-versions .versions-kind-field .ui-select-trigger { min-width: 0; }
+}
+@media (max-width:420px) {
+ .modern-shell .modern-versions .versions-toolbar { gap: .45em; }
+ .modern-shell .modern-versions .versions-filter-panel { display: contents; }
+ .modern-shell .modern-versions .versions-kind-field { flex: 1 1 100%; }
+ .modern-shell .modern-versions .versions-snapshots { flex: 1 1 8em; font-size: max(12px,.9em); }
+ .modern-shell .modern-versions .versions-toolbar > button { flex: 0 1 auto; padding: .5em; font-size: max(12px,.9em); }
+}

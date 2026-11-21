@@ -75,5 +75,5 @@
 :is(.immersive-shell,.immersive-dialog-theme) .field > span { font-size: max(13px,1em); }
 :is(.immersive-shell,.immersive-dialog-theme) .field small { font-size: max(12px,.9em); color: var(--muted); }
 :is(.immersive-shell,.immersive-dialog-theme) .field :is(input,textarea,.ui-select-trigger) { font-size: max(13px,1em); }
-.ui-select-positioner .ui-select-popup { --ui-select-surface: var(--s-panel); --ui-select-text: var(--s-text); --ui-select-muted: var(--s-muted); --ui-select-border: var(--s-control-line); --ui-select-highlight: var(--s-selected); background: var(--s-panel); border-color: var(--s-control-line); border-radius: var(--c-radius); color: var(--s-text); }
-.ui-select-positioner .ui-select-option { font-size: max(13px,1em); min-height: var(--c-control-height); border-radius: var(--c-radius); }
+/* The foundation transports these values into this control's detached popup. */
+:is(.immersive-shell,.immersive-dialog-theme) .ui-select-trigger { --ui-select-border: var(--control-border); --ui-select-option-box-sizing: border-box; --ui-select-option-min-height: 2.45em; --ui-select-option-padding: .45em .75em; --ui-select-option-line-height: 1.4; --ui-select-option-radius: var(--c-radius); --ui-select-popup-radius: var(--c-radius); }

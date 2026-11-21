@@ -92,7 +92,7 @@
   overflow: hidden;
   background: var(--ui-select-surface);
   border: 1px solid var(--ui-select-border);
-  border-radius: min(10px, var(--radius, 10px));
+  border-radius: var(--ui-select-popup-radius, min(10px, var(--radius, 10px)));
   box-shadow: var(--overlay-shadow);
   padding: 5px;
   outline: none;
@@ -104,11 +104,14 @@
   outline: none;
 }
 .ui-select-option {
+  box-sizing: var(--ui-select-option-box-sizing, content-box);
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 12px;
-  border-radius: 5px;
+  min-height: var(--ui-select-option-min-height, 0);
+  padding: var(--ui-select-option-padding, 9px 12px);
+  line-height: var(--ui-select-option-line-height, normal);
+  border-radius: var(--ui-select-option-radius, 5px);
   cursor: pointer;
   outline: none;
   overflow-wrap: anywhere;

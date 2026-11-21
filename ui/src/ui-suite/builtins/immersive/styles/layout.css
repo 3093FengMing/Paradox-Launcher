@@ -78,3 +78,6 @@
 }
 
 .immersive-shell.compact .instance-context-sidebar { flex-basis: 12em; width: 12em; padding: 1em .7em; }
+
+.immersive-shell.is-home .route-stage { min-height: calc(100dvh - var(--titlebar-height)); }
+.immersive-shell .page-heading { margin-bottom: 1em; }

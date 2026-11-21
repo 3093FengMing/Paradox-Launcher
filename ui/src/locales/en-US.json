@@ -232,7 +232,10 @@
     "storageTitle": "Shared resources, individual worlds",
     "storageDescription": "Each instance has its own saves and configuration. QuintElement manages shared game resources.",
     "emptyTitle": "Your adventure awaits",
-    "emptyDescription": "Create your first instance and make this space your own."
+    "emptyDescription": "Create your first instance and make this space your own.",
+    "visibleCount": "Showing {{shown}} of {{total}}",
+    "loadMore": "Show 30 more",
+    "clearSearch": "Clear search"
   },
   "profileDialog": {
     "createTitle": "Create game instance",

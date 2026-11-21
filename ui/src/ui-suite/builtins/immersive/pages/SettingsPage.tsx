@@ -1,7 +1,7 @@
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, Folder, Gamepad2, LoaderCircle, Palette, SlidersHorizontal } from 'lucide-react';
-import { Field, Toggle, UiIdentity } from '@paradox/ui';
+import { Field, UiIdentity } from '@paradox/ui';
 import { useLauncherActions, useLauncherSnapshot, useUiEditorActions } from '@paradox/launcher';
 import { sourceView } from '../../common/lib/view';
 import { settingsPageState } from '../../common/lib/settings-display';
@@ -134,13 +134,6 @@ export default function SettingsPage() {
         <Field label={t('settings.gameArguments')} description={t('settings.gameArgumentsDescription')} data-ui-site="Settings-62">
         <textarea aria-label={t('settings.gameArguments')} rows={3} placeholder={t('settings.gameArgumentsPlaceholder')} value={draft.extra_game_arguments} onChange={event => patch('extra_game_arguments', event.target.value)} data-ui-site="Settings-63"/>
         </Field>
-        <div className="settings-row" data-ui-site="Settings-64">
-        <div data-ui-site="Settings-65">
-        <h3 data-ui-site="Settings-66">{t('downloads.showSnapshots')}</h3>
-        <p data-ui-site="Settings-67">{t('settings.snapshotsDescription')}</p>
-        </div>
-        <Toggle label={t('downloads.showSnapshots')} checked={draft.show_snapshots} onChange={value => patch('show_snapshots', value)} data-ui-site="Settings-68"/>
-        </div>
         </section>
           <section id={`${prefix}-templates`} className="settings-section" data-ui-site="Settings-69">
         <Templates data-ui-site="Settings-70"/>

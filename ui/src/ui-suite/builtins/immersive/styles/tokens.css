@@ -1,5 +1,5 @@
 /* Primitive → semantic → component layers. Public appearance variables keep user preferences. */
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal, .ui-select-positioner) {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) {
   --p-graphite: #24272d; --p-panel: #30353d; --p-paper: #edf1f7; --p-white: #fff;
   --p-primary: #6676dc; --p-action-ink: #0d1022;
   --p-dark-muted: #bac5d4; --p-light-muted: #586476;
@@ -23,8 +23,7 @@
   --shadow: none; --overlay-shadow: 0 12px 40px #1114192f; --overlay-backdrop: var(--s-overlay);
   --ease-out: cubic-bezier(.2,.7,.2,1); color-scheme: dark;
 }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal)[data-theme="light"],
-.ui-select-positioner[data-ui-theme="light"] {
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal)[data-theme="light"] {
   --s-canvas: var(--p-paper); --s-panel: var(--p-white); --s-text: var(--p-graphite);
   --s-muted: var(--p-light-muted); --s-selected: var(--p-light-selected);
   --s-line: var(--p-light-line); --s-control-line: var(--p-light-control-line);

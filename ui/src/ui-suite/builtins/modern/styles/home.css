@@ -1,64 +1,75 @@
-.modern-home { container-type: inline-size; display: grid; gap: 1.3rem; max-width: 88rem; }
-.modern-home .home-workspace-grid { display: grid; grid-template-columns: minmax(0,1fr); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius, 6px); overflow: hidden; }
-.modern-home :is(.current-instance-card,.home-task-card) { min-width: 0; padding: 1.25rem; background: transparent; }
-.modern-home .home-task-card { border-left: 1px solid var(--border); }
-.modern-home .home-section-label { display: flex; align-items: center; gap: .6rem; color: var(--muted); font-size: max(12px,.86em); }
-.modern-home .home-section-label h2 { font-size: max(14px,1.05em); font-weight: 600; }
-.modern-home .home-section-label svg { color: var(--muted); flex-shrink: 0; }
-.modern-home .current-instance-card > h2 { font-size: max(22px,1.7em); margin: 0 0 .55rem; font-weight: 600; overflow-wrap: anywhere; }
-.modern-home .current-instance-card > .home-section-label { margin-bottom: .75rem; }
-.modern-home .current-instance-card > p { font-size: max(13px,.93em); line-height: 1.6; }
-.modern-home .home-instance-state { display: flex; flex-wrap: wrap; gap: .5rem .8rem; align-items: center; color: var(--muted); font-size: max(12px,.86em); margin-top: .45rem; }
-.modern-home .home-instance-state > span { color: var(--text); }
-.modern-home .home-account { display: flex; gap: .65rem; align-items: center; padding: .6rem 0; margin: .75rem 0; max-width: 100%; background: transparent; color: var(--text); font-size: max(13px,.93em); }
-.modern-home .home-account > span:not(.avatar) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.modern-home .home-account > small { font-size: max(12px,.86em); color: var(--muted); }
-.modern-home .home-primary-actions { display: flex; gap: .7rem; flex-wrap: wrap; }
-.modern-home .home-primary-actions > button { min-height: 2.65rem; font-size: max(13px,1em); padding: .65rem 1rem; }
-.modern-home .home-action-reason { margin-top: .75rem; color: var(--muted); font-size: max(12px,.86em); line-height: 1.6; overflow-wrap: anywhere; }
-.modern-home .home-task-summary { display: flex; gap: 1.5rem; margin: 1.1rem 0; flex-wrap: wrap; }
-.modern-home .home-task-summary > span { display: flex; gap: .5rem; align-items: center; color: var(--muted); font-size: max(12px,.86em); }
-.modern-home .home-task-summary b { color: var(--text); font-size: max(13px,1em); font-weight: 600; font-variant-numeric: tabular-nums; }
-.modern-home .home-task-card > p { font-size: max(13px,.93em); line-height: 1.65; }
-.modern-home .home-task-row { display: flex; justify-content: space-between; gap: .75rem; border-top: 1px solid var(--border); padding: .8rem 0; font-size: max(12px,.86em); }
-.modern-home .home-task-row strong { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 500; }
-.modern-home .home-task-row span { color: var(--muted); flex-shrink: 0; }
-.modern-home .home-task-card > .text-button { margin-top: .65rem; }
-.modern-home .home-overview { padding: 0; overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius, 6px); min-width: 0; }
-.modern-home .home-overview > header { display: flex; justify-content: space-between; gap: 1rem; align-items: center; flex-wrap: wrap; padding: .85rem 1.2rem; border-bottom: 1px solid var(--border); }
-.modern-home .home-overview h2 { display: flex; gap: .6rem; align-items: center; font-size: max(14px,1.05em); font-weight: 600; }
-.modern-home .home-overview h2 > span { font-size: max(12px,.86em); color: var(--muted); font-weight: 400; }
-.modern-home .home-shortcuts { display: flex; flex-wrap: wrap; align-items: center; gap: .85rem; }
-.modern-home .home-profile-choice { width: 100%; display: flex; align-items: center; gap: .9rem; min-height: 3.85em; padding: .35rem 1.2rem; background: transparent; color: var(--text); text-align: left; border-bottom: 1px solid var(--border); }
+.modern-home { container-type: inline-size; display: grid; gap: 1em; width: 100%; min-width: 0; }
+.modern-home .home-workspace-grid { display: grid; grid-template-columns: minmax(17em, 22em) minmax(0, 1fr); align-items: stretch; min-width: 0; min-height: 29em; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius, 6px); overflow: clip; }
+.modern-home .current-instance-card { position: sticky; top: 0; align-self: start; min-width: 0; min-height: 29em; display: flex; flex-direction: column; align-items: stretch; gap: .7em; padding: 1.5em; background: transparent; }
+.modern-home .home-account { display: flex; align-items: center; gap: .8em; width: 100%; min-width: 0; margin: 0 0 1.1em; padding: .8em; background: var(--bg); color: var(--text); border: 1px solid var(--control-border); border-radius: var(--radius, 6px); text-align: start; }
+.modern-home .home-account-copy { min-width: 0; flex: 1; display: grid; gap: .25em; }
+.modern-home .home-account-copy strong { font-size: max(14px, 1em); font-weight: 600; overflow-wrap: anywhere; line-height: 1.45; }
+.modern-home .home-account-copy small { color: var(--muted); font-size: max(12px, .86em); line-height: 1.5; }
+.modern-home .home-account > :is(svg,.account-avatar) { flex-shrink: 0; }
+.modern-home .home-section-label { display: flex; align-items: center; flex-wrap: wrap; gap: .65em; color: var(--muted); font-size: max(13px, .93em); }
+.modern-home .home-section-label svg { flex-shrink: 0; }
+.modern-home .current-instance-card > h2 { margin: 0; font-size: max(24px, 1.8em); font-weight: 650; line-height: 1.35; overflow-wrap: anywhere; text-wrap: pretty; }
+.modern-home .current-instance-card > p { margin: 0; color: var(--muted); font-size: max(13px, .93em); line-height: 1.6; overflow-wrap: anywhere; }
+.modern-home .home-instance-state { display: flex; align-items: center; gap: .5em; padding: .65em 0; color: var(--text); font-size: max(13px, .93em); }
+.modern-home .home-instance-state > span { display: inline-flex; gap: .5em; align-items: center; }
+.modern-home .home-instance-state > span::before { content: ''; width: .45em; height: .45em; flex: 0 0 auto; background: var(--accent-ink); border-radius: 50%; }
+.modern-home .home-primary-actions { display: grid; gap: .65em; margin-top: auto; padding-top: 1.5em; }
+.modern-home .home-primary-actions > button { width: 100%; min-height: 3em; font-size: max(13px, 1em); padding: .75em 1em; white-space: normal; line-height: 1.45; }
+.modern-home .home-primary-actions > .launch-button { min-height: 3.8em; font-size: max(15px, 1.08em); font-weight: 650; }
+.modern-home .home-primary-actions > .launch-button svg { width: 19px; height: 19px; }
+.modern-home .home-action-reason { color: var(--muted); font-size: max(12px, .86em); line-height: 1.6; overflow-wrap: anywhere; }
+.modern-home .home-overview { min-width: 0; min-height: 29em; padding: 0; display: flex; flex-direction: column; background: transparent; border-inline-start: 1px solid var(--border); }
+.modern-home .home-overview > header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .8em; padding: 1.25em 1.5em; border-bottom: 1px solid var(--border); }
+.modern-home .home-overview h2 { display: flex; align-items: center; gap: .65em; margin: 0; font-size: max(18px, 1.3em); font-weight: 600; line-height: 1.4; }
+.modern-home .home-overview h2 > span { font-size: max(12px, .75em); font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+.modern-home .home-shortcuts { display: flex; align-items: center; gap: .55em; flex-wrap: wrap; }
+.modern-home .home-shortcuts > button { min-height: 2.8em; padding: .6em .8em; white-space: normal; }
+.modern-home .home-library-search { display: flex; align-items: center; gap: .75em; padding: .55em 1.5em; min-width: 0; border-bottom: 1px solid var(--border); }
+.modern-home .home-library-search > svg { color: var(--muted); flex-shrink: 0; }
+.modern-home .home-library-search > input { width: 100%; flex: 1; min-width: 0; min-height: 2.8em; padding: .4em 0; background: transparent; color: var(--text); border: 0; border-radius: 0; font-size: max(13px, 1em); }
+.modern-home .home-library-search > button { width: 2.8em; min-height: 2.8em; padding: 0; flex-shrink: 0; }
+.modern-home .home-instance-list { flex: 1; min-width: 0; }
+.modern-home .home-profile-choice { display: flex; align-items: center; gap: .9em; width: 100%; min-height: 4.6em; padding: .85em 1.5em; background: transparent; color: var(--text); text-align: start; border-radius: 0; border-bottom: 1px solid var(--border); }
 .modern-home .home-profile-choice:last-child { border-bottom: 0; }
-.modern-home .home-profile-choice > svg { color: var(--muted); flex-shrink: 0; }
-.modern-home .home-profile-choice > span:first-of-type { min-width: 0; flex: 1; display: grid; gap: .25rem; }
-.modern-home .home-profile-choice strong { font-size: max(13px,1em); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.modern-home .home-profile-choice small, .modern-home .home-profile-choice > span:nth-of-type(2) { font-size: max(12px,.86em); color: var(--muted); }
+.modern-home .home-profile-choice > svg { flex-shrink: 0; color: var(--muted); }
+.modern-home .home-profile-choice > span:first-of-type { display: grid; gap: .25em; flex: 1; min-width: 0; }
+.modern-home .home-profile-choice strong { font-size: max(14px, 1em); font-weight: 550; line-height: 1.45; overflow-wrap: anywhere; }
+.modern-home .home-profile-choice small { color: var(--muted); font-size: max(12px, .86em); line-height: 1.45; overflow-wrap: anywhere; }
+.modern-home .home-profile-choice > span:nth-of-type(2) { color: var(--muted); font-size: max(12px, .86em); line-height: 1.5; flex-shrink: 0; max-width: 11em; }
 .modern-home .home-profile-choice.selected { background: var(--selected); }
 .modern-home .home-profile-choice.selected > svg:last-child { color: var(--accent-ink); }
 .modern-home .home-profile-choice:focus-visible { outline-offset: -3px; }
-.modern-home .home-empty-list { padding: 1.5rem; }
-.modern-home .home-effective-settings { display: flex; gap: 1.5rem; flex-wrap: wrap; color: var(--muted); font-size: max(12px,.86em); }
-.modern-home .home-effective-settings b { color: var(--text); font-weight: 500; margin-left: .5rem; }
-.modern-home .home-personalize { justify-self: start; }
-@media (hover:hover) and (pointer:fine) { .modern-home .home-profile-choice:hover { background: var(--hover); } }
-@media (max-width:1000px) { .modern-home .home-workspace-grid { grid-template-columns: minmax(0,1fr); } .modern-home .home-task-card { border-left: 0; border-top: 1px solid var(--border); } }
-@media (max-width:640px) {
-  .modern-home { gap: .85rem; }
-  .modern-home :is(.current-instance-card,.home-task-card) { padding: 1.1rem; }
-  .modern-home .home-account { flex-wrap: wrap; }
-  .modern-home .home-overview > header { padding: .85rem; }
-  .modern-home .home-profile-choice { padding: .85rem; gap: .65rem; flex-wrap: wrap; }
-  .modern-home .home-profile-choice strong { white-space: normal; overflow-wrap: anywhere; }
-  .modern-home .home-primary-actions > button { flex: 1 1 auto; }
+.modern-home .home-empty-list { padding: 2em 1.5em; color: var(--muted); line-height: 1.6; margin: 0; }
+.modern-home .home-empty-list h3 { color: var(--text); font-size: max(16px, 1.15em); font-weight: 600; margin: 0 0 .4em; }
+.modern-home .home-empty-list p { margin: 0; }
+.modern-home .home-library-footer { display: flex; align-items: center; gap: .65em; flex-wrap: wrap; min-width: 0; padding: .85em 1.5em; border-top: 1px solid var(--border); }
+.modern-home .home-library-footer > span { margin-inline-end: auto; color: var(--muted); font-size: max(12px, .86em); font-variant-numeric: tabular-nums; }
+.modern-home .home-library-footer > button { min-height: 2.65em; padding: .5em .7em; white-space: normal; }
+.modern-home .home-personalize { justify-self: start; color: var(--muted); }
+/* The full launch panel is the home action; a dock is reserved for very low windows. */
+@media (min-height: 401px) {
+  .modern-shell.is-home .current-launch-target { display: none; }
 }
-
-.modern-home .home-account { border: 1px solid var(--control-border); border-radius: var(--radius,6px); padding: .65em .85em; width: fit-content; }
-@container (min-width: 700px) {
-  .modern-home .current-instance-card { display: grid; grid-template-columns: minmax(0,1fr) minmax(19em,auto); align-items: start; gap: .3em 1.8em; }
-  .modern-home .current-instance-card > :is(h2,p,.home-section-label,.home-instance-state) { grid-column: 1; margin: 0; }
-  .modern-home .current-instance-card > .home-account { grid-column: 2; grid-row: 1 / 3; margin: 0; justify-self: stretch; width: auto; flex-wrap: wrap; }
-  .modern-home .current-instance-card > .home-primary-actions { grid-column: 2; grid-row: 3 / 5; align-self: end; }
-  .modern-home .current-instance-card > .home-action-reason { grid-column: 1 / -1; margin-top: .5em; }
+@media (hover: hover) and (pointer: fine) {
+  .modern-home :is(.home-profile-choice,.home-account):hover { background: var(--hover); }
+}
+@container (max-width: 760px) {
+  .modern-home .home-workspace-grid { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .modern-home .current-instance-card { position: static; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(14em, .8fr); gap: .5em 1.5em; border-bottom: 1px solid var(--border); }
+  .modern-home .home-overview { min-height: 0; border-inline-start: 0; }
+  .modern-home .current-instance-card > :is(.home-account,.home-action-reason) { grid-column: 1 / -1; }
+  .modern-home .current-instance-card > :is(.home-section-label,h2,p,.home-instance-state) { grid-column: 1; }
+  .modern-home .current-instance-card > .home-primary-actions { grid-column: 2; grid-row: 2 / 6; align-self: end; margin-top: 0; padding-top: 0; }
+  .modern-home .home-account { margin-bottom: .6em; }
+}
+@container (max-width: 40em) {
+  .modern-home .current-instance-card { display: flex; padding: 1.1em; gap: .65em; }
+  .modern-home .home-primary-actions { padding-top: .5em; margin-top: .2em; }
+  .modern-home .current-instance-card > .home-primary-actions { align-self: stretch; }
+  .modern-home .home-overview > header, .modern-home .home-library-search, .modern-home .home-library-footer { padding-inline: 1.1em; }
+  .modern-home .home-profile-choice { padding: .85em 1.1em; gap: .65em; flex-wrap: wrap; align-items: flex-start; }
+  .modern-home .home-profile-choice > span:first-of-type { flex-basis: calc(100% - 5em); }
+  .modern-home .home-profile-choice > span:nth-of-type(2) { margin-inline-start: 2.65em; max-width: none; }
+  .modern-home .home-profile-choice > svg:last-child:not(:first-child) { margin-inline-start: auto; }
+  .modern-home .home-library-footer > span { width: 100%; }
 }

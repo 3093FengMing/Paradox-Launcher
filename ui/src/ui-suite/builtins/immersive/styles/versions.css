@@ -56,3 +56,27 @@
   .immersive-shell .immersive-versions .versions-toolbar > button { margin-left: auto; }
   .immersive-shell .immersive-versions .versions-footer { padding: .7em .8em; }
 }
+
+/* The page heading owns the title; installation help follows the catalog. */
+.immersive-shell .immersive-versions .versions-toolbar { gap: .7em; }
+.immersive-shell .immersive-versions .versions-filter-panel { gap: .65em; }
+.immersive-shell .immersive-versions .versions-kind-field { flex-basis: auto; }
+.immersive-shell .immersive-versions .versions-kind-field .ui-select-trigger { min-width: 11em; justify-content: space-between; }
+.immersive-shell .immersive-versions .versions-intro { flex-basis: 100%; padding: 0; }
+.immersive-shell .immersive-versions .versions-intro h2 { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.immersive-shell .immersive-versions .versions-intro p { font-size: max(12px,.93em); max-width: 72ch; }
+.immersive-shell .immersive-versions .versions-cache { border-top: 1px solid var(--border); border-bottom: 0; padding: .55em 1em; background: transparent; }
+.immersive-shell .immersive-versions .versions-cache strong { font-weight: 500; color: var(--muted); }
+.immersive-shell .immersive-versions .versions-name strong { min-width: 0; overflow-wrap: anywhere; }
+.immersive-shell .immersive-versions .versions-tag { white-space: nowrap; }
+@media (max-width:620px) {
+ .immersive-shell .immersive-versions .versions-kind-field { flex-basis: 100%; }
+ .immersive-shell .immersive-versions .versions-kind-field .ui-select-trigger { min-width: 0; }
+}
+@media (max-width:420px) {
+ .immersive-shell .immersive-versions .versions-toolbar { gap: .45em; }
+ .immersive-shell .immersive-versions .versions-filter-panel { display: contents; }
+ .immersive-shell .immersive-versions .versions-kind-field { flex: 1 1 100%; }
+ .immersive-shell .immersive-versions .versions-snapshots { flex: 1 1 8em; font-size: max(12px,.9em); }
+ .immersive-shell .immersive-versions .versions-toolbar > button { flex: 0 1 auto; padding: .5em; font-size: max(12px,.9em); }
+}

@@ -29,7 +29,7 @@
 .discover-page .discover-project-copy p { font-size: max(12px, .86rem); color: var(--muted); overflow-wrap: anywhere; }
 .discover-page .discover-project-copy small { color: var(--muted); font-size: max(12px, .75rem); }
 .discover-page .discover-empty { padding: 45px 20px; display: grid; justify-items: center; gap: 13px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: var(--radius, 6px); }
-.discover-page .discover-error { display: grid; justify-items: start; gap: 13px; padding: 22px; border: 1px solid var(--border); border-left: 3px solid var(--accent); background: var(--surface); border-radius: var(--radius, 6px); overflow-wrap: anywhere; }
+.discover-page .discover-error { display: grid; justify-items: start; gap: 13px; padding: 22px; border: 1px solid var(--border); border-left: 1px solid var(--border); background: var(--surface); border-radius: var(--radius, 6px); overflow-wrap: anywhere; }
 .discover-page .discover-pagination { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 14px; padding: 10px 0; }
 .discover-page .discover-pagination span { font-size: max(12px, .83rem); color: var(--muted); }
 @media (max-width: 600px) { .discover-page { gap: 16px; } .discover-page .discover-query-row { flex-wrap: wrap; } .discover-page .discover-query-row > .field { flex-basis: 100%; } .discover-page .discover-query-row > button { width: 100%; } .discover-page .discover-kinds > button { flex: 1 1 auto; } .discover-page .discover-intro h2 { font-size: 1.75rem; } }

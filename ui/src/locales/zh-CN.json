@@ -232,7 +232,10 @@
     "storageTitle": "共享资源，独立世界",
     "storageDescription": "每个实例拥有独立的存档与配置，游戏资源由 QuintElement 统一管理。",
     "emptyTitle": "你的冒险，尚待开启",
-    "emptyDescription": "创建第一个实例，让这个空间成为你的世界。"
+    "emptyDescription": "创建第一个实例，让这个空间成为你的世界。",
+    "visibleCount": "已显示 {{shown}} / {{total}} 项",
+    "loadMore": "再显示 30 项",
+    "clearSearch": "清除搜索"
   },
   "profileDialog": {
     "createTitle": "创建游戏实例",

@@ -29,10 +29,14 @@
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-range-control { display: flex; align-items: center; gap: 10px; flex: 0 1 225px; min-width: 0; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-range-control input { flex: 1; min-width: 80px; width: 100%; accent-color: var(--accent-ink); }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-range-control output { min-width: 40px; text-align: right; font-size: max(13px, .82em); font-variant-numeric: tabular-nums; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-swatches { display: flex; flex-wrap: wrap; gap: 8px; flex: 0 1 260px; min-width: 0; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-swatches > button, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-swatches > input { display: grid; place-items: center; width: 28px; height: 28px; min-width: 28px; border: 2px solid transparent; border-radius: 50%; padding: 0; cursor: pointer; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .appearance-colors { flex-wrap: wrap; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .appearance-colors > div:first-child { flex: 1 1 220px; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-swatches { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; flex: 0 0 auto; width: 272px; max-width: 100%; min-width: 0; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-swatches > button, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-swatches > input { display: grid; place-items: center; box-sizing: border-box; flex: 0 0 32px; width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px; aspect-ratio: 1; border: 2px solid transparent; border-radius: 50%; padding: 0; cursor: pointer; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-swatches > button[aria-pressed=true] { outline: 2px solid var(--text); outline-offset: 2px; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-swatches > input { border-color: var(--border); border-radius: var(--c-radius); background: var(--bg); }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-swatches > input { border-color: var(--border); border-radius: var(--c-radius); background: var(--bg); padding: 3px; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-swatches > input::-webkit-color-swatch-wrapper { padding: 0; }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-swatches > input::-webkit-color-swatch { border: 0; border-radius: max(0px,calc(var(--c-radius) - 4px)); }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-appearance, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .appearance-layout, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .appearance-spacing, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .appearance-layout-choices, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .appearance-themes, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .appearance-user-suites, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .appearance-measures, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .appearance-switches { display: grid; gap: 18px; min-width: 0; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-appearance header { display: grid; gap: 7px; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-style-options { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
@@ -66,7 +70,8 @@
  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-directory, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-editor-section { flex-direction: column; align-items: stretch; }
  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-directory input { flex-basis: auto; }
  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-row { flex-wrap: wrap; gap: 12px; }
- :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-range-control, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-swatches { flex-basis: 100%; }
+ :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-range-control { flex-basis: 100%; }
+ :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .appearance-colors > div:first-child { flex: 0 1 auto; width: 100%; }
  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-template-heading, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-template { flex-wrap: wrap; }
  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-save-bar { flex-wrap: wrap; }
  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-save-actions { flex: 1 1 100%; }
@@ -74,6 +79,7 @@
 }
 @media (max-height: 400px) { :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-save-bar { position: static; } }
 @media (max-width: 420px) {
+ :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-swatches { width: 152px; }
  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-page { gap: 14px; }
  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-tabs > button { padding: 9px; flex: 1 1 100%; }
  :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .settings-tabs > button svg { flex-shrink: 0; }
@@ -94,3 +100,60 @@
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-appearance .appearance-grouped-list { display: grid; gap: 20px; min-width: 0; }
 @media(max-width:900px){:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-settings .settings-workspace { grid-template-columns: 1fr; gap: 20px; } :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-settings .settings-tabs, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-settings .settings-section-links { flex-direction: row; padding-left: 0; }}
 @media(max-width:420px){:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .immersive-settings .settings-section { padding: 15px 0; }}
+
+/* Keep the settings index visible while its continuous work surface scrolls. */
+.immersive-shell .immersive-settings { gap: 1em; }
+.immersive-shell .immersive-settings .settings-page-heading { display: none; }
+.immersive-shell .immersive-settings .settings-workspace { grid-template-columns: 13em minmax(0,1fr); align-items: start; gap: 1.8em; }
+.immersive-shell .immersive-settings .settings-navigation { position: sticky; top: .7em; gap: 1em; padding-right: 1.1em; border-right: 1px solid var(--border); }
+.immersive-shell .immersive-settings .settings-tabs { gap: .35em; padding: 0; background: transparent; }
+.immersive-shell .immersive-settings .settings-tabs > button { min-height: 44px; padding: .7em .8em; border-color: transparent; gap: .75em; font-size: max(13px,1em); text-align: left; }
+.immersive-shell .immersive-settings .settings-tabs > button svg { flex-shrink: 0; }
+.immersive-shell .immersive-settings .settings-tabs > button.selected { background: var(--s-selected); color: var(--text); border-color: transparent; }
+.immersive-shell .immersive-settings .settings-tabs > button.selected svg { color: var(--accent-ink); }
+.immersive-shell .immersive-settings .settings-section-links { gap: .15em; padding: .7em 0 0; border-top: 1px solid var(--border); }
+.immersive-shell .immersive-settings .settings-section-links a { display: flex; align-items: center; min-height: 36px; padding: .4em .85em; border-radius: var(--c-radius); color: var(--muted); font-size: max(13px,.93em); }
+.immersive-shell .immersive-settings .settings-main { gap: 1em; }
+.immersive-shell .immersive-settings .settings-content { gap: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--c-radius); }
+.immersive-shell .immersive-settings .settings-section { gap: 1em; padding: 1.35em 1.5em; border-bottom: 1px solid var(--border); scroll-margin-top: .8em; }
+.immersive-shell .immersive-settings .settings-section:first-child { padding-top: 1.35em; }
+.immersive-shell .immersive-settings .settings-section:last-child { border-bottom: 0; }
+.immersive-shell .immersive-settings .settings-section p { max-width: 72ch; }
+.immersive-shell .immersive-settings .settings-field-grid { gap: 1em; }
+.immersive-shell .immersive-settings .settings-style-options { display: flex; flex-direction: column; gap: 0; }
+.immersive-shell .immersive-settings .settings-style-option { min-height: 4.5em; padding: .85em 0; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; }
+.immersive-shell .immersive-settings .settings-style-option.selected { background: transparent; color: var(--text); }
+.immersive-shell .immersive-settings .settings-style-option:last-child { border-bottom: 0; }
+.immersive-shell .immersive-settings .settings-style-option.selected > span > strong { color: var(--accent-ink); }
+.immersive-shell .immersive-settings .java-runtime { padding: 1em 0; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; }
+.immersive-shell .immersive-settings .java-warnings { padding: 1em 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; }
+.immersive-shell .immersive-settings .java-installations { display: grid; grid-template-columns: minmax(0,1fr); gap: 0; }
+.immersive-shell .immersive-settings .settings-row { padding: .7em 0; }
+.immersive-shell .immersive-settings .settings-save-bar { gap: 1em; padding: .85em 1em; }
+.immersive-shell .immersive-settings .settings-save-actions { flex-direction: row; }
+.immersive-shell .immersive-settings .settings-save-actions > button { min-height: 40px; }
+@media (hover:hover) and (pointer:fine) {
+ .immersive-shell .immersive-settings .settings-section-links a:hover { background: var(--hover); color: var(--text); }
+}
+@media (max-width:1000px) {
+ .immersive-shell .immersive-settings .settings-workspace { grid-template-columns: minmax(0,1fr); gap: 1em; }
+ .immersive-shell .immersive-settings .settings-navigation { position: static; gap: .7em; padding: 0; border: 0; }
+ .immersive-shell .immersive-settings .settings-tabs { flex-direction: row; flex-wrap: wrap; }
+ .immersive-shell .immersive-settings .settings-tabs > button { flex: 1 1 8em; justify-content: center; }
+ .immersive-shell .immersive-settings .settings-section-links { flex-direction: row; flex-wrap: wrap; gap: .2em; padding: .35em 0; border-bottom: 1px solid var(--border); }
+ .immersive-shell .immersive-settings .settings-section-links a { padding: .35em .65em; min-height: 32px; }
+}
+@media (max-width:600px) {
+ .immersive-shell .immersive-settings .settings-section { padding: 1.1em; }
+ .immersive-shell .immersive-settings .settings-section:first-child { padding-top: 1.1em; }
+ .immersive-shell .immersive-settings .settings-tabs > button { gap: .45em; padding: .6em; }
+ .immersive-shell .immersive-settings .settings-save-bar { gap: .65em; padding: .8em; }
+ .immersive-shell .immersive-settings .settings-save-status p { display: none; }
+ .immersive-shell .immersive-settings .settings-save-actions { flex: 1 1 100%; }
+ .immersive-shell .immersive-settings .settings-save-actions > button { flex: 1 1 0; }
+}
+@media (max-width:420px) {
+ .immersive-shell .immersive-settings .settings-tabs > button { flex: 1 1 0; flex-direction: column; gap: .3em; font-size: max(12px,.9em); }
+ .immersive-shell .immersive-settings .settings-section-links { gap: .1em; }
+ .immersive-shell .immersive-settings .settings-section-links a { min-height: 30px; padding: .25em .45em; font-size: max(12px,.9em); }
+}

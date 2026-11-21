@@ -21,7 +21,7 @@
 .accounts-page .accounts-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; }
 .accounts-page .accounts-confirm { flex-basis: 100%; display: grid; gap: 12px; padding: 15px; border: 1px solid var(--border); border-radius: var(--radius, 6px); background: var(--bg); }
 .accounts-page .accounts-confirm p { overflow-wrap: anywhere; }
-.accounts-page .accounts-notice { display: grid; justify-items: start; gap: 12px; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius, 6px); padding: 18px; background: var(--surface); overflow-wrap: anywhere; }
+.accounts-page .accounts-notice { display: grid; justify-items: start; gap: 12px; border: 1px solid var(--border); border-left: 1px solid var(--border); border-radius: var(--radius, 6px); padding: 18px; background: var(--surface); overflow-wrap: anywhere; }
 .accounts-page .accounts-recovery-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
 .accounts-page .accounts-empty { display: grid; justify-items: center; gap: 12px; color: var(--muted); padding: 34px 16px; border: 1px dashed var(--border); border-radius: var(--radius, 6px); text-align: center; }
 @media (max-width: 600px) {
@@ -34,7 +34,7 @@
 }
 .modern-accounts .accounts-overview { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 22px; }
 .modern-accounts .accounts-offline, .modern-accounts .accounts-configuration, .modern-accounts .accounts-microsoft { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius, 6px); padding: 25px; }
-.modern-accounts .accounts-offline { border-top: 3px solid var(--accent); }
+.modern-accounts .accounts-offline { border-top: 1px solid var(--border); }
 .modern-accounts .accounts-list { grid-template-columns: repeat(auto-fit, minmax(min(310px, 100%), 1fr)); }
 .modern-accounts .accounts-row { padding: 19px; border: 1px solid var(--border); border-radius: var(--radius, 6px); align-content: start; background: var(--bg); }
 .modern-accounts .accounts-row > .accounts-identity { flex-basis: 100%; }

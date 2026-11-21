@@ -29,3 +29,19 @@
   .immersive-shell .download-navigation { margin-bottom: .55em; padding-bottom: .35em; }
   .immersive-shell .download-indicator { bottom: max(.55em,env(safe-area-inset-bottom)); }
 }
+
+/* Downloads retain three business routes with equal navigation visibility. */
+.immersive-shell .download-navigation { justify-content: flex-start; gap: .25em; margin-bottom: 1em; padding-bottom: .55em; }
+.immersive-shell .download-navigation-tabs { display: contents; }
+.immersive-shell :is(.download-navigation-tab,.download-navigation-history) { display: inline-flex; flex: 0 1 auto; align-items: center; justify-content: center; gap: .55em; min-height: 44px; padding: .65em 1.1em; border: 0; background: transparent; font-size: max(13px,1em); }
+.immersive-shell .download-navigation-history { margin-left: 0; }
+.immersive-shell :is(.download-navigation-tab,.download-navigation-history)[aria-current=page] { background: var(--s-selected); color: var(--text); border-color: transparent; }
+.immersive-shell :is(.download-navigation-tab,.download-navigation-history)[aria-current=page] > svg { color: var(--accent-ink); }
+.immersive-shell :is(.download-navigation-tab,.download-navigation-history) > span { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width:500px) {
+ .immersive-shell .download-navigation { gap: .2em; }
+ .immersive-shell :is(.download-navigation-tab,.download-navigation-history) { flex: 1 1 0; min-width: 0; padding: .6em .4em; gap: .35em; }
+}
+@media (max-width:360px) {
+ .immersive-shell :is(.download-navigation-tab,.download-navigation-history) > svg { display: none; }
+}

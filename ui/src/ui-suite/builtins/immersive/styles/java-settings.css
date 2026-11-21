@@ -17,7 +17,7 @@
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .java-empty { display: flex; gap: 13px; padding: 18px; border: 1px dashed var(--border); border-radius: var(--c-radius); color: var(--muted); }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .java-empty > svg, :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .java-warnings > svg { flex-shrink: 0; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .java-empty > div { display: grid; gap: 6px; min-width: 0; }
-:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .java-warnings { display: flex; align-items: flex-start; gap: 12px; padding: 15px; background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--c-radius); }
+:where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .java-warnings { display: flex; align-items: flex-start; gap: 12px; padding: 15px; background: var(--bg); border: 1px solid var(--border); border-left: 1px solid var(--border); border-radius: var(--c-radius); }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .java-warnings > div { display: grid; gap: 9px; min-width: 0; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .java-entered-download { display: flex; align-items: flex-end; gap: 10px; min-width: 0; }
 :where(.immersive-shell, .immersive-dialog-theme, .immersive-portal) .java-entered-download .field { display: grid; gap: 7px; min-width: 0; flex: 1; }

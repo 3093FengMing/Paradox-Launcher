@@ -94,18 +94,20 @@ for (const suite of ['modern', 'immersive']) {
     assert.equal(await site('VersionsPage-manual').count(), 0, 'no duplicate manual-version input entry');
     assert.equal(await site('VersionsPage-cache').innerText().then(text => /cache/i.test(text)), true);
     assert.match(await site('VersionsPage-cache').innerText(), /outdated|stale|expired|过期/i);
+    const kind = page.getByRole('combobox', { name: 'Type', exact: true });
+    const openKind = async () => { await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))); await kind.focus(); await page.keyboard.press('Enter'); await page.getByRole('listbox').waitFor(); };
+    assert.equal(await site('VersionsPage-snapshots').count(), 0, 'type selector is the only version visibility control');
+    await openKind();
+    assert.equal(await page.getByRole('listbox').getByRole('option').count(), 4, 'all version types remain available even with the legacy preference disabled');
+    await page.getByRole('option', { name: /^Release/ }).click();
     for (const count of [60, 90, 120, 135]) {
       await site('VersionsPage-more').focus();
       await page.keyboard.press('Enter');
       assert.equal(await site('VersionsPage-version').count(), count, 'real load-more activation grows the same catalog by one batch');
     }
     assert.equal(await site('VersionsPage-more').count(), 0, 'load more disappears after all release rows are rendered');
-    await site('VersionsPage-snapshots').check();
-    await wait(() => window.suiteBuiltinsFixture.snapshot.config.value.settings.show_snapshots);
-    const kind = page.getByRole('combobox', { name: 'Type', exact: true });
-    const openKind = async () => { await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))); await kind.focus(); await page.keyboard.press('Enter'); await page.getByRole('listbox').waitFor(); };
     await openKind();
-    assert.equal(await page.getByRole('listbox').getByRole('option').count(), 4, 'snapshot preference exposes all real type choices');
+    assert.equal(await page.getByRole('listbox').getByRole('option').count(), 4, 'all type choices are always exposed');
     await page.keyboard.press('Escape');
     assert.equal(await kind.evaluate(element => element === document.activeElement), true, 'type dropdown Escape restores actual trigger focus');
     await openKind();
@@ -114,12 +116,10 @@ for (const suite of ['modern', 'immersive']) {
     await openKind();
     await page.getByRole('option', { name: /^Historical/ }).click();
     assert.equal(await site('VersionsPage-version').count(), 1);
-    await site('VersionsPage-snapshots').uncheck();
-    await wait(() => !window.suiteBuiltinsFixture.snapshot.config.value.settings.show_snapshots);
-    assert.equal(await site('VersionsPage-version').count(), 30, 'hidden snapshots force release and reset pagination regardless of previous local group');
     await openKind();
-    assert.equal(await page.getByRole('listbox').getByRole('option').count(), 1, 'disabled snapshot preference leaves only release as an effective type');
-    await page.keyboard.press('Escape');
+    await page.getByRole('option', { name: /^All versions/ }).click();
+    assert.equal(await site('VersionsPage-version').count(), 30, 'all versions reset pagination and include every group');
+    assert.equal(await act(() => window.suiteBuiltinsFixture.snapshot.config.value.settings.show_snapshots), false, 'local filtering does not mutate the legacy persisted preference');
     await act(() => { window.task6Boundary.failCatalog = true; });
     await site('VersionsPage-refresh').click();
     await site('VersionsPage-error').waitFor();

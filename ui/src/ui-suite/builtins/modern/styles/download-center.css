@@ -34,3 +34,19 @@
   .modern-shell .download-navigation { margin-bottom: .55em; padding-bottom: .35em; }
   .modern-shell .download-indicator { bottom: max(.55em,env(safe-area-inset-bottom)); }
 }
+
+/* All three download routes form one local navigation group. */
+.modern-shell .download-navigation { justify-content: flex-start; gap: .25em; margin-bottom: 1em; padding-bottom: .55em; }
+.modern-shell .download-navigation-tabs { display: contents; }
+.modern-shell :is(.download-navigation-tab,.download-navigation-history) { position: relative; display: inline-flex; flex: 0 1 auto; align-items: center; justify-content: center; gap: .55em; min-height: 44px; padding: .65em 1.1em; border: 0; background: transparent; font-size: max(13px,1em); }
+.modern-shell .download-navigation-history { margin-left: 0; }
+.modern-shell :is(.download-navigation-tab,.download-navigation-history)[aria-current=page] { background: var(--selected); color: var(--text); border-color: transparent; }
+.modern-shell :is(.download-navigation-tab,.download-navigation-history)[aria-current=page] > svg { color: var(--accent-ink); }
+.modern-shell :is(.download-navigation-tab,.download-navigation-history) > span { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width:500px) {
+ .modern-shell .download-navigation { gap: .2em; }
+ .modern-shell :is(.download-navigation-tab,.download-navigation-history) { flex: 1 1 0; min-width: 0; padding: .6em .4em; gap: .35em; }
+}
+@media (max-width:360px) {
+ .modern-shell :is(.download-navigation-tab,.download-navigation-history) > svg { display: none; }
+}

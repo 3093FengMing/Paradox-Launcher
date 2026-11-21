@@ -130,12 +130,12 @@ for (const suite of ['immersive', 'modern']) {
     pass('keyboard_account_and_window_actions');
     if (suite === 'immersive') {
       const trigger = page.locator('.immersive-launch-select');
-      assert.equal(await trigger.locator('svg.lucide-chevron-down').count(), 1, 'instance selector has a downward arrow');
+      assert.equal(await trigger.locator('svg.lucide-chevron-up').count(), 1, 'bottom-anchored instance selector has an upward arrow');
       assert.equal(await trigger.locator('svg').getAttribute('aria-hidden'), 'true');
       await trigger.focus(); await page.keyboard.press('Enter');
       await page.getByRole('menu').waitFor();
       const triggerBox = await trigger.boundingBox(), menuBox = await page.getByRole('menu').boundingBox();
-      assert.ok(menuBox.y >= triggerBox.y + triggerBox.height - 1, 'desktop instance menu opens below the downward selector');
+      assert.ok(menuBox.y + menuBox.height <= triggerBox.y + 1, 'bottom-anchored instance menu opens above its selector');
       await page.keyboard.press('b'); await page.keyboard.press('Enter');
       await wait(() => window.suiteBuiltinsFixture.snapshot.profiles.activeKey === 'beta-instance');
       await page.getByRole('menu').waitFor({ state: 'hidden' });
@@ -147,7 +147,7 @@ for (const suite of ['immersive', 'modern']) {
       await page.waitForFunction(element => element === document.activeElement, await trigger.elementHandle(), { timeout: 3000 });
       assert.equal(await trigger.evaluate(e => e === document.activeElement), true);
       await act(async () => window.suiteBuiltinsFixture.actions.profiles.select('original-instance'));
-      pass('downward_split_menu_geometry_keyboard_typeahead_selection_escape_focus');
+      pass('upward_split_menu_geometry_keyboard_typeahead_selection_escape_focus');
     }
     // Launch-account selection and actual B launch remain separate from selected A.
     await primary().click();

@@ -45,7 +45,7 @@
 .modern-instances .instances-footer code { white-space: normal; overflow-wrap: anywhere; font-size: inherit; }
 .instance-menu-positioner { z-index: 110; }
 .instance-tools-menu { min-width: 13rem; max-width: calc(100vw - 24px); max-height: min(24rem,var(--available-height)); overflow: auto; padding: .4rem; color: var(--text); background: var(--surface); border: 1px solid var(--control-border); border-radius: var(--radius, 6px); box-shadow: 0 8px 24px #0003; }
-.instance-menu-item { display: flex; align-items: center; min-height: 2.45rem; padding: .5rem .75rem; font-size: max(13px,.93em); cursor: pointer; border-radius: var(--radius, 4px); }
+.modern-portal .instance-menu-item { box-sizing: border-box; display: flex; align-items: center; min-height: 2.45em; padding: .45em .75em; line-height: 1.4; font-size: max(13px,1em); cursor: pointer; border-radius: var(--radius, 4px); }
 .instance-menu-item[data-disabled] { opacity: .5; cursor: default; }
 .instance-menu-item[data-highlighted] { background: var(--hover); outline: 2px solid var(--accent-ink); outline-offset: -2px; }
 .instance-menu-separator { height: 1px; background: var(--border); margin: .35rem; }
@@ -82,3 +82,6 @@
   .modern-instances .instances-filters label { flex: 1 1 100%; display: grid; grid-template-columns: minmax(6em,auto) minmax(0,1fr); }
   .modern-instances .instances-filters select { width: 100%; max-width: none; min-width: 0; }
 }
+
+.modern-shell .instances-pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1em; padding: 1em; border-top: 1px solid var(--border); color: var(--muted); font-size: max(12px,.92em); font-variant-numeric: tabular-nums; }
+.modern-shell .instances-pagination > button { min-height: 2.8em; }
